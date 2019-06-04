@@ -1,0 +1,2 @@
+
+-DCATKIN_DEVEL_PREFIX=/home/jcmate/Desktop/robotanist/RoboWS/devel -DCMAKE_INSTALL_PREFIX=/home/jcmate/Desktop/robotanist/RoboWS/install -G Unix Makefiles
