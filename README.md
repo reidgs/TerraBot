@@ -38,8 +38,13 @@ As far as we are concerned only the Desktop install is necesary
 though the base may work (untested)
 
 Follow instructions [here](https://wiki.ros.org/rosserial_arduino/Tutorials/Arduino%20IDE%20Setup) to install rosserial and rosserial ardiuno  
-**REMEMBER THAT YOU ARE USING MELODIC***
+**REMEMBER THAT YOU ARE USING MELODIC**
 
 #### Python ####
 install pip ''sudo apt install python-pip''  
 ''pip install: ''
+
+#### Arduino ####
+''sudo apt install arduino.mk''
+then use the provided Makefile
+change filepaths as necessary
