@@ -3,7 +3,7 @@
  *
  * This sketch demonstrates the control of hobby R/C servos
  * using ROS and the arduiono
- * 
+ *
  * For the full tutorial write up, visit
  * www.ros.org/wiki/rosserial_arduino_demos
  *
@@ -22,10 +22,10 @@ void cb( const std_msgs::Int32& cmd_msg){
   x = cmd_msg.data;
 }
 
-ros::Subscriber<std_msgs::Int32> rActuator("rActuator", &cb);
+ros::Subscriber<std_msgs::Int32> rActuator("r_actuator", &cb);
 
 std_msgs::Int32 x_msg;
-ros::Publisher rSensor("rSensor", &x_msg);
+ros::Publisher rSensor("r_sensor", &x_msg);
 
 void setup(){
   nh.initNode();
