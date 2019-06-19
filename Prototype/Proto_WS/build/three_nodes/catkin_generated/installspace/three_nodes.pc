@@ -1,0 +1,8 @@
+prefix=/home/casablanca/Desktop/RoBotanist/Prototype/Proto_WS/install
+
+Name: three_nodes
+Description: Description of three_nodes
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/casablanca/Desktop/RoBotanist/Prototype/Proto_WS/install/lib 
+Requires: 

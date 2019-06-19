@@ -1,0 +1,2 @@
+three_nodes
+-DCATKIN_DEVEL_PREFIX=/home/casablanca/Desktop/RoBotanist/Prototype/Proto_WS/devel -DCMAKE_INSTALL_PREFIX=/home/casablanca/Desktop/RoBotanist/Prototype/Proto_WS/install -G Unix Makefiles
