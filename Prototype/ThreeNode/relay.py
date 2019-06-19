@@ -40,22 +40,27 @@ tds_sensor = rospy.Subscriber("tds_raw", Int32, tds_p)
 #publishing actuator data to the arduino
 
 wpump_pub = rospy.Publisher("wpump_fine", Int32, queue_size = 100)
+npump_pub = rospy.Publisher("npump_fine", Int32, queue_size = 100)
 apump_pub = rospy.Publisher("apump_fine", Int32, queue_size = 100)
 led_pub = rospy.Publisher("led_fine", Int32, queue_size = 100)
-
-def wpump_p(data):
-    edited = interf.wpump_inter(data.data)
-    wpump_pub.publish(edited)
-
-def apump_p(data):
-    edited = interf.apump_inter(data.data)
-    apump_pub.publish(edited)
 
 def led_p(data):
     edited = interf.led_inter(data.data)
     led_pub.publish(edited)
 
-wpump_input = rospy.Subscriber("wpump_raw", Int32, wpump_p)
-apump_input = rospy.Subscriber("apump_raw", Int32, apump_p)
-led_input = rospy.Subscriber("led_raw", Int32, led_p)
+def wpump_p(data):
+    edited = interf.wpump_inter(data.data)
+    wpump_pub.publish(edited)
 
+def npump_p(data):
+    edited = interf.npump_inter(data.data)
+    npump_pub.publish(edited)
+
+def apump_p(data):
+    edited = interf.apump_inter(data.data)
+    apump_pub.publish(edited)
+
+led_input = rospy.Subscriber("led_raw", Int32, led_p)
+wpump_input = rospy.Subscriber("wpump_raw", Int32, wpump_p)
+npump_input = rospy.Subscriber("npump_raw", Int32, npump_p)
+apump_input = rospy.Subscriber("apump_raw", Int32, apump_p)

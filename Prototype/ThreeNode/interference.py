@@ -15,11 +15,15 @@ def tds_inter(x):
     return x
 
 #Interfering with Actuators
+def led_inter(x):
+    return x
+
 def wpump_inter(x):
+    return x
+
+def npump_inter(x):
     return x
 
 def apump_inter(x):
     return x
 
-def led_inter(x):
-    return x
