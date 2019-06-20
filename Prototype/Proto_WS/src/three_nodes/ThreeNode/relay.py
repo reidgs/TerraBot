@@ -7,11 +7,11 @@ from std_msgs.msg import Bool
 rospy.init_node('relay', anonymous = True)
 
 #publishing sensor data to the student
-humid_pub = rospy.Publisher("humid_fine", Int32, queue_size = 100)
-temp_pub = rospy.Publisher("temp_fine", Int32, queue_size = 100)
-light_pub = rospy.Publisher("light_fine", Int32, queue_size = 100)
-level_pub = rospy.Publisher("level_fine", Int32, queue_size = 100)
-tds_pub = rospy.Publisher("tds_fine", Int32, queue_size = 100)
+humid_pub = rospy.Publisher("humid_output", Int32, queue_size = 100)
+temp_pub = rospy.Publisher("temp_output", Int32, queue_size = 100)
+light_pub = rospy.Publisher("light_output", Int32, queue_size = 100)
+level_pub = rospy.Publisher("level_output", Int32, queue_size = 100)
+tds_pub = rospy.Publisher("tds_output", Int32, queue_size = 100)
 
 def humid_p(data):
     edited = interf.humid_inter(data.data)
@@ -41,10 +41,10 @@ tds_sensor = rospy.Subscriber("tds_raw", Int32, tds_p)
 
 #publishing actuator data to the arduino
 
-wpump_pub = rospy.Publisher("wpump_fine", Bool, queue_size = 100)
-npump_pub = rospy.Publisher("npump_fine", Bool, queue_size = 100)
-apump_pub = rospy.Publisher("apump_fine", Bool, queue_size = 100)
-led_pub = rospy.Publisher("led_fine", Int32, queue_size = 100)
+led_pub = rospy.Publisher("led_raw", Int32, queue_size = 100)
+wpump_pub = rospy.Publisher("wpump_raw", Bool, queue_size = 100)
+npump_pub = rospy.Publisher("npump_raw", Bool, queue_size = 100)
+apump_pub = rospy.Publisher("apump_raw", Bool, queue_size = 100)
 
 def led_p(data):
     edited = interf.led_inter(data.data)
@@ -62,7 +62,9 @@ def apump_p(data):
     edited = interf.apump_inter(data.data)
     apump_pub.publish(edited)
 
-led_input = rospy.Subscriber("led_raw", Int32, led_p)
-wpump_input = rospy.Subscriber("wpump_raw", Bool, wpump_p)
-npump_input = rospy.Subscriber("npump_raw", Bool, npump_p)
-apump_input = rospy.Subscriber("apump_raw", Bool, apump_p)
+led_input = rospy.Subscriber("led_input", Int32, led_p)
+wpump_input = rospy.Subscriber("wpump_input", Bool, wpump_p)
+npump_input = rospy.Subscriber("npump_input", Bool, npump_p)
+apump_input = rospy.Subscriber("apump_input", Bool, apump_p)
+
+rospy.spin()

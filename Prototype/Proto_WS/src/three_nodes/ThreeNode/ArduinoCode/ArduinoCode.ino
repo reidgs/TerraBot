@@ -23,8 +23,10 @@ int C;   // temperature C readings are integers
 int H;   // humidity readings are integers
 
 ros::NodeHandle  nh;
-int light_pin = 5;
-int DHT_pin = 6;
+int DHT_pin = 3;
+int light_pin = 4;
+int level_pin = 5;
+int tds_pin = 6;
 int led_pin = 7;
 int wpump_pin = 8;
 int npump_pin = 9;
@@ -51,20 +53,27 @@ void apump_activate(const std_msgs::Bool& cmd_msg){
 }
 
 // Actuators
-ros::Subscriber<std_msgs::Int32> led_sub("led_fine", &led_activate);
-ros::Subscriber<std_msgs::Bool> wpump_sub("wpump_fine", &wpump_activate);
-ros::Subscriber<std_msgs::Bool> npump_sub("npump_fine", &npump_activate);
-ros::Subscriber<std_msgs::Bool> apump_sub("apump_fine", &apump_activate);
+ros::Subscriber<std_msgs::Int32> led_sub("led_raw", &led_activate);
+ros::Subscriber<std_msgs::Bool> wpump_sub("wpump_raw", &wpump_activate);
+ros::Subscriber<std_msgs::Bool> npump_sub("npump_raw", &npump_activate);
+ros::Subscriber<std_msgs::Bool> apump_sub("apump_raw", &apump_activate);
 
 // Sensors
-std_msgs::Int32 temp_msg;
-ros::Publisher temp_pub("temp_raw", &temp_msg);
 
 std_msgs::Int32 humid_msg;
 ros::Publisher humid_pub("humid_raw", &humid_msg);
 
+std_msgs::Int32 temp_msg;
+ros::Publisher temp_pub("temp_raw", &temp_msg);
+
 std_msgs::Int32 light_msg;
 ros::Publisher light_pub("light_raw", &light_msg);
+
+std_msgs::Int32 level_msg;
+ros::Publisher level_pub("level_raw", &level_msg);
+
+std_msgs::Int32 tds_msg;
+ros::Publisher tds_pub("tds_raw", &tds_msg);
 
 void setup(){
   pinMode(led_pin, OUTPUT);
@@ -82,6 +91,8 @@ void setup(){
   nh.advertise(temp_pub);
   nh.advertise(humid_pub);
   nh.advertise(light_pub);
+  nh.advertise(level_pub);
+  nh.advertise(tds_pub);
 }
 
 byte temperature = 0;
@@ -98,6 +109,12 @@ void loop(){
 
   light_msg.data = analogRead(light_pin);
   light_pub.publish(&light_msg);
+
+  level_msg.data = analogRead(level_pin);
+  level_pub.publish(&level_msg);
+
+  tds_msg.data = analogRead(tds_pin);
+  tds_pub.publish(&tds_msg);
 
   nh.spinOnce();
   delay(1);

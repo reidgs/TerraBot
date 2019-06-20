@@ -1,5 +1,5 @@
 ARDUINO_DIR = /usr/share/arduino
-AEDUINO_PORT = /dev/ttyACM*
+ARDUINO_PORT = /dev/ttyACM*
 
 USER_LIB_PATH = /home/casablanca/sketchbook/libraries
 ARDUINO_LIBS = ros_lib SimpleDHT
