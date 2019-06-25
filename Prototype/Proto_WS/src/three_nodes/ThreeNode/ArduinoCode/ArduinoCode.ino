@@ -23,15 +23,15 @@ int C;   // temperature C readings are integers
 int H;   // humidity readings are integers
 
 ros::NodeHandle  nh;
-int DHT_pin = 3;
-int light_pin = 4;
+int DHT_pin = 52;
+int light_pin = A0;
 int level_pin = 5;
 int tds_pin = 6;
-int led_pin = 7;
-int wpump_pin = 8;
-int npump_pin = 9;
-int apump_pin = 10;
-SimpleDHT11 dht11(DHT_pin);
+int led_pin = 9;
+int wpump_pin = 10;
+int npump_pin = 11;
+int apump_pin = 12;
+SimpleDHT22 dht(DHT_pin);
 
 
 
@@ -99,7 +99,7 @@ byte temperature = 0;
 byte humidity = 0;
 
 void loop(){
-  dht11.read(&temperature, &humidity, NULL);
+  dht.read(&temperature, &humidity, NULL);
 
   temp_msg.data = temperature;
   temp_pub.publish(&temp_msg);
