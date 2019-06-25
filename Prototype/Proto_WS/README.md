@@ -20,7 +20,7 @@ Then from sketchbook folder
 ### SimpleDHT
 From the sketchbook folder  
 git clone https://github.com/winlinvip/SimpleDHT.git  
-###Arduino.mk
+### Arduino.mk
 > 'sudo apt install arduino-mk'
 
 Make sure the arduino is connected to the computer first.
