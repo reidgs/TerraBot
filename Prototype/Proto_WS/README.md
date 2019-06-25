@@ -10,6 +10,8 @@ this will allow you to use ros terminal comands.
 > *requires roslib Arduino library and SimpleDHT*
 
 ## Installing Dependancies
+> Side note if you do not have a Sketchbook folder, make one
+> To allow uploading to an Arduino 'sudo usermod -a -G dialout $USER'
 ### Roslib
 > 'sudo apt install ros-melodic-rosserial-arduino'  
 > 'sudo apt install ros-melodic-rosserial'
@@ -18,6 +20,8 @@ Then from sketchbook folder
 ### SimpleDHT
 From the sketchbook folder  
 git clone https://github.com/winlinvip/SimpleDHT.git  
+###Arduino.mk
+> 'sudo apt install arduino-mk'
 
 Make sure the arduino is connected to the computer first.
 Then, check to find make sure that the Makefile has the correct information.
