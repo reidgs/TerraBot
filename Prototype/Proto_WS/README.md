@@ -7,7 +7,17 @@ first in any open terminal window remember to 'source devel/setup.bash'.
 this will allow you to use ros terminal comands.
 
 ### Arduino
-> ** requires roslib Arduino library and SimpleDHT **
+> *requires roslib Arduino library and SimpleDHT*
+
+## Installing Dependancies
+### Roslib
+> 'sudo apt install ros-melodic-rosserial-arduino'  
+> 'sudo apt install ros-melodic-rosserial'
+Then from sketchbook folder
+> 'rosrun rosserial\_arduino make\_libraries.py .'  
+### SimpleDHT
+From the sketchbook folder  
+git clone https://github.com/winlinvip/SimpleDHT.git  
 
 Make sure the arduino is connected to the computer first.
 Then, check to find make sure that the Makefile has the correct information.
@@ -32,14 +42,14 @@ sensor/actuator simply add \_raw or \_input to it, keeping it consitent.
 #### Order
 With highly repetative code it is important to keep the variables in order.
 Currently the order for the names is
-** Sensors **  
+*Sensors*  
 Humidity -(humid)  
 Temperature -(temp)  
 Light -(light)
 Water Level -(level)  
 Total Dissolved Solids -(tds)  
 
-** Actuators **
+*Actuators*
 LED -(led)  
 Water Pump -(wpump)  
 Air Pump -(apump)  
