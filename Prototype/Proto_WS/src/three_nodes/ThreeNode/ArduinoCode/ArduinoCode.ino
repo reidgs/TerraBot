@@ -28,9 +28,9 @@ int light_pin = A0;
 int level_pin = 5;
 int tds_pin = 6;
 int led_pin = 9;
-int wpump_pin = 10;
+int wpump_pin = 12;
 int npump_pin = 11;
-int apump_pin = 12;
+int apump_pin = 10;
 SimpleDHT22 dht(DHT_pin);
 
 
@@ -117,5 +117,5 @@ void loop(){
   tds_pub.publish(&tds_msg);
 
   nh.spinOnce();
-  delay(1);
+  delay(100);
 }
