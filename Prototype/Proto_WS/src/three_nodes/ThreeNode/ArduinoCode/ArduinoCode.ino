@@ -25,14 +25,14 @@ int H;   // humidity readings are integers
 ros::NodeHandle  nh;
 int DHT_pin = 52;
 int light_pin = A0;
-int level_pin = 5;
+int level_pin = A7;
 int tds_pin = 6;
 int led_pin = 9;
 int wpump_pin = 12;
 int npump_pin = 11;
 int apump_pin = 10;
 SimpleDHT22 dht(DHT_pin);
-
+float now = millis();
 
 
 // Functions for Actuators
@@ -99,23 +99,24 @@ byte temperature = 0;
 byte humidity = 0;
 
 void loop(){
-  dht.read(&temperature, &humidity, NULL);
+  if(millis() - now > 100){
+      now = millis();
+      dht.read(&temperature, &humidity, NULL);
 
-  temp_msg.data = temperature;
-  temp_pub.publish(&temp_msg);
+      temp_msg.data = temperature;
+      temp_pub.publish(&temp_msg);
 
-  humid_msg.data = humidity;
-  humid_pub.publish(&humid_msg);
+      humid_msg.data = humidity;
+      humid_pub.publish(&humid_msg);
 
-  light_msg.data = analogRead(light_pin);
-  light_pub.publish(&light_msg);
+      light_msg.data = analogRead(light_pin);
+      light_pub.publish(&light_msg);
 
-  level_msg.data = analogRead(level_pin);
-  level_pub.publish(&level_msg);
+      level_msg.data = analogRead(level_pin);
+      level_pub.publish(&level_msg);
 
-  tds_msg.data = analogRead(tds_pin);
-  tds_pub.publish(&tds_msg);
-
+      tds_msg.data = analogRead(tds_pin);
+      tds_pub.publish(&tds_msg);
+  }
   nh.spinOnce();
-  delay(100);
 }
