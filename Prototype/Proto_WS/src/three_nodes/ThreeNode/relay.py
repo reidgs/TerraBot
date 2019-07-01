@@ -8,14 +8,13 @@ import time
 
 def usage():
     print("relay function for Autonomous Systems")
-    print("-h -l -v [file]")
+    print("-h -l -v ")
     print("-h\thelp")
     print("-l\tlog")
-    print("DO NOT INCLUE .txt or any file extensions in the log file")
     print("-v\tverbose")
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "hl:v", ["help"])
+    opts, args = getopt.getopt(sys.argv[1:], "hlv", ["help"])
 except getopt.GetoptError as err:
     # print help information and exit:
     print(err) # will print something like "option -a not recognized"
@@ -23,7 +22,6 @@ except getopt.GetoptError as err:
     sys.exit(2)
 verbose = False
 log = False
-log_file = None
 for o, a in opts:
     if o == "-v":
         verbose = True
@@ -32,8 +30,14 @@ for o, a in opts:
         sys.exit()
     elif o in ("-l"):
         log = True
-        log_file = a
-        humid_file = open(a + "_humid_log.txt", a, 0)
+        humid_file = open("Log/humid_log.txt", 'a', 0)
+        temp_file = open("Log/temp_log.txt", 'a', 0)
+        light_file = open("Log/light_log.txt", 'a', 0)
+        level_file = open("Log/level_log.txt", 'a', 0)
+        tds_file = open("Log/tds_log.txt", 'a', 0)
+        wpump_file = open("Log/wpump_log.txt", 'a', 0)
+        npump_file = open("Log/npump_log.txt", 'a', 0)
+        apump_file = open("Log/apump_log.txt", 'a', 0)
     else:
         assert False, "unhandled option"
 
@@ -47,33 +51,42 @@ level_pub = rospy.Publisher("level_output", Int32, queue_size = 100)
 tds_pub = rospy.Publisher("tds_output", Int32, queue_size = 100)
 
 def humid_p(data):
-    if (log and verbose):
-        print("logging humidity from arduino")
-        humid_file.write(data.data + ", " + time.time())
+    if (log):
+        humid_file.write(str(data.data) + ", " + str(time.time()) + ", ")
+        if (verbose):
+            print ("Logging humidity data")
     edited = interf.humid_inter(data.data)
     humid_pub.publish(edited)
 
 def temp_p(data):
-    if (log and verbose):
-        print("logging temperature from arduino")
+    if (log):
+        temp_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        if (verbose):
+            print ("Logging Tempurature data")
     edited = interf.temp_inter(data.data)
     temp_pub.publish(edited)
 
 def light_p(data):
-    if (log and verbose):
-        print("logging light from arduino")
+    if (log):
+        light_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        if (verbose):
+            print ("Logging light data")
     edited = interf.light_inter(data.data)
     light_pub.publish(edited)
 
 def level_p(data):
-    if (log and verbose):
-        print("logging water level from arduino")
+    if (log):
+        level_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        if (verbose):
+            print ("Logging water level data")
     edited = interf.level_inter(data.data)
     level_pub.publish(edited)
 
 def tds_p(data):
-    if (log and verbose):
-        print("logging tds from arduino")
+    if (log):
+        tds_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        if (verbose):
+            print ("Logging tds data")
     edited = interf.tds_inter(data.data)
     tds_pub.publish(edited)
 
@@ -91,26 +104,34 @@ npump_pub = rospy.Publisher("npump_raw", Bool, queue_size = 100)
 apump_pub = rospy.Publisher("apump_raw", Bool, queue_size = 100)
 
 def led_p(data):
-    if(verbose and log):
-        print("logging led input from student")
+    if (log):
+        led_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        if (verbose):
+            print ("Logging LED data")
     edited = interf.led_inter(data.data)
     led_pub.publish(edited)
 
 def wpump_p(data):
-    if(verbose and log):
-        print("logging water pump input from student")
+    if (log):
+        wpump_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        if (verbose):
+            print ("Logging water pump data")
     edited = interf.wpump_inter(data.data)
     wpump_pub.publish(edited)
 
 def npump_p(data):
-    if(verbose and log):
-        print("logging nutrient pump input from student")
+    if (log):
+        npump_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        if (verbose):
+            print ("Logging nutrient pump data")
     edited = interf.npump_inter(data.data)
     npump_pub.publish(edited)
 
 def apump_p(data):
-    if(verbose and log):
-        print("logging air pump input from student")
+    if (log):
+        apump_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        if (verbose):
+            print ("Logging air pump data")
     edited = interf.apump_inter(data.data)
     apump_pub.publish(edited)
 
