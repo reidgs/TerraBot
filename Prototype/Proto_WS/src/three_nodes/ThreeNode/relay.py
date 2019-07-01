@@ -4,11 +4,14 @@ import interference as interf
 from std_msgs.msg import Int32
 from std_msgs.msg import Bool
 import getopt, sys
+import time
 
 def usage():
     print("relay function for Autonomous Systems")
+    print("-h -l -v [file]")
     print("-h\thelp")
     print("-l\tlog")
+    print("DO NOT INCLUE .txt or any file extensions in the log file")
     print("-v\tverbose")
 
 try:
@@ -30,6 +33,7 @@ for o, a in opts:
     elif o in ("-l"):
         log = True
         log_file = a
+        humid_file = open(a + "_humid_log.txt", a, 0)
     else:
         assert False, "unhandled option"
 
@@ -45,6 +49,7 @@ tds_pub = rospy.Publisher("tds_output", Int32, queue_size = 100)
 def humid_p(data):
     if (log and verbose):
         print("logging humidity from arduino")
+        humid_file.write(data.data + ", " + time.time())
     edited = interf.humid_inter(data.data)
     humid_pub.publish(edited)
 
