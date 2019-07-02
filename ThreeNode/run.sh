@@ -2,13 +2,11 @@
 
 DATE=$(date)
 BLUE='\033[1;34m'
-echo -e "${BLUE}Opened on $DATE" >> Log/rosserial.log 
-echo -e "${BLUE}Opened on $DATE" >> Log/student.log 
-echo -e "${BLUE}Opened on $DATE" >> Log/relay.log
+NC='\033[0m'
+echo -e "${BLUE} Opened on $DATE ${NC}\n" >> Log/rosserial.log 
+echo -e "${BLUE} Opened on $DATE ${NC}\n" >> Log/student.log 
+echo -e "${BLUE} Opened on $DATE ${NC}\n" >> Log/relay.log
 
-echo  >> Log/rosserial.log 
-echo  >> Log/student.log 
-echo  >> Log/relay.log
 roscore > /dev/null &
 CORE=$!
 sleep 4
