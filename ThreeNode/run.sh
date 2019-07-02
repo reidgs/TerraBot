@@ -1,5 +1,14 @@
 #!/bin/bash
 
+DATE=$(date)
+BLUE='\033[1;34m'
+echo -e "${BLUE}Opened on $DATE" >> Log/rosserial.log 
+echo -e "${BLUE}Opened on $DATE" >> Log/student.log 
+echo -e "${BLUE}Opened on $DATE" >> Log/relay.log
+
+echo  >> Log/rosserial.log 
+echo  >> Log/student.log 
+echo  >> Log/relay.log
 roscore > /dev/null &
 CORE=$!
 sleep 4
