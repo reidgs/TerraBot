@@ -3,58 +3,78 @@ import rospy
 import rosbag
 from std_msgs.msg import Int16, Bool
 import csv
+import override as ovr
 
 bag = rosbag.Bag('newTest.bag', 'w')
-d = {'time':['light','water']}
+sensorsR = {'time':['photoCell', 'waterLevel']}
+actuatorsR = {'time':['LEDs', 'pump']}
+sensorsF = {'time':['photoCell', 'waterLevel']}
+actuatorsF = {'time':['LEDs', 'pump']}
 size = 0
 
-lghtHave = 0
-lghtNeed = 0
-wtrLvl = 0
+rospy.init_node('Pi', anonymous=True)
+lightPubF = rospy.Publisher('lightSensorF', Int16, queue_size=10)
+waterPubF = rospy.Publisher('waterLevelF', Bool, queue_size=10)
+lightSub = rospy.Subscriber('lightSensorR', Int16, lightRCb)
+waterSub = rospy.Subscriber('waterLevelR', Int16, wtrCb)
+rate = rospy.Rate(3)
 
-def lghtCb(data):
-    global lghtHave
-    lghtHave = data.data
-    global bag
-    bag.write('/lightHaveAmt', data)
-    time = rospy.get_rostime().secs
-    d.update({time: [ data.data , d.get(time,[None,None])[1] ]})
+lightPubR = rospy.Publisher('LEDsR', Int16, queue_size=10)
+lightSubF = rospy.Subscriber('LEDsF', Int16, lightFCb)
+
+def time():
+    return rospy.get_rostime().secs
+
+def LEDCb(data):
+    lightR = lightF(data.data)
+    lightPubR.publish(lightR)
+    time = time()
+    actuatorsF.update({time: [ data.data , actuatorsF.get(time,[None,None])[1] ]})
+    actuatorsR.update({time: [ lightR, actuatorsR.get(time,[None,None])[1] ]})
+
+
+
+def lightRCb(data):
+    lightF = lightR(data.data)
+    lightPubF.publish(lightF)
+    #global bag
+    #bag.write('/lightHaveAmt', data)
+    time = time()
+    raw.update({time: [ data.data , raw.get(time,[None,None])[1] ]})
+    filt.update({time: [ lightF, filt.get(time,[None,None])[1] ]})
 
 def wtrCb(data):
-    global wtrLvl
-    wtrLvl = data.data
-    global bag
-    bag.write('/waterLevelAmt', data)
+    waterF = waterR(data.data)
+    waterPubF.publish(waterF)
+    #global bag
+    #bag.write('/waterLevelAmt', data)
     time = rospy.get_rostime().secs
-    d.update({time: [ d.get(time,[None,None])[0] , data.data ]})
+    raw.update({time: [ raw.get(time,[None,None])[0] , data.data ]})
+    filt.update({time: [ filt.get(time,[None,None])[0] , waterF ]})
+
+def writeCSV():
+    global raw
+    global filt
+    with open('filt.csv', 'a') as f:
+        for key in sorted(filt.keys()):
+            f.write("%s,%s,%s\n"%(key,filt[key][0],filt[key][1]))
+
+    with open('raw.csv', 'a') as f: 
+        for key in sorted(raw.keys()):
+            f.write("%s,%s,%s\n"%(key,raw[key][0],raw[key][1]))
+    raw = {'time':['light','water']}
+    filt = {'time':['light','water']}
 
 
-if __name__=='__main__':
-    rospy.init_node('Pi', anonymous=True)
-    lghtpub = rospy.Publisher('lightNeedAmt', Int16, queue_size=10)
-    wtrpub = rospy.Publisher('pump', Bool, queue_size=10)
-    lghtsub = rospy.Subscriber('lightHaveAmt', Int16, lghtCb)
-    wtrsub = rospy.Subscriber('waterLevelAmt', Int16, wtrCb)
-    rate = rospy.Rate(3)
-    while not rospy.is_shutdown():
-        if wtrLvl < 300:
-            pumpswitch = True
-        else:
-            pumpswitch = False
-        need = int(lghtHave*225/600)
-        lghtpub.publish(need)
-        wtrpub.publish(pumpswitch)
-        rate.sleep()
-        if len(d) == 10:
-            print(d)
-            with open('test.csv', 'a') as f:
-                for key in sorted(d.keys()):
-                    f.write("%s,%s,%s\n"%(key,d[key][0],d[key][1]))
-            d={'time':['light','water']}
+#while not rospy.is_shutdown():
+if len(d) == 10:
+    writeCSV()
+   # rate.sleep
 
-    if rospy.is_shutdown():
-        for topic, msg, t in bag.read_messages(topics=['/lightHaveAmt','/waterLevelAmt']):
-            time = "time: %d.%d" %(t.secs, t.nsecs)
-            print(topic,msg,time)
-        bag.close()
-
+if rospy.is_shutdown():
+    for topic, msg, t in \
+            bag.read_messages(topics=['/lightHaveAmt','/waterLevelAmt']):
+        time = "time: %d.%d" %(t.secs, t.nsecs)
+        print(topic,msg,time)
+    bag.close()
+rospy.spin()
