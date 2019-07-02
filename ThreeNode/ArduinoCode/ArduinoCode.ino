@@ -34,6 +34,9 @@ int apump_pin = 10;
 SimpleDHT22 dht(DHT_pin);
 float now = millis();
 
+long light_sum = 0;
+long light_count = 0;
+
 
 // Functions for Actuators
 void led_activate( const std_msgs::Int32& cmd_msg){
@@ -99,6 +102,11 @@ byte temperature = 0;
 byte humidity = 0;
 
 void loop(){
+  if (light_count < 1000) {
+    light_count++;
+    light_sum += analogRead(light_pin);
+  }
+  
   if(millis() - now > 100){
       now = millis();
       dht.read(&temperature, &humidity, NULL);
@@ -109,7 +117,9 @@ void loop(){
       humid_msg.data = humidity;
       humid_pub.publish(&humid_msg);
 
-      light_msg.data = analogRead(light_pin);
+      light_msg.data = light_sum / light_count;
+      light_sum = 0;
+      light_count = 0;
       light_pub.publish(&light_msg);
 
       level_msg.data = analogRead(level_pin);
