@@ -3,10 +3,11 @@
 roscore > /dev/null &
 CORE=$!
 sleep 4
-#rosrun rosrun rosserial_arduino serial_node.py /dev/ttyACM0
-python relay.py &
+rosrun rosserial_arduino serial_node.py /dev/ttyACM0 >> Log/rosserial.log &
+ROSARD=$!
+python relay.py >> Log/relay.log &
 RELAY=$!
-python student.py &
+python student.py >> Log/student.log &
 STUDENT=$!
 
-echo "$CORE $RELAY $STUDENT"> processes.txt
+echo "$RELAY $STUDENT $ROSARD $CORE "> processes.txt
