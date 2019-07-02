@@ -52,7 +52,8 @@ tds_pub = rospy.Publisher("tds_output", Int32, queue_size = 100)
 
 def humid_p(data):
     if (log):
-        humid_file.write(str(data.data) + ", " + str(time.time()) + ", ")
+        humid_file.write(str(time.time()) + ", " + str(data.data) + "\n")
+        flush(humid_file)
         if (verbose):
             print ("Logging humidity data")
     edited = interf.humid_inter(data.data)
@@ -60,7 +61,8 @@ def humid_p(data):
 
 def temp_p(data):
     if (log):
-        temp_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        temp_file.write(str(time.time()) + ", " + str(data.data) + "\n")
+        flush(temp_file)
         if (verbose):
             print ("Logging Tempurature data")
     edited = interf.temp_inter(data.data)
@@ -68,7 +70,8 @@ def temp_p(data):
 
 def light_p(data):
     if (log):
-        light_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        light_file.write(str(time.time()) + ", " + str(data.data) + "\n")
+        flush(light_file)
         if (verbose):
             print ("Logging light data")
     edited = interf.light_inter(data.data)
@@ -76,7 +79,8 @@ def light_p(data):
 
 def level_p(data):
     if (log):
-        level_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        level_file.write(str(time.time()) + ", " + str(data.data) + "\n")
+        flush(level_file)
         if (verbose):
             print ("Logging water level data")
     edited = interf.level_inter(data.data)
@@ -84,7 +88,8 @@ def level_p(data):
 
 def tds_p(data):
     if (log):
-        tds_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        tds_file.write(str(time.time()) + ", " + str(data.data) + "\n")
+        flush(tds_file)
         if (verbose):
             print ("Logging tds data")
     edited = interf.tds_inter(data.data)
@@ -105,7 +110,8 @@ apump_pub = rospy.Publisher("apump_raw", Bool, queue_size = 100)
 
 def led_p(data):
     if (log):
-        led_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        led_file.write(str(time.time()) + ", " + str(data.data) + "\n")
+        flush(led_file)
         if (verbose):
             print ("Logging LED data")
     edited = interf.led_inter(data.data)
@@ -113,7 +119,8 @@ def led_p(data):
 
 def wpump_p(data):
     if (log):
-        wpump_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        wpump_file.write(str(time.time()) + ", " + str(data.data) + "\n")
+        flush(wpump_file)
         if (verbose):
             print ("Logging water pump data")
     edited = interf.wpump_inter(data.data)
@@ -121,7 +128,8 @@ def wpump_p(data):
 
 def npump_p(data):
     if (log):
-        npump_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        npump_file.write(str(time.time()) + ", " + str(data.data) + "\n")
+        flush(npump_file)
         if (verbose):
             print ("Logging nutrient pump data")
     edited = interf.npump_inter(data.data)
@@ -129,7 +137,8 @@ def npump_p(data):
 
 def apump_p(data):
     if (log):
-        apump_log.write(str(data.data) + ", " + str(time.time()) + ", ")
+        apump_file.write(str(time.time()) + ", " + str(data.data) + "\n")
+        flush(apump_file)
         if (verbose):
             print ("Logging air pump data")
     edited = interf.apump_inter(data.data)
