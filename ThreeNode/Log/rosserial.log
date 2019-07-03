@@ -1,0 +1,63 @@
+[1;34m Opened on Wed Jul  3 18:08:00 EDT 2019 [0m
+
+[INFO] [1562191687.284001]: ROS Serial Python Node
+[INFO] [1562191687.296687]: Connecting to /dev/ttyACM0 at 57600 baud
+[INFO] [1562191689.421614]: Requesting topics...
+[INFO] [1562191689.480069]: Note: publish buffer size is 512 bytes
+[INFO] [1562191689.487116]: Setup publisher on temp_raw [std_msgs/Int32]
+[INFO] [1562191689.505952]: Setup publisher on humid_raw [std_msgs/Int32]
+[INFO] [1562191689.521957]: Setup publisher on light_raw [std_msgs/Int32]
+[INFO] [1562191689.555165]: Setup publisher on level_raw [std_msgs/Int32]
+[INFO] [1562191689.570091]: Setup publisher on tds_raw [std_msgs/Int32]
+[INFO] [1562191689.596585]: Setup publisher on cur_raw [std_msgs/Int32]
+[INFO] [1562191689.618364]: Setup publisher on readout [std_msgs/Int32MultiArray]
+[INFO] [1562191689.634148]: Note: subscribe buffer size is 512 bytes
+[INFO] [1562191689.637375]: Setup subscriber on led_raw [std_msgs/Int32]
+[INFO] [1562191689.655607]: Setup subscriber on wpump_raw [std_msgs/Bool]
+[INFO] [1562191689.678942]: Setup subscriber on npump_raw [std_msgs/Bool]
+[INFO] [1562191689.691813]: Setup subscriber on apump_raw [std_msgs/Bool]
+[INFO] [1562191689.701740]: Setup subscriber on fan_raw [std_msgs/Bool]
+[1;32m Closed on Wed Jul  3 18:08:24 EDT 2019 [0m
+
+[1;34m Opened on Wed Jul  3 18:10:18 EDT 2019 [0m
+
+[INFO] [1562191824.857321]: ROS Serial Python Node
+[INFO] [1562191824.865834]: Connecting to /dev/ttyACM0 at 57600 baud
+[INFO] [1562191826.994929]: Requesting topics...
+[INFO] [1562191827.032056]: Note: publish buffer size is 512 bytes
+[INFO] [1562191827.039428]: Setup publisher on temp_raw [std_msgs/Int32]
+[INFO] [1562191827.057775]: Setup publisher on humid_raw [std_msgs/Int32]
+[INFO] [1562191827.074206]: Setup publisher on light_raw [std_msgs/Int32]
+[INFO] [1562191827.089315]: Setup publisher on level_raw [std_msgs/Int32]
+[INFO] [1562191827.105819]: Setup publisher on tds_raw [std_msgs/Int32]
+[INFO] [1562191827.123262]: Setup publisher on cur_raw [std_msgs/Int32]
+[INFO] [1562191827.145648]: Setup publisher on readout [std_msgs/Int32MultiArray]
+[INFO] [1562191827.186364]: Note: subscribe buffer size is 512 bytes
+[INFO] [1562191827.193508]: Setup subscriber on led_raw [std_msgs/Int32]
+[INFO] [1562191827.225742]: Setup subscriber on wpump_raw [std_msgs/Bool]
+[INFO] [1562191827.247305]: Setup subscriber on npump_raw [std_msgs/Bool]
+[INFO] [1562191827.261735]: Setup subscriber on apump_raw [std_msgs/Bool]
+[INFO] [1562191827.273557]: Setup subscriber on fan_raw [std_msgs/Bool]
+[1;32m Closed on Wed Jul  3 18:12:29 EDT 2019 [0m
+
+[1;34m Opened on Wed Jul  3 18:12:55 EDT 2019 [0m
+
+[INFO] [1562191981.180487]: ROS Serial Python Node
+[INFO] [1562191981.188018]: Connecting to /dev/ttyACM0 at 57600 baud
+[INFO] [1562191983.317741]: Requesting topics...
+[INFO] [1562191983.362093]: Note: publish buffer size is 512 bytes
+[INFO] [1562191983.368452]: Setup publisher on temp_raw [std_msgs/Int32]
+[INFO] [1562191983.389758]: Setup publisher on humid_raw [std_msgs/Int32]
+[INFO] [1562191983.412808]: Setup publisher on light_raw [std_msgs/Int32]
+[INFO] [1562191983.439890]: Setup publisher on level_raw [std_msgs/Int32]
+[INFO] [1562191983.479270]: Setup publisher on tds_raw [std_msgs/Int32]
+[INFO] [1562191983.490238]: Setup publisher on cur_raw [std_msgs/Int32]
+[INFO] [1562191983.507577]: Setup publisher on readout [std_msgs/Int32MultiArray]
+[INFO] [1562191983.519726]: Note: subscribe buffer size is 512 bytes
+[INFO] [1562191983.521420]: Setup subscriber on led_raw [std_msgs/Int32]
+[INFO] [1562191983.527445]: Setup subscriber on wpump_raw [std_msgs/Bool]
+[INFO] [1562191983.541017]: Setup subscriber on npump_raw [std_msgs/Bool]
+[INFO] [1562191983.548866]: Setup subscriber on apump_raw [std_msgs/Bool]
+[INFO] [1562191983.562489]: Setup subscriber on fan_raw [std_msgs/Bool]
+[1;32m Closed on Wed Jul  3 18:14:57 EDT 2019 [0m
+

@@ -6,12 +6,13 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Int32MultiArray.h>
 #include <SimpleDHT.h>
-
 
 byte temperature = 0;
 byte humidity = 0;
 int lvl = 0;
+long int readout[3];
 
 ros::NodeHandle  nh;
 int DHT_pin = 52;
@@ -54,7 +55,7 @@ void apump_activate(const std_msgs::Bool& cmd_msg){
 }
 
 void fan_activate(const std_msgs::Bool& cmd_msg){
-  analogWrite(fan_pin, cmd_msg ? 255 : 0);
+  analogWrite(fan_pin, cmd_msg.data ? 255 : 0);
 }
 
 // Actuators
@@ -66,11 +67,13 @@ ros::Subscriber<std_msgs::Bool> fan_sub("fan_raw", &fan_activate);
 
 // Sensor helpers
 int get_level() {
-
   digitalWrite(lb_pin, HIGH);
-  lvl =  analogRead(l3_pin) ? 3 :
-         analogRead(l2_pin) ? 2 :
-         analogRead(l1_pin) ? 1 : 0;
+  readout[0] = analogRead(l1_pin);
+  readout[1] = analogRead(l2_pin);
+  readout[2] = analogRead(l3_pin);
+  lvl =  analogRead(l3_pin) > 100 ? 3 :
+         analogRead(l2_pin) > 100 ? 2 :
+         analogRead(l1_pin) > 100 ? 1 : 0;
   digitalWrite(lb_pin, LOW);
   return lvl;
 }
@@ -95,6 +98,11 @@ ros::Publisher tds_pub("tds_raw", &tds_msg);
 std_msgs::Int32 cur_msg;
 ros::Publisher cur_pub("cur_raw", &cur_msg);
 
+std_msgs::Int32MultiArray readout_msg;
+ros::Publisher readout_pub("readout", &readout_msg);
+
+
+
 void setup(){
   pinMode(led_pin, OUTPUT);
   pinMode(wpump_pin, OUTPUT);
@@ -116,6 +124,7 @@ void setup(){
   nh.advertise(level_pub);
   nh.advertise(tds_pub);
   nh.advertise(cur_pub);
+  nh.advertise(readout_pub);
 }
 
 void loop(){
@@ -147,6 +156,9 @@ void loop(){
 
       cur_msg.data = analogRead(cur_pin);
       cur_pub.publish(&cur_msg);
+      readout_msg.data_length = 3;
+      readout_msg.data = readout;
+      readout_pub.publish(&readout_msg);
   }
   nh.spinOnce();
 }
