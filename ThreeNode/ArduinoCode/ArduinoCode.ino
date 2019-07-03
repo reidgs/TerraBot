@@ -22,7 +22,7 @@ int led_pin = 9;
 int wpump_pin = 12;
 int npump_pin = 11;
 int apump_pin = 10;
-int fan_pin = 13;
+int fan_pin = 8;
 SimpleDHT22 dht(DHT_pin);
 float now = millis();
 
