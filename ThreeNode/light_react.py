@@ -7,6 +7,7 @@ from std_msgs.msg import Bool
 
 light = 0
 led_level = 0
+w_level = 3
 
 rospy.init_node("student", anonymous = True)
 
@@ -26,7 +27,8 @@ def light_reaction(data):
     light = data.data
 
 def level_reaction(data):
-    True
+    global w_level
+    w_level = data.data
 
 def tds_reaction(data):
     True
@@ -44,6 +46,7 @@ while not rospy.core.is_shutdown():
         led_level = max(0, led_level - 1)
     led_pub.publish(led_level)
 #    print([light,led_level])
+    wpump_pub.publish(True if w_level == 0 else False)
     rospy.rostime.wallsleep(0.01)
 
 

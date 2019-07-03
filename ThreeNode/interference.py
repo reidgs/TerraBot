@@ -14,6 +14,9 @@ def level_inter(x):
 def tds_inter(x):
     return x
 
+def cur_inter(x):
+    return x
+
 #Interfering with Actuators
 def led_inter(x):
     return x
@@ -27,3 +30,5 @@ def npump_inter(x):
 def apump_inter(x):
     return x
 
+def fan_inter(x):
+    return x

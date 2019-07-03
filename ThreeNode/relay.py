@@ -98,21 +98,21 @@ def tds_p(data):
     edited = interf.tds_inter(data.data)
     tds_pub.publish(edited)
 
-def fan_p(data):
+def cur_p(data):
     if (log):
-        fan_file.write(str(time.time()) + ", " + str(data.data) + "\n")
-        flush(fan_file)
+        cur_file.write(str(time.time()) + ", " + str(data.data) + "\n")
+        flush(cur_file)
         if (verbose):
-            print ("Logging fan data")
-    edited = interf.fan_inter(data.data)
-    fan_pub.publish(edited)
+            print ("Logging cur data")
+    edited = interf.cur_inter(data.data)
+    cur_pub.publish(edited)
 
 humid_sensor = rospy.Subscriber("humid_raw", Int32, humid_p)
 temp_sensor = rospy.Subscriber("temp_raw", Int32, temp_p)
 light_sensor = rospy.Subscriber("light_raw", Int32, light_p)
 level_sensor = rospy.Subscriber("level_raw", Int32, level_p)
 tds_sensor = rospy.Subscriber("tds_raw", Int32, tds_p)
-fan_sensor = rospy.Subscriber("fan_raw", Int32, fan_p)
+cur_sensor = rospy.Subscriber("cur_raw", Int32, cur_p)
 
 #publishing actuator data to the arduino
 
@@ -163,7 +163,7 @@ def fan_p(data):
         fan_file.write(str(time.time()) + ", " + str(data.data) + "\n")
         flush(fan_file)
         if (verbose):
-            print ("Logging air pump data")
+            print ("Logging fan data")
     edited = interf.fan_inter(data.data)
     fan_pub.publish(edited)
 
