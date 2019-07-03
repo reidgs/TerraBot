@@ -35,9 +35,11 @@ for o, a in opts:
         light_file = open("Log/light_log.txt", 'a', 0)
         level_file = open("Log/level_log.txt", 'a', 0)
         tds_file = open("Log/tds_log.txt", 'a', 0)
+        cur_file = open("Log/cur_log.txt", 'a', 0)
         wpump_file = open("Log/wpump_log.txt", 'a', 0)
         npump_file = open("Log/npump_log.txt", 'a', 0)
         apump_file = open("Log/apump_log.txt", 'a', 0)
+        fan_file = open("Log/fan_log.txt", 'a', 0)
     else:
         assert False, "unhandled option"
 
@@ -49,6 +51,7 @@ temp_pub = rospy.Publisher("temp_output", Int32, queue_size = 100)
 light_pub = rospy.Publisher("light_output", Int32, queue_size = 100)
 level_pub = rospy.Publisher("level_output", Int32, queue_size = 100)
 tds_pub = rospy.Publisher("tds_output", Int32, queue_size = 100)
+cur_pub = rospy.Publisher("cur_output", Int32, queue_size = 100)
 
 def humid_p(data):
     if (log):
@@ -95,11 +98,21 @@ def tds_p(data):
     edited = interf.tds_inter(data.data)
     tds_pub.publish(edited)
 
+def fan_p(data):
+    if (log):
+        fan_file.write(str(time.time()) + ", " + str(data.data) + "\n")
+        flush(fan_file)
+        if (verbose):
+            print ("Logging fan data")
+    edited = interf.fan_inter(data.data)
+    fan_pub.publish(edited)
+
 humid_sensor = rospy.Subscriber("humid_raw", Int32, humid_p)
 temp_sensor = rospy.Subscriber("temp_raw", Int32, temp_p)
 light_sensor = rospy.Subscriber("light_raw", Int32, light_p)
 level_sensor = rospy.Subscriber("level_raw", Int32, level_p)
 tds_sensor = rospy.Subscriber("tds_raw", Int32, tds_p)
+fan_sensor = rospy.Subscriber("fan_raw", Int32, fan_p)
 
 #publishing actuator data to the arduino
 
@@ -107,6 +120,7 @@ led_pub = rospy.Publisher("led_raw", Int32, queue_size = 100)
 wpump_pub = rospy.Publisher("wpump_raw", Bool, queue_size = 100)
 npump_pub = rospy.Publisher("npump_raw", Bool, queue_size = 100)
 apump_pub = rospy.Publisher("apump_raw", Bool, queue_size = 100)
+fan_pub = rospy.Publisher("fan_raw", Bool, queue_size = 100)
 
 def led_p(data):
     if (log):
@@ -144,10 +158,20 @@ def apump_p(data):
     edited = interf.apump_inter(data.data)
     apump_pub.publish(edited)
 
+def fan_p(data):
+    if (log):
+        fan_file.write(str(time.time()) + ", " + str(data.data) + "\n")
+        flush(fan_file)
+        if (verbose):
+            print ("Logging air pump data")
+    edited = interf.fan_inter(data.data)
+    fan_pub.publish(edited)
+
 led_input = rospy.Subscriber("led_input", Int32, led_p)
 wpump_input = rospy.Subscriber("wpump_input", Bool, wpump_p)
 npump_input = rospy.Subscriber("npump_input", Bool, npump_p)
 apump_input = rospy.Subscriber("apump_input", Bool, apump_p)
+fan_input = rospy.Subscriber("fan_input", Bool, fan_p)
 
 if (verbose):
     print("Spinning...")

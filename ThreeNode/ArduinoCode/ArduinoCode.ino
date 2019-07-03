@@ -1,15 +1,5 @@
 /*
- * rosserial Servo Control Example
- *
- * This sketch demonstrates the control of hobby R/C servos
- * using ROS and the arduiono
- *
- * For the full tutorial write up, visit
- * www.ros.org/wiki/rosserial_arduino_demos
- *
- * For more information on the Arduino Servo Library
- * Checkout :
- * http://www.arduino.cc/en/Reference/Servo
+ * Automated Systems Arduino File
  */
 
 #include <ros.h>
@@ -27,10 +17,12 @@ int DHT_pin = 52;
 int light_pin = A0;
 int level_pin = A7;
 int tds_pin = 6;
+int cur_pin = A1;
 int led_pin = 9;
 int wpump_pin = 12;
 int npump_pin = 11;
 int apump_pin = 10;
+int fan_pin = 13;
 SimpleDHT22 dht(DHT_pin);
 float now = millis();
 
@@ -55,11 +47,16 @@ void apump_activate(const std_msgs::Bool& cmd_msg){
   analogWrite(apump_pin, cmd_msg.data ? 255 : 0);
 }
 
+void fan_activate(const std_msgs::Bool& cmd_msg){
+  analogWrite(fan_pin, cmd_msg ? 255 : 0);
+}
+
 // Actuators
 ros::Subscriber<std_msgs::Int32> led_sub("led_raw", &led_activate);
 ros::Subscriber<std_msgs::Bool> wpump_sub("wpump_raw", &wpump_activate);
 ros::Subscriber<std_msgs::Bool> npump_sub("npump_raw", &npump_activate);
 ros::Subscriber<std_msgs::Bool> apump_sub("apump_raw", &apump_activate);
+ros::Subscriber<std_msgs::Bool> fan_sub("fan_raw", &fan_activate);
 
 // Sensors
 
@@ -78,11 +75,15 @@ ros::Publisher level_pub("level_raw", &level_msg);
 std_msgs::Int32 tds_msg;
 ros::Publisher tds_pub("tds_raw", &tds_msg);
 
+std_msgs::Int32 cur_msg;
+ros::Publisher cur_pub("cur_raw", &cur_msg);
+
 void setup(){
   pinMode(led_pin, OUTPUT);
   pinMode(wpump_pin, OUTPUT);
   pinMode(npump_pin, OUTPUT);
   pinMode(apump_pin, OUTPUT);
+  pinMode(fan_pin, OUTPUT);
 
   nh.initNode();
 
@@ -90,12 +91,14 @@ void setup(){
   nh.subscribe(wpump_sub);
   nh.subscribe(npump_sub);
   nh.subscribe(apump_sub);
+  nh.subscribe(fan_sub);
 
   nh.advertise(temp_pub);
   nh.advertise(humid_pub);
   nh.advertise(light_pub);
   nh.advertise(level_pub);
   nh.advertise(tds_pub);
+  nh.advertise(cur_pub);
 }
 
 byte temperature = 0;
@@ -106,7 +109,7 @@ void loop(){
     light_count++;
     light_sum += analogRead(light_pin);
   }
-  
+
   if(millis() - now > 100){
       now = millis();
       dht.read(&temperature, &humidity, NULL);
@@ -127,6 +130,9 @@ void loop(){
 
       tds_msg.data = analogRead(tds_pin);
       tds_pub.publish(&tds_msg);
+
+      cur_msg.data = analogRead(cur_pin);
+      cur_pub.publish(&cur_msg);
   }
   nh.spinOnce();
 }
