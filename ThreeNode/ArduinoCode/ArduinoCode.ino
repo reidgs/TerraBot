@@ -8,16 +8,22 @@
 #include <std_msgs/Bool.h>
 #include <SimpleDHT.h>
 
-//Is this necessary?
-int C;   // temperature C readings are integers
-int H;   // humidity readings are integers
+
+byte temperature = 0;
+byte humidity = 0;
+int lvl = 0;
 
 ros::NodeHandle  nh;
 int DHT_pin = 52;
 int light_pin = A0;
-int level_pin = A7;
-int tds_pin = 6;
-int cur_pin = A1;
+
+int l1_pin = A15;
+int l2_pin = A14;
+int l3_pin = A13;
+int lb_pin = A12;
+
+int tds_pin = A1;
+int cur_pin = A2;
 int led_pin = 9;
 int wpump_pin = 12;
 int npump_pin = 11;
@@ -57,6 +63,17 @@ ros::Subscriber<std_msgs::Bool> wpump_sub("wpump_raw", &wpump_activate);
 ros::Subscriber<std_msgs::Bool> npump_sub("npump_raw", &npump_activate);
 ros::Subscriber<std_msgs::Bool> apump_sub("apump_raw", &apump_activate);
 ros::Subscriber<std_msgs::Bool> fan_sub("fan_raw", &fan_activate);
+
+// Sensor helpers
+int get_level() {
+
+  digitalWrite(lb_pin, HIGH);
+  lvl =  analogRead(l3_pin) ? 3 :
+         analogRead(l2_pin) ? 2 :
+         analogRead(l1_pin) ? 1 : 0;
+  digitalWrite(lb_pin, LOW);
+  return lvl;
+}
 
 // Sensors
 
@@ -101,9 +118,6 @@ void setup(){
   nh.advertise(cur_pub);
 }
 
-byte temperature = 0;
-byte humidity = 0;
-
 void loop(){
   if (light_count < 1000) {
     light_count++;
@@ -125,7 +139,7 @@ void loop(){
       light_count = 0;
       light_pub.publish(&light_msg);
 
-      level_msg.data = analogRead(level_pin);
+      level_msg.data = get_level();
       level_pub.publish(&level_msg);
 
       tds_msg.data = analogRead(tds_pin);
