@@ -30,16 +30,17 @@ for o, a in opts:
         sys.exit()
     elif o in ("-l"):
         log = True
-        humid_file = open("Log/humid_log.txt", 'a', 0)
-        temp_file = open("Log/temp_log.txt", 'a', 0)
-        light_file = open("Log/light_log.txt", 'a', 0)
-        level_file = open("Log/level_log.txt", 'a', 0)
-        tds_file = open("Log/tds_log.txt", 'a', 0)
-        cur_file = open("Log/cur_log.txt", 'a', 0)
-        wpump_file = open("Log/wpump_log.txt", 'a', 0)
-        npump_file = open("Log/npump_log.txt", 'a', 0)
-        apump_file = open("Log/apump_log.txt", 'a', 0)
-        fan_file = open("Log/fan_log.txt", 'a', 0)
+        humid_file = open("Log/humid_log.csv", 'a', 0)
+        temp_file = open("Log/temp_log.csv", 'a', 0)
+        light_file = open("Log/light_log.csv", 'a', 0)
+        level_file = open("Log/level_log.csv", 'a', 0)
+        tds_file = open("Log/tds_log.csv", 'a', 0)
+        cur_file = open("Log/cur_log.csv", 'a', 0)
+        led_file = open("Log/led_log.csv", 'a', 0)
+        wpump_file = open("Log/wpump_log.csv", 'a', 0)
+        npump_file = open("Log/npump_log.csv", 'a', 0)
+        apump_file = open("Log/apump_log.csv", 'a', 0)
+        fan_file = open("Log/fan_log.csv", 'a', 0)
     else:
         assert False, "unhandled option"
 
