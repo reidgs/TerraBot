@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import rospy
 import interference as interf
-from std_msgs.msg import Int32
-from std_msgs.msg import Bool
+from std_msgs.msg import Int32,Bool,Float32
 import getopt, sys
 import time
 
@@ -41,6 +40,7 @@ for o, a in opts:
         npump_file = open("Log/npump_log.csv", 'a', 0)
         apump_file = open("Log/apump_log.csv", 'a', 0)
         fan_file = open("Log/fan_log.csv", 'a', 0)
+        freq_file = open("Log/freq_log.csv", 'a', 0)
     else:
         assert False, "unhandled option"
 
@@ -173,6 +173,20 @@ wpump_input = rospy.Subscriber("wpump_input", Bool, wpump_p)
 npump_input = rospy.Subscriber("npump_input", Bool, npump_p)
 apump_input = rospy.Subscriber("apump_input", Bool, apump_p)
 fan_input = rospy.Subscriber("fan_input", Bool, fan_p)
+
+#Variable Frequency Adjustment
+freq_pub = rospy.Publisher("freq_raw", Float32, queue_size = 100)
+
+def freq_p(data):
+    if (log):
+        freq_file.write(str(time.time()) + ", " + str(data.data) + "\n")
+        flush(freq_file)
+        if (verbose):
+            print ("Logging frequency data")
+    edited = interf.freq_inter(data.data)
+    freq_pub.publish(edited)
+
+freq_input = rospy.Subscriber("freq_input", Float32, freq_p)
 
 if (verbose):
     print("Spinning...")

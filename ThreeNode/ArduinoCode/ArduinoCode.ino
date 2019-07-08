@@ -4,18 +4,19 @@
 
 #include <ros.h>
 #include <std_msgs/Int32.h>
+#include <std_msgs/Float32.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Bool.h>
-#include <std_msgs/Int32MultiArray.h>
 #include <SimpleDHT.h>
 
 byte temperature = 0;
 byte humidity = 0;
 int lvl = 0;
-long int readout[3];
 
 ros::NodeHandle  nh;
 int DHT_pin = 52;
+SimpleDHT22 dht(DHT_pin);
+
 int light_pin = A0;
 
 int l1_pin = A15;
@@ -25,17 +26,29 @@ int lb_pin = A12;
 
 int tds_pin = A1;
 int cur_pin = A2;
+
+
 int led_pin = 9;
 int wpump_pin = 12;
 int npump_pin = 11;
 int apump_pin = 10;
 int fan_pin = 8;
-SimpleDHT22 dht(DHT_pin);
+
 float now = millis();
+float interval = 100;
 
 long light_sum = 0;
 long light_count = 0;
 
+long cur_sum = 0;
+long cur_count = 0;
+
+//Frequency Adjustment
+void freq_change( const std_msgs::Float32& cmd_msg){
+  interval = 1000 / cmd_msg.data;
+}
+
+ros::Subscriber<std_msgs::Float32> freq_sub("freq_raw", &freq_change);
 
 // Functions for Actuators
 void led_activate( const std_msgs::Int32& cmd_msg){
@@ -63,14 +76,12 @@ ros::Subscriber<std_msgs::Int32> led_sub("led_raw", &led_activate);
 ros::Subscriber<std_msgs::Bool> wpump_sub("wpump_raw", &wpump_activate);
 ros::Subscriber<std_msgs::Bool> npump_sub("npump_raw", &npump_activate);
 ros::Subscriber<std_msgs::Bool> apump_sub("apump_raw", &apump_activate);
-ros::Subscriber<std_msgs::Bool> fan_sub("fan_raw", &fan_activate);
+ros::Subscriber<std_msgs::Bool> fan_sub("fan_raw",
+&fan_activate);
 
 // Sensor helpers
 int get_level() {
   digitalWrite(lb_pin, HIGH);
-  readout[0] = analogRead(l1_pin);
-  readout[1] = analogRead(l2_pin);
-  readout[2] = analogRead(l3_pin);
   lvl =  analogRead(l3_pin) > 100 ? 3 :
          analogRead(l2_pin) > 100 ? 2 :
          analogRead(l1_pin) > 100 ? 1 : 0;
@@ -98,10 +109,6 @@ ros::Publisher tds_pub("tds_raw", &tds_msg);
 std_msgs::Int32 cur_msg;
 ros::Publisher cur_pub("cur_raw", &cur_msg);
 
-std_msgs::Int32MultiArray readout_msg;
-ros::Publisher readout_pub("readout", &readout_msg);
-
-
 
 void setup(){
   pinMode(led_pin, OUTPUT);
@@ -111,6 +118,7 @@ void setup(){
   pinMode(fan_pin, OUTPUT);
 
   nh.initNode();
+  nh.subscribe(freq_sub);
 
   nh.subscribe(led_sub);
   nh.subscribe(wpump_sub);
@@ -124,7 +132,6 @@ void setup(){
   nh.advertise(level_pub);
   nh.advertise(tds_pub);
   nh.advertise(cur_pub);
-  nh.advertise(readout_pub);
 }
 
 void loop(){
@@ -133,7 +140,12 @@ void loop(){
     light_sum += analogRead(light_pin);
   }
 
-  if(millis() - now > 100){
+  if (cur_count < 1000) {
+    cur_count++;
+    cur_sum += analogRead(cur_pin);
+  }
+
+  if(millis() - now > interval){
       now = millis();
       dht.read(&temperature, &humidity, NULL);
 
@@ -154,11 +166,10 @@ void loop(){
       tds_msg.data = analogRead(tds_pin);
       tds_pub.publish(&tds_msg);
 
-      cur_msg.data = analogRead(cur_pin);
+      cur_msg.data = cur_sum / cur_count;
+      cur_sum = 0;
+      cur_count = 0;
       cur_pub.publish(&cur_msg);
-      readout_msg.data_length = 3;
-      readout_msg.data = readout;
-      readout_pub.publish(&readout_msg);
   }
   nh.spinOnce();
 }

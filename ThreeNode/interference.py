@@ -32,3 +32,6 @@ def apump_inter(x):
 
 def fan_inter(x):
     return x
+
+def freq_inter(x):
+    return x
