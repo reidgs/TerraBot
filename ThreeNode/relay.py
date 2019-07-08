@@ -52,7 +52,7 @@ temp_pub = rospy.Publisher("temp_output", Int32, queue_size = 100)
 light_pub = rospy.Publisher("light_output", Int32, queue_size = 100)
 level_pub = rospy.Publisher("level_output", Int32, queue_size = 100)
 tds_pub = rospy.Publisher("tds_output", Int32, queue_size = 100)
-cur_pub = rospy.Publisher("cur_output", Int32, queue_size = 100)
+cur_pub = rospy.Publisher("cur_output", Float32, queue_size = 100)
 
 def humid_p(data):
     if (log):

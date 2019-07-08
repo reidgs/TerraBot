@@ -40,7 +40,7 @@ level_sensor = rospy.Subscriber("level_output", Int32, level_reaction)
 tds_sensor = rospy.Subscriber("tds_output", Int32, tds_reaction)
 
 while not rospy.core.is_shutdown():
-    if light - 90 < 0:
+    if light - 500 < 0:
         led_level = min(255, led_level + 1)
     else:
         led_level = max(0, led_level - 1)

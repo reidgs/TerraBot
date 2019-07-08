@@ -6,7 +6,7 @@ def temp_inter(x):
     return x
 
 def light_inter(x):
-    return x
+    return int(x*3.41+13.531)  #converted to lux
 
 def level_inter(x):
     return x
@@ -15,7 +15,7 @@ def tds_inter(x):
     return x
 
 def cur_inter(x):
-    return x
+    return (x-512)*.0491 #converted to amps
 
 #Interfering with Actuators
 def led_inter(x):
