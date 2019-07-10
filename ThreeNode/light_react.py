@@ -3,6 +3,7 @@
 #mock file of student
 import rospy
 from std_msgs.msg import Int32
+from std_msgs.msg import Float32
 from std_msgs.msg import Bool
 
 light = 0
@@ -15,6 +16,8 @@ wpump_pub = rospy.Publisher("wpump_input", Bool, queue_size = 100)
 npump_pub = rospy.Publisher("npump_input", Bool, queue_size = 100)
 apump_pub = rospy.Publisher("apump_input", Bool, queue_size = 100)
 led_pub = rospy.Publisher("led_input", Int32, queue_size = 100)
+
+freq_pub = rospy.Publisher("freq_input", Float32, queue_size = 100)
 
 def humid_reaction(data):
     True
@@ -38,6 +41,8 @@ temp_sensor = rospy.Subscriber("temp_output", Int32, temp_reaction)
 light_sensor = rospy.Subscriber("light_output", Int32, light_reaction)
 level_sensor = rospy.Subscriber("level_output", Int32, level_reaction)
 tds_sensor = rospy.Subscriber("tds_output", Int32, tds_reaction)
+
+freq_pub.publish(1)
 
 while not rospy.core.is_shutdown():
     if light - 90 < 0:
