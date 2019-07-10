@@ -1,5 +1,6 @@
 import rospy
-from std_msgs.msg import Int32,Bool,Float32
+from std_msgs.msg import Int32,Bool,Float32,String
+import subprocess
     
 
 sensor_names = ['tds', 'cur', 'light', 'level', 'temp', 'hum']
@@ -17,7 +18,8 @@ pub_types = {
     'wpump' : Bool,
     'npump' : Bool,
     'apump' : Bool,
-    'fan'   : Bool
+    'fan'   : Bool,
+    'cam'   : String
 }
 
 sub_types = {
@@ -32,7 +34,8 @@ sub_types = {
     'wpump' : Bool,
     'npump' : Bool,
     'apump' : Bool,
-    'fan'   : Bool
+    'fan'   : Bool,
+    'cam'   : Bool
 }
 
 #interference functions
@@ -48,11 +51,21 @@ def light_inter(x):
 def cur_inter(x):
     return (x-512)*.0491 #converted to amps
 
+def cam_inter(x):
+    if x:
+        time_stamp = time.time()
+        subprocess.call("raspistill -o /Photos/%s" % time_stamp, shell = True)
+        return time_stamp
+    else:
+        return None
+        
+
 for n in sensor_names + actuator_names:
     interf_dict[n] = identity
 
 interf_dict['light'] = light_inter
 interf_dict['cur'] = cur_inter
+interf_dict['cam'] = cam_inter
 
 def get_inter(name):
     return interf_dict[name]

@@ -3,7 +3,7 @@ import os
 import rospy
 import interference as interf
 from interference import sensor_names, actuator_names, pub_types, sub_types
-from std_msgs.msg import Int32,Bool,Float32
+from std_msgs.msg import Int32,Bool,Float32,String
 import getopt, sys
 import time
 
