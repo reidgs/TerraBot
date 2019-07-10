@@ -1,24 +1,52 @@
 #!/usr/bin/env python
 import rospy
 import rosbag
-from std_msgs.msg import Float32, Bool
+from std_msgs.msg import Int32, Float32, Bool
 import csv
 
-lightSen = 0
+simulator = True
+timeNow = 0
+timeFreq = 5
+
+lightSen = -500
 curLight = 0
 lightDesire = 500
+lowerLight = 0
+upperLight = 600
 
 waterLevel = 50
 pumpRate = 73 #cubicIn/min
 waterDesire = 50 #mm
 pumpTime = 0 #min
+pumpOn = False
+
+lightMsg = False
+
+
+timeRate = rospy.Publisher('timeRate', Int32, queue_size=10)
+
+def timeCb(data):
+    global timeNow
+    global timeFreq
+    timeNow = data.data
+
+
+def getTime():
+    if simulator:
+        return timeNow
+    else:
+        return rospy.get_rostime().secs
+
 
 def lightCb(data):
     global lightSen
+    global lightMsg
     lightSen = data.data
     rospy.loginfo("light sensor: %s", data.data)
+    lightMsg = True
 
 def waterCb(data):
+    global waterMsg
     global waterLevel
     waterLevel = data.data
     rospy.loginfo("water Level: %s", data.data)
@@ -35,19 +63,29 @@ if __name__ == '__main__':
     waterPub = rospy.Publisher('pumpOn', Bool, queue_size=10)
     waterSub = rospy.Subscriber('waterLevel', Float32, waterCb)
 
-    rate = rospy.Rate(3)
-    while not rospy.is_shutdown():
-        curLight += lightDesire - lightSen
-        lightPub.publish(curLight)
+    #simulated time
+    simTime = rospy.Subscriber('simTime', Int32, timeCb)
+    timeRate.publish(timeFreq)
 
-        if rospy.get_rostime().secs > pumpTime and waterLevel < waterDesire - 6: #pumpRate/200.0: # level in 1 min
-            pumpTime = (waterDesire-waterLevel)/2 + rospy.get_rostime().secs
-            #pumpTime = (waterDesire-waterLevel)/(pumpRate/200.0)*60 + rospy.get_rostime().secs
-        if rospy.get_rostime().secs < pumpTime:
+    while not rospy.is_shutdown():
+        #checks if new message so not redundant
+        if lightSen != -500 and lightMsg:
+            curLight += lightDesire - lightSen
+            if curLight > upperLight:
+                curLight = upperLight
+            elif curLight < lowerLight:
+                curLight = lowerLight
+            lightPub.publish(curLight)
+            lightMsg = False
+        #pump not already on & need to turn on
+        if getTime() > pumpTime and waterLevel <= waterDesire - 5: #pumpRate/200.0: # level in 1 min
+            pumpTime = (waterDesire-waterLevel)*3/5 + getTime()
+            #pumpTime = (waterDesire-waterLevel)/(pumpRate/200.0)*60 + getTime()
             waterPub.publish(True)
-            rospy.loginfo("what")
-        else:
+            pumpOn = True
+        #pump needs to get turned off
+        elif getTime() > pumpTime and pumpOn:
+            pumpOn = False
             waterPub.publish(False)
 
 
-        rate.sleep()
