@@ -3,8 +3,9 @@
 ******
 
 ## Running code
-first in any open terminal window remember to `source devel/setup.bash`.
-this will allow you to use ros terminal comands.
+To start up the three node code simply run `./run.sh`  
+When finished `./stop.sh`  
+NOTE: if you do not stop bad things will happen (proccess will not stop)
 
 ### Arduino
 > *requires roslib Arduino library and SimpleDHT*
@@ -16,7 +17,7 @@ this will allow you to use ros terminal comands.
 > `sudo apt install ros-melodic-rosserial-arduino`  
 > `sudo apt install ros-melodic-rosserial`  
 Then from sketchbook folder
-> `rosrun rosserial\_arduino make\_libraries.py .`  
+> `rosrun rosserial_arduino make_libraries.py .`  
 ### SimpleDHT
 From the sketchbook folder  
 git clone https://github.com/winlinvip/SimpleDHT.git  
@@ -25,15 +26,16 @@ git clone https://github.com/winlinvip/SimpleDHT.git
 
 Make sure the arduino is connected to the computer first.
 Then, check to find make sure that the Makefile has the correct information.
-Specifically check `USER\_LIB\_PATH` `ARDUINO\_LIBS`.
+Specifically check `USER_LIB_PATH` `ARDUINO_LIBS`.
 
 Then from the folder containing ArduinoCode.ino run `make upload clean`.
 
-Finally run `rosrun rosserial\_arduino serial\_node.py /dev/PORT` where PORT 
-the port the arduino is connected to.
+Finally run `rosrun rosserial_arduino serial_node.py /dev/PORT` where PORT 
+the port the arduino is connected to. (Most likely ttyACM0)
 
 ### Python
-To start the relay and student nodes run `rosrun three\nodes relay.py` etc.
+~~To start the relay and student nodes run `rosrun three\nodes relay.py` etc.~~
+No longer using ros ws so simply use python relay.py etc.
 
 ## Editing the Code
 
@@ -52,18 +54,21 @@ Temperature -(temp)
 Light -(light)
 Water Level -(level)  
 Total Dissolved Solids -(tds)  
+Current -(cur)  
 
 *Actuators*  
 LED -(led)  
 Water Pump -(wpump)  
 Air Pump -(apump)  
 Nutrient Pump -(npump)  
+Fan -(fan)  
 
 ### Consistency
 
 Make sure that topics that are published are also subscribed to and vice versa.
 If a new sensor/actuator is added make sure that you are consistent with the naming, 
 type, and order across the four files
+
 
 
 
