@@ -9,8 +9,8 @@ import os
 
 #flags for timeRange and timeFreq
 parser = argparse.ArgumentParser()
-parser.add_argument('timeRange', type=int)
-parser.add_argument('timeFreq', type=int)
+parser.add_argument('time_range', type=int)
+parser.add_argument('time_freq', type=int)
 args = parser.parse_args()
 
 #global vars
@@ -21,14 +21,14 @@ actuator_names = ['freq', 'led', 'wpump', 'npump', 'apump', 'fan']
 
 
 
-timeRange = args.timeRange
-timeFreq = args.timeFreq
+time_range = args.time_range
+time_freq = args.time_freq
 
-lightGiven = 0.0
+light_given = 0.0
 
-pumpRate = 73.0 #cubicIn/min
-pumpOn = False 
-waterAdded = 0.0
+pump_rate = 73.0 #cubicIn/min
+pump_on = False 
+water_added = 0.0
 
 #logging
 def gen_log_files():
@@ -48,66 +48,67 @@ def log_info(name, data):
 
 
 #callbacks
-#def lightCb(data):
- #   global lightGiven
-  #  lightGiven = float(data.data)
+def light_cb(data):
+    global light_given
+    light_given = float(data.data)
 
-#def waterCb(data):
- #   global pumpOn
-  #  pumpOn = data.data
+def water_cb(data):
+    global pump_on
+    pump_on = data.data
 
-
-#math
-
-    global pumpRate
-    return time*pumpRate/200.0
 
 if __name__ == '__main__':
 
     rospy.init_node('Simulator', anonymous=True)
     
     #setting up pubs/subs
-    lightPub = rospy.Publisher('lightHave', Float32, queue_size=10)
-    lightSub = rospy.Subscriber('lightGive', Float32, lightCb)
+    light_pub = rospy.Publisher('light_output', Int32, queue_size=100)
+    light_sub = rospy.Subscriber('led_input', Int32, light_cb)
 
-    waterPub = rospy.Publisher('waterLevel', Float32, queue_size=10)
-    waterSub = rospy.Subscriber('pumpOn', Bool, waterCb)
+    water_pub = rospy.Publisher('level_output', Int32, queue_size=100)
+    water_sub = rospy.Subscriber('wpump_input', Bool, water_cb)
 
-    #simulated time
-    simTime = rospy.Publisher('simTime', Int32, queue_size=10)
+    ntr_pub = rospy.Publsiher('tds_output', Int32, queue_size=100)
+    ntr_sub = rospy.Subscriber('npump_input', Bool, ntr_cb)
 
-    wait = rospy.Rate(timeFreq)
-    print(timeFreq)
-    print(timeRange)
-    for timeNow in range(timeRange):
+    hum_pub = rospy.Publisher('hum_output', Int32, queue_size=100)
+    temp_pub = rospy.Publisher('temp_output', Int32, queue_size=100)
+    fan_sub = rospy.Subscriber('fan_input', Bool, fan_cb)    
+    
+    time = rospy.Publisher('time', Int32, queue_size=10)
+   
+    gen_log_files()
+   
+    wait = rospy.Rate(time_freq)
+    for time_now in range(time_range):
        
         
         #calculations
-        if waterAdded > 0:
+        if water_added > 0:
             #evaporation/usage of added water !!! LOL DONT ACTAULLY KNOW HOW MUCH THIS WILL BE...!!
-            waterAdded -= 0.05*pumpRate/200.0 #fraction of water rise from pump...
-        if pumpOn:
-            waterAdded += pumpRate/200.0
+            water_added -= 0.05*pumpRate/200.0 #fraction of water rise from pump...
+        if pump_on:
+            water_added += pump_rate/200.0
         
         #imported data from function
-        lightD = d.lightData(timeNow)
-        waterD = d.waterData(timeNow)
+        light_d = d.light_data(time_now)
+        water_d = d.water_data(time_now)
 
         #publishing
-        lightPub.publish(lightD +lightGiven)
-        waterPub.publish(waterD + waterAdded) #water given each sec
+        light_pub.publish(light_d +light_given)
+        water_pub.publish(water_d + water_added) #water given each sec
             
-        simTime.publish(timeNow)
+        sim_time.publish(time_now)
         
         #logging
         
 
 
 
-        rospy.loginfo("water data: %s pump: %s total: %s " % \
-                    (waterD, pumpOn, waterD + waterAdded))
-        rospy.loginfo("light data: %s lightStdGive: %s total: %s" % \
-                (lightD, lightGiven, lightD+lightGiven))
+        #rospy.loginfo("water data: %s pump: %s total: %s " % \
+         #           (waterD, pumpOn, waterD + waterAdded))
+       # rospy.loginfo("light data: %s lightStdGive: %s total: %s" % \
+        #        (lightD, lightGiven, lightD+lightGiven))
 
 
         wait.sleep()
