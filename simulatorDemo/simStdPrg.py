@@ -74,7 +74,7 @@ if __name__ == '__main__':
             lightMsg = False
         #pump not already on & need to turn on
         if timeNow > pumpTime and waterLevel <= waterDesire - 5: #pumpRate/200.0: # level in 1 min
-            pumpTime = (waterDesire-waterLevel)*3/5 + getTime()
+            pumpTime = (waterDesire-waterLevel)*3/5 + timeNow 
             #pumpTime = (waterDesire-waterLevel)/(pumpRate/200.0)*60 + getTime()
             waterPub.publish(True)
             pumpOn = True

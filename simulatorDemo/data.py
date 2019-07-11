@@ -26,11 +26,3 @@ def waterData(time):
     rate = 1.0/3.0
     return 50.0 - rate*time
 
-
-
-
-
-
-
-
-
