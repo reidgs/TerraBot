@@ -1,10 +1,10 @@
 import rospy
 from std_msgs.msg import Int32,Bool,Float32,String
-import subprocess
+import subprocess, time
     
 
 sensor_names = ['tds', 'cur', 'light', 'level', 'temp', 'hum']
-actuator_names = ['freq', 'led', 'wpump', 'npump', 'apump', 'fan']
+actuator_names = ['freq', 'led', 'wpump', 'npump', 'apump', 'fan', 'cam']
 
 pub_types = {
     'tds'   : Int32,
@@ -53,11 +53,11 @@ def cur_inter(x):
 
 def cam_inter(x):
     if x:
-        time_stamp = time.time()
-        subprocess.call("raspistill -o /Photos/%s" % time_stamp, shell = True)
+        time_stamp = "Photos/" + str(time.time()) + ".jpg"
+        subprocess.call("raspistill -n -o %s" % time_stamp, shell = True)
         return time_stamp
     else:
-        return None
+        return "there was an error"
         
 
 for n in sensor_names + actuator_names:

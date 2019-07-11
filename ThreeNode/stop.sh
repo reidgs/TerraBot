@@ -1,7 +1,6 @@
 #!/bin/bash
 
 kill $(cat processes.txt)
-rm processes.txt
 rm *.pyc
 sleep 3
 DATE=$(date)

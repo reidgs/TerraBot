@@ -24,10 +24,10 @@ def gen_log_files():
     global log_files
 
     prefix = time.strftime("%Y%m%d_%H%M%S_")
-    os.makedirs("Log_%s" % prefix)
+    os.makedirs("Log/Log_%s" % prefix)
 
     for name in sensor_names + actuator_names:
-        file_name = "Log_%s/%s_log.csv" % (prefix, name)
+        file_name = "Log/Log_%s/%s_log.csv" % (prefix, name)
         log_files[name] = open(file_name, 'w+', 0)
 
 def generate_publishers():

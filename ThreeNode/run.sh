@@ -12,7 +12,7 @@ CORE=$!
 sleep 4
 rosrun rosserial_arduino serial_node.py /dev/ttyACM0 >> Log/rosserial.log 2>&1 &
 ROSARD=$!
-python relay.py -l -v >> Log/relay.log 2>&1 &
+python relay.py -l >> Log/relay.log 2>&1 &
 RELAY=$!
 python student.py >> Log/student.log 2>&1 &
 STUDENT=$!
