@@ -7,10 +7,10 @@ initialWater = 50
 
 
 #sunlight cycle
-def light_output(time):
+def lightData(time):
     global maxLight
     global daylight
-    amp = maxLight/(2*daylight)
+    amp = maxLight/(2.0*daylight)
     return amp * m.sin(2*m.pi*time/86400) + maxLight - amp
 
 
@@ -21,10 +21,10 @@ def light_output(time):
 ##  -really how much water is being consumed...
 
 #evaporation/usage of initial water
-def water_output(time):
+def waterData(time):
     global initialWater
-    rate = 1.0/3
-    return 50 - rate*time
+    rate = 1.0/3.0
+    return 50.0 - rate*time
 
 
 
