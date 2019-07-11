@@ -2,11 +2,11 @@
 import rospy
 import rosbag
 from std_msgs.msg import Int32, Float32, Bool
-import csv
 
 simulator = True
 timeNow = 0
-timeFreq = 5
+timeFreq = 1
+timeRange = 10
 
 lightSen = -500
 curLight = 0
@@ -22,20 +22,16 @@ pumpOn = False
 
 lightMsg = False
 
-
-timeRate = rospy.Publisher('timeRate', Int32, queue_size=10)
-
 def timeCb(data):
     global timeNow
-    global timeFreq
     timeNow = data.data
 
 
-def getTime():
-    if simulator:
-        return timeNow
-    else:
-        return rospy.get_rostime().secs
+#def getTime():
+ #   if simulator:
+  #      return timeNow
+   # else:
+    #    return rospy.get_rostime().secs
 
 
 def lightCb(data):
@@ -65,7 +61,6 @@ if __name__ == '__main__':
 
     #simulated time
     simTime = rospy.Subscriber('simTime', Int32, timeCb)
-    timeRate.publish(timeFreq)
 
     while not rospy.is_shutdown():
         #checks if new message so not redundant
@@ -78,13 +73,13 @@ if __name__ == '__main__':
             lightPub.publish(curLight)
             lightMsg = False
         #pump not already on & need to turn on
-        if getTime() > pumpTime and waterLevel <= waterDesire - 5: #pumpRate/200.0: # level in 1 min
-            pumpTime = (waterDesire-waterLevel)*3/5 + getTime()
+        if timeNow > pumpTime and waterLevel <= waterDesire - 5: #pumpRate/200.0: # level in 1 min
+            pumpTime = (waterDesire-waterLevel)*3/5 + timeNow 
             #pumpTime = (waterDesire-waterLevel)/(pumpRate/200.0)*60 + getTime()
             waterPub.publish(True)
             pumpOn = True
         #pump needs to get turned off
-        elif getTime() > pumpTime and pumpOn:
+        elif timeNow > pumpTime and pumpOn:
             pumpOn = False
             waterPub.publish(False)
 
