@@ -54,7 +54,7 @@ def cur_inter(x):
 def cam_inter(x):
     if x:
         time_stamp = "Photos/" + str(time.time()) + ".jpg"
-        subprocess.call("raspistill -n -o %s" % time_stamp, shell = True)
+        subprocess.call("raspistill -n -rot 180 -o %s" % time_stamp, shell = True)
         return time_stamp
     else:
         return "there was an error"

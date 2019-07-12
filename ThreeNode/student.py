@@ -46,7 +46,7 @@ def tds_reaction(data):
     True
 
 def cam_reaction(data):
-    print ("picture taken\t" + data)
+    print ("picture taken\t" + data.data)
 
 temp_sensor = rospy.Subscriber("temp_output", Int32, temp_reaction)
 light_sensor = rospy.Subscriber("light_output", Int32, light_reaction)
@@ -56,7 +56,7 @@ cam_sensor = rospy.Subscriber("cam_raw", String, cam_reaction)
 
 while not rospy.core.is_shutdown():
     time_now = get_time()
-    if time_now - light_time > 4320:
+    if time_now - light_time > 12 * 3600:
         led_level ^= 255
         light_time = time_now
     """if light < 9000:
