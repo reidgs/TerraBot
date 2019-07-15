@@ -16,10 +16,6 @@ args = parser.parse_args()
 time_range = args.time_range
 time_freq = args.time_freq
 
-log_files = {}
-sensor_names = ['tds', 'cur', 'light', 'level', 'temp', 'hum']
-actuator_names = ['freq', 'led', 'wpump', 'npump', 'fan']
-
 #initialization of vars 
 pub_freq = 1
 
@@ -29,7 +25,7 @@ led_given = 0.0
 light_now = 0
 
 wpump_rate = 1.83 #cubicIn/s
-wpump_on = False 
+wpump_on = False
 water_added = 0.0 #height (in)
 level_now = 0
 
@@ -43,27 +39,6 @@ hum_now = 0.0
 temp_now = 50
 
 cur_now = 0.0
-
-#logging
-def gen_log_files():
-    global log_files
-    prefix = t.strftime("%Y%m%d_%H%M%S_")
-    os.makedirs("sim_log_%s" % prefix)
-
-    for name in sensor_names + actuator_names:
-        file_name = "sim_log_%s/%s.csv" % (prefix, name)
-        log_files[name] = open(file_name, 'w+', 0)
-
-
-def log_info(name, data):
-    f = globals()[str(name) + "_data"]
-    t = time_now
-    log_file = log_files[name]
-    baseline = f(t) 
-    log_file.write(str(t) + "," + str(baseline)\
-                          + "," +  str(data) + "\n")
-    log_file.flush
-
 
 #callbacks
 def led_cb(data):
@@ -91,12 +66,7 @@ def freq_cb(data):
     pub_freq = data.data
     log_info('freq', pub_freq)
 
-
-#calculations to update sensors 
-def light_update():
-    global light_now, time_now
-    light_now = led_given + light_data(time_now)
-
+#calculations to update sensors
 def tds_update(secs):
     global ntr_added, npump_on, npump_rate, tds_now, time_now
     if npump_on:
@@ -116,7 +86,7 @@ def level_update(secs):
 def hum_update():
     global hum_now, time_now
     #how do i even relate this to fans + water pump
- 
+
 def temp_update():
     global temp_now, time_now
     #prob don't need to incorporate fans
@@ -127,31 +97,33 @@ def cur_update():
     #um somehow add up cur used by actuators...
     cur_now = cur_data(time_now)
 
+
+
 if __name__ == '__main__':
 
     rospy.init_node('Simulator', anonymous=True)
-    
+
     #setting up pubs/subs & log files & rate
-    light_pub = rospy.Publisher('light_output', Int32, queue_size=100)
-    led_sub = rospy.Subscriber('led_input', Int32, led_cb)
+    light_pub = rospy.Publisher('light_raw', Int32, queue_size=100)
+    led_sub = rospy.Subscriber('led_raw', Int32, led_cb)
 
-    level_pub = rospy.Publisher('level_output', Int32, queue_size=100)
-    wpump_sub = rospy.Subscriber('wpump_input', Bool, wpump_cb)
+    level_pub = rospy.Publisher('level_raw', Int32, queue_size=100)
+    wpump_sub = rospy.Subscriber('wpump_raw', Bool, wpump_cb)
 
-    tds_pub = rospy.Publisher('tds_output', Int32, queue_size=100)
-    npump_sub = rospy.Subscriber('npump_input', Bool, npump_cb)
+    tds_pub = rospy.Publisher('tds_raw', Int32, queue_size=100)
+    npump_sub = rospy.Subscriber('npump_raw', Bool, npump_cb)
 
-    hum_pub = rospy.Publisher('hum_output', Int32, queue_size=100)
-    temp_pub = rospy.Publisher('temp_output', Int32, queue_size=100)
-    fan_sub = rospy.Subscriber('fan_input', Bool, fan_cb)    
-    
-    time_pub = rospy.Publisher('time_output', Int32, queue_size=100)
-    freq_sub = rospy.Subscriber('freq_input', Float32, freq_cb)
-    
-    cur_pub = rospy.Publisher('cur_output', Float32, queue_size = 100)
+    apump_sub = rospy.Subscriber('apump_raw', Bool, apump_cb)
 
-    gen_log_files()
-   
+    hum_pub = rospy.Publisher('humid_raw', Int32, queue_size=100)
+    temp_pub = rospy.Publisher('temp_raw', Int32, queue_size=100)
+    fan_sub = rospy.Subscriber('fan_raw', Bool, fan_cb)
+
+    time_pub = rospy.Publisher('time_raw', Int32, queue_size=100)
+    freq_sub = rospy.Subscriber('freq_raw', Float32, freq_cb)
+
+    cur_pub = rospy.Publisher('cur_raw', Float32, queue_size = 100)
+
     wait = rospy.Rate(time_freq)
 
     if pub_freq < 1:
@@ -163,30 +135,34 @@ if __name__ == '__main__':
     for sec in range(time_range):
         if pub_freq < 1 and sec % x != 0:
                 continue
-            
+
         for cycle in range(freq):
-            
+
             time_now = sec + cycle/pub_freq
-            
+
             #update sensors
-            light_update()
             level_update(1.0/pub_freq)
             tds_update(1.0/pub_freq)
             temp_update()
             cur_update()
-    
+
             #publishing
-            light_pub.publish(light_now) 
+            light_pub.publish(light_now)
             level_pub.publish(level_now)
             tds_pub.publish(tds_now)
             hum_pub.publish(hum_now)
             temp_pub.publish(temp_now)
             cur_pub.publish(cur_now)
             time_pub.publish(time_now)
-        
-            #logging
-            for sensor in sensor_names:
-                log_info(sensor, globals()[sensor + '_now'])
 
         wait.sleep()
+
+
+
+
+
+
+
+
+
 
