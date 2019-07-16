@@ -145,7 +145,7 @@ if __name__ == '__main__':
     temp_pub = rospy.Publisher('temp_output', Int32, queue_size=100)
     fan_sub = rospy.Subscriber('fan_input', Bool, fan_cb)    
     
-    time_pub = rospy.Publisher('time_output', Int32, queue_size=100)
+    time_pub = rospy.Publisher('time', Int32, queue_size=100)
     freq_sub = rospy.Subscriber('freq_input', Float32, freq_cb)
     
     cur_pub = rospy.Publisher('cur_output', Float32, queue_size = 100)
