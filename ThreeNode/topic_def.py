@@ -38,35 +38,3 @@ from_stu = {
     'fan'   : Bool,
 }
 
-#######################
-pub_types = {
-    'tds'   : Int32,
-    'cur'   : Float32,
-    'light' : Int32,
-    'level' : Int32,
-    'temp'  : Int32,
-    'humid'   : Int32,
-    'freq'  : Float32,
-    'led'   : Int32,
-    'wpump' : Bool,
-    'npump' : Bool,
-    'apump' : Bool,
-    'fan'   : Bool,
-    'cam'   : String
-}
-
-sub_types = {
-    'tds'   : Int32,
-    'cur'   : Int32,
-    'light' : Int32,
-    'level' : Int32,
-    'temp'  : Int32,
-    'humid'   : Int32,
-    'freq'  : Float32,
-    'led'   : Int32,
-    'wpump' : Bool,
-    'npump' : Bool,
-    'apump' : Bool,
-    'fan'   : Bool,
-    'cam'   : Bool
-}
