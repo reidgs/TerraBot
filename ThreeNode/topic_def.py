@@ -1,7 +1,44 @@
 from std_msgs.msg import Int32,Bool,Float32,String
 sensor_names = ['tds', 'cur', 'light', 'level', 'temp', 'humid']
-actuator_names = ['freq', 'led', 'wpump', 'npump', 'apump', 'fan', 'cam']
+actuator_names = ['freq', 'led', 'wpump', 'npump', 'apump', 'fan']
 
+to_ard = {
+    'freq'  : Float32,
+    'led'   : Int32,
+    'wpump' : Bool,
+    'npump' : Bool,
+    'apump' : Bool,
+    'fan'   : Bool,
+}
+
+from_ard = {
+    'tds'   : Int32,
+    'cur'   : Int32,
+    'light' : Int32,
+    'level' : Int32,
+    'temp'  : Int32,
+    'humid'   : Int32,
+}
+
+
+to_stu = {
+    'tds'   : Int32,
+    'cur'   : Float32,
+    'light' : Int32,
+    'level' : Int32,
+    'temp'  : Int32,
+    'humid'   : Int32,
+}
+
+from_stu = {
+    'led'   : Int32,
+    'wpump' : Bool,
+    'npump' : Bool,
+    'apump' : Bool,
+    'fan'   : Bool,
+}
+
+#######################
 pub_types = {
     'tds'   : Int32,
     'cur'   : Float32,

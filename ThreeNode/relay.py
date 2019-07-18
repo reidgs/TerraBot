@@ -2,7 +2,7 @@
 import os
 import rospy
 import interference as interf
-from topic_def import sensor_names, actuator_names, pub_types, sub_types
+from topic_def import sensor_names, actuator_names, to_stu, to_ard, from_stu, from_ard, pub_types, sub_types
 from std_msgs.msg import Int32,Bool,Float32,String
 import getopt, sys
 import time
@@ -36,18 +36,18 @@ def generate_publishers():
     for name in sensor_names:
         pub_name = name + "_output"
         publishers[name] = rospy.Publisher(
-                            pub_name, pub_types[name],
+                            pub_name, to_stu[name],
                             latch = True, queue_size = 100)
 
     for name in actuator_names:
         pub_name = name + "_raw"
         publishers[name] = rospy.Publisher(
-                            pub_name, pub_types[name],
+                            pub_name, to_ard[name],
                             latch = True, queue_size = 100)
 
 def cb_generic(name, data):
     if (log):
-        log_file = log_files[name] 
+        log_file = log_files[name]
         log_file.write(str(time.time()) + ", " + str(data.data) + "\n")
         log_file.flush()
         if (verbose):
@@ -59,11 +59,11 @@ def generate_cb(name):
     return (lambda data: cb_generic(name, data))
 
 def generate_subscribers():
-    global subscribers 
+    global subscribers
     for name in sensor_names:
         sub_name = name + "_raw"
         cb = generate_cb(name)
-        subscribers[name] = rospy.Subscriber(sub_name, sub_types[name], cb)
+        subscribers[name] = rospy.Subscriber(sub_name, from_ard[name], cb)
 
     for name in actuator_names:
         sub_name = name + "_input"
@@ -81,7 +81,7 @@ except getopt.GetoptError as err:
     sys.exit(2)
 
 for o, a in opts:
-    
+
     if o == "-v":
         verbose = True
     elif o in ("-h", "--help"):
