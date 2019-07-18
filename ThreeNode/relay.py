@@ -23,7 +23,7 @@ def usage():
 def gen_log_files():
     global log_files
 
-    prefix = time.strftime("%Y%m%d_%H%M%S_")
+    prefix = time.strftime("%y_%m_%d_%H%M%S_")
     os.makedirs("Log/Log_%s" % prefix)
 
     for name in sensor_names + actuator_names:
@@ -36,12 +36,14 @@ def generate_publishers():
     for name in sensor_names:
         pub_name = name + "_output"
         publishers[name] = rospy.Publisher(
-                            pub_name, pub_types[name], queue_size = 100)
+                            pub_name, pub_types[name],
+                            latch = True, queue_size = 100)
 
     for name in actuator_names:
         pub_name = name + "_raw"
         publishers[name] = rospy.Publisher(
-                            pub_name, pub_types[name], queue_size = 100)
+                            pub_name, pub_types[name],
+                            latch = True, queue_size = 100)
 
 def cb_generic(name, data):
     if (log):
