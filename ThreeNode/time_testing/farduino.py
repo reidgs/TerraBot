@@ -1,39 +1,52 @@
-import time
-from std_msgs.msg import Float64
-from std_msgs.msg import Bool
 import rospy
+from std_msgs.msg import Int32,Bool,Float32,String
+from topic_def import sensor_names, actuator_names, to_ard, from_ard
 
-EVAP_RATE = 1.0
-FLOW_RATE = 30.0
+def generate_values():
+    global values
+    global requests
+    for name in actuator_names + sensor_names:
+        values[name] = 0
+    for name in actuator_names:
+        requests[name]=0
+
+def generate_publishers():
+    global publishers
+    for name in sensor_names:
+        pub_name = name + "_output"
+        publishers[name] = rospy.Publisher(
+                            pub_name, from_ard[name],
+                            latch = True, queue_size = 100)
+def update_request(name, data):
+    requests[name] = data.data
+
+def generate_subscribers():
+    global subscribers
+    for name in actuator_names:
+        sub_name = name + "_input"
+        cb = lambda data: update_request(name, data)
+        subscribers[name] = rospy.Subscriber(sub_name, to_ard[name], cb)
 
 
-now = time.time()
-count = 0
-off = 0
-last = time.time()
+time_update = {}
 
-rospy.init_node("farduino")
+def nothing(data):
+    True
+
+for n in sensor_names + actuator_names:
+    callback_dict[n] = nothing
+
+def light_update():
+    values['light'] = levels[led]
+
+time_update['light'] = light_update
 
 
-def time_request(data):
-    global now, last
-    diff = data.data - now
-    last = now
-    now = data.data
-    tick(diff)
-
-def tick(diff):
-    return diff
-
-time_sub = rospy.Subscriber("time_raw", Float64, time_request)
-
-while not rospy.core.is_shutdown():
-    count += 1
-    off = max(off, time.time() - now)
-
-    if count > 1000:
-        print(off)
-        count = 0
-        off = 0
-    rospy.sleep(0.0001)
-
+current_time = 0
+interval = 1
+def time_cb(data):
+    if data.data - current_time >= interval:
+        for name in actuator_names:
+            values[name] = requests[name]
+        for name in sensor_names:
+            publishers[name].publish(values[name])

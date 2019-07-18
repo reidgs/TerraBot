@@ -68,7 +68,7 @@ def generate_subscribers():
     for name in actuator_names:
         sub_name = name + "_input"
         cb = generate_cb(name)
-        subscribers[name] = rospy.Subscriber(sub_name, sub_types[name], cb)
+        subscribers[name] = rospy.Subscriber(sub_name, from_stu[name], cb)
 
 ###Start of program
 try:
@@ -98,8 +98,17 @@ rospy.init_node('relay', anonymous = True)
 generate_publishers()
 generate_subscribers()
 
+time_pub = rospy.Publisher("time", Float32, queue_size = 100)
+
 if (verbose):
     print("Spinning...")
 
-rospy.spin()
+while not rospy.core.is_shutdown():
+    time_pub.publish(time.time())
+    rospy.rostime.wallsleep(.01)
+
+if (verbose):
+    print("Spinning...")
+
+#rospy.spin()
 
