@@ -3,9 +3,7 @@
 #mock file of student
 import rospy
 import subprocess
-from std_msgs.msg import Int32
-from std_msgs.msg import Bool
-from std_msgs.msg import String
+from std_msgs.msg import Int32, Bool, String
 import time
 
 light = 0
@@ -13,9 +11,7 @@ led_level = 0
 hum  = 0
 w_level = 3
 
-def get_time():
-    return time.time()
-
+time_now = 0
 light_time = 0
 cam_time = 0
 
@@ -26,6 +22,8 @@ npump_pub = rospy.Publisher("npump_input", Bool, latch = True, queue_size = 100)
 apump_pub = rospy.Publisher("apump_input", Bool, latch = True, queue_size = 100)
 led_pub = rospy.Publisher("led_input", Int32, latch = True, queue_size = 100)
 fan_pub = rospy.Publisher("fan_input", Bool, latch = True, queue_size = 100)
+
+ping_pub = rospy.Publisher("ping", Bool, latch = True, queue_size = 100)
 
 def humid_reaction(data):
     global hum
@@ -48,14 +46,22 @@ def tds_reaction(data):
 def cam_reaction(data):
     print ("picture taken\t" + data.data)
 
+def time_cb(data):
+    global time_now
+    time_now = data.data
+
+
 temp_sensor = rospy.Subscriber("temp_output", Int32, temp_reaction)
 humid_sensor = rospy.Subscriber("humid_output", Int32, humid_reaction)
 light_sensor = rospy.Subscriber("light_output", Int32, light_reaction)
 level_sensor = rospy.Subscriber("level_output", Int32, level_reaction)
 tds_sensor = rospy.Subscriber("tds_output", Int32, tds_reaction)
 
+time_sub = rospy.Subscriber("time", Float32, time_cb)
+
 while not rospy.core.is_shutdown():
-    time_now = get_time()
+    if time_now % 60 == 0:
+        ping_pub.publish(True)
 
     if time_now - light_time > 6 * 3600:
         led_level ^= 255

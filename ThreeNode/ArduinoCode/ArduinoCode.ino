@@ -34,7 +34,8 @@ int npump_pin = 11;
 int apump_pin = 10;
 int fan_pin = 8;
 
-float now = millis();
+float last_update = 0;
+float time_now = 0;
 float interval = 1000;
 
 long light_sum = 0;
@@ -42,6 +43,8 @@ long light_count = 0;
 
 long cur_sum = 0;
 long cur_count = 0;
+
+
 
 //Frequency Adjustment
 void freq_change( const std_msgs::Float32& cmd_msg){
@@ -71,6 +74,10 @@ void fan_activate(const std_msgs::Bool& cmd_msg){
   analogWrite(fan_pin, cmd_msg.data ? 255 : 0);
 }
 
+void time_cb(const std_msgs::Float32& cmd_msg){
+  time_now = cmd_msg.data;
+}
+
 // Actuators
 ros::Subscriber<std_msgs::Int32> led_sub("led_raw", &led_activate);
 ros::Subscriber<std_msgs::Bool> wpump_sub("wpump_raw", &wpump_activate);
@@ -78,6 +85,8 @@ ros::Subscriber<std_msgs::Bool> npump_sub("npump_raw", &npump_activate);
 ros::Subscriber<std_msgs::Bool> apump_sub("apump_raw", &apump_activate);
 ros::Subscriber<std_msgs::Bool> fan_sub("fan_raw",
 &fan_activate);
+ros::Subscriber<std_msgs::Float32> time_sub("time", &time_cb);
+
 
 // Sensor helpers
 int get_level() {
@@ -146,8 +155,8 @@ void loop(){
     cur_sum += analogRead(cur_pin);
   }
 
-  if(millis() - now > interval){
-      now = millis();
+  if(time_now - last_update > interval){
+      last_update = time_now;
       dht.read(&temperature, &humidity, NULL);
 
       temp_msg.data = temperature;
