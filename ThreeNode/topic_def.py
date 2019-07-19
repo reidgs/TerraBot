@@ -9,6 +9,7 @@ to_ard = {
     'npump' : Bool,
     'apump' : Bool,
     'fan'   : Bool,
+    'freq'  : Float32
 }
 
 from_ard = {
@@ -36,5 +37,6 @@ from_stu = {
     'npump' : Bool,
     'apump' : Bool,
     'fan'   : Bool,
+    'freq'  : Float32
 }
 

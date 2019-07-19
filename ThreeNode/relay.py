@@ -2,13 +2,15 @@
 import os
 import rospy
 import interference as interf
-from topic_def import sensor_names, actuator_names, to_stu, to_ard, from_stu, from_ard, pub_types, sub_types
+from topic_def import sensor_names, actuator_names, to_stu, to_ard, from_stu, from_ard
 from std_msgs.msg import Int32,Bool,Float32,String
-import getopt, sys
+import argparse
 import time
 
 verbose = False
 log = False
+simulate = False
+
 log_files = {}
 publishers = {}
 subscribers = {}
@@ -23,7 +25,7 @@ def usage():
 def gen_log_files():
     global log_files
 
-    prefix = time.strftime("%y_%m_%d_%H%M%S_")
+    prefix = time.strftime("%Y%m%d_%H%M%S") + ("_sim" if simulate else "")
     os.makedirs("Log/Log_%s" % prefix)
 
     for name in sensor_names + actuator_names:
@@ -71,28 +73,18 @@ def generate_subscribers():
         subscribers[name] = rospy.Subscriber(sub_name, from_stu[name], cb)
 
 ###Start of program
-try:
-    opts, args = getopt.getopt(sys.argv[1:], "hlv", ["help"])
+parser = argparse.ArgumentParser(description = "relay parser for Autonomous Systems")
+parser.add_argument('-v', '--verbose', action = 'store_true')
+parser.add_argument('-l', '--log', action = 'store_true')
+parser.add_argument('-s', '--simulate', action = 'store_true')
+args = parser.parse_args()
 
-except getopt.GetoptError as err:
-    # print help information and exit:
-    print(err) # will print something like "option -a not recognized"
-    usage()
-    sys.exit(2)
+verbose = args.verbose
+log = args.log
+simulate = args.simulate
 
-for o, a in opts:
-
-    if o == "-v":
-        verbose = True
-    elif o in ("-h", "--help"):
-        usage()
-        sys.exit()
-    elif o in ("-l"):
-        log = True
-        gen_log_files()
-    else:
-        assert False, "unhandled option"
-
+if log:
+    gen_log_files()
 
 rospy.init_node('relay', anonymous = True)
 generate_publishers()
@@ -103,12 +95,8 @@ time_pub = rospy.Publisher("time", Float32, queue_size = 100)
 if (verbose):
     print("Spinning...")
 
+
 while not rospy.core.is_shutdown():
     time_pub.publish(time.time())
     rospy.rostime.wallsleep(.01)
-
-if (verbose):
-    print("Spinning...")
-
-#rospy.spin()
 

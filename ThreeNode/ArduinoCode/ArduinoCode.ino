@@ -35,7 +35,7 @@ int apump_pin = 10;
 int fan_pin = 8;
 
 float now = millis();
-float interval = 100;
+float interval = 1000;
 
 long light_sum = 0;
 long light_count = 0;
@@ -116,6 +116,7 @@ void setup(){
   pinMode(npump_pin, OUTPUT);
   pinMode(apump_pin, OUTPUT);
   pinMode(fan_pin, OUTPUT);
+  pinMode(lb_pin, OUTPUT);
 
   nh.initNode();
   nh.subscribe(freq_sub);

@@ -2,13 +2,12 @@ import rospy
 from std_msgs.msg import Int32,Bool,Float32,String
 from topic_def import sensor_names, actuator_names, to_ard, from_ard
 
+values = {}
+
 def generate_values():
     global values
-    global requests
     for name in actuator_names + sensor_names:
         values[name] = 0
-    for name in actuator_names:
-        requests[name]=0
 
 def generate_publishers():
     global publishers
@@ -17,8 +16,9 @@ def generate_publishers():
         publishers[name] = rospy.Publisher(
                             pub_name, from_ard[name],
                             latch = True, queue_size = 100)
+
 def update_request(name, data):
-    requests[name] = data.data
+    values[name] = data.data
 
 def generate_subscribers():
     global subscribers
@@ -37,7 +37,7 @@ for n in sensor_names + actuator_names:
     callback_dict[n] = nothing
 
 def light_update():
-    values['light'] = levels[led]
+    values['light'] = values['led']
 
 time_update['light'] = light_update
 
