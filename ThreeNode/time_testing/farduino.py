@@ -12,7 +12,7 @@ def generate_values():
 def generate_publishers():
     global publishers
     for name in sensor_names:
-        pub_name = name + "_output"
+        pub_name = name + "_raw"
         publishers[name] = rospy.Publisher(
                             pub_name, from_ard[name],
                             latch = True, queue_size = 100)
@@ -23,30 +23,48 @@ def update_request(name, data):
 def generate_subscribers():
     global subscribers
     for name in actuator_names:
-        sub_name = name + "_input"
+        sub_name = name + "_raw"
         cb = lambda data: update_request(name, data)
         subscribers[name] = rospy.Subscriber(sub_name, to_ard[name], cb)
 
 
-time_update = {}
+#time_update = {}
 
-def nothing(data):
-    True
+#def nothing(data):
+ #   True
 
-for n in sensor_names + actuator_names:
-    callback_dict[n] = nothing
+#what is this
+#for n in sensor_names + actuator_names:
+ #   callback_dict[n] = nothing
 
 def light_update():
     values['light'] = values['led']
 
-time_update['light'] = light_update
+def level_update():
+    values['level'] = values['wpump']
 
+def tds_update():
+    values['tds'] = values['npump']
 
-current_time = 0
+def hum_update():
+    values['humid'] = values['level'] + values['fan']
+
+def temp_update():
+    values['temp'] = values['fan']
+
+def cur_update():
+    values['cur'] = 'idk'
+
+#what is this
+#time_update['light'] = light_update
+
+#how to set /sim_time parameter..?
 interval = 1
-def time_cb(data):
-    if data.data - current_time >= interval:
+while  not rospy.core.is_shutdown():
+    if rospy.get_time() - current_time >= interval:
+        #update sensors (calculations)
         for name in actuator_names:
-            values[name] = requests[name]
+            values[name] = globals()[name + '_update']()
+        #publishing sensor data
         for name in sensor_names:
             publishers[name].publish(values[name])
