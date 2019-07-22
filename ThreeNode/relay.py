@@ -1,9 +1,12 @@
 #!/usr/bin/env python
-import os
+import os, sys
+import subprocess as sp
+import signal
 import rospy
 import interference as interf
-from topic_def import sensor_names, actuator_names, to_stu, to_ard, from_stu, from_ard
+from topic_def import *
 from std_msgs.msg import Int32,Bool,Float32,String
+from rosgraph_msgs.msg import Clock
 import argparse
 import time
 
@@ -15,13 +18,6 @@ log_files = {}
 publishers = {}
 subscribers = {}
 
-def usage():
-    print("relay function for Autonomous Systems")
-    print("-h -l -v ")
-    print("-h\thelp")
-    print("-l\tlog")
-    print("-v\tverbose")
-
 def gen_log_files():
     global log_files
 
@@ -31,6 +27,9 @@ def gen_log_files():
     for name in sensor_names + actuator_names:
         file_name = "Log/Log_%s/%s_log.csv" % (prefix, name)
         log_files[name] = open(file_name, 'w+', 0)
+
+def log_print(string):
+    print("%s%s"%(time.strftime("[%Y%m%d %H:%M:%S]: "),string))
 
 def generate_publishers():
     global publishers
@@ -53,7 +52,7 @@ def cb_generic(name, data):
         log_file.write(str(time.time()) + ", " + str(data.data) + "\n")
         log_file.flush()
         if (verbose):
-            print ("Logging %s data" % name)
+            log_print ("Logging %s data" % name)
     edited = interf.get_inter(name)(data.data)
     publishers[name].publish(edited)
 
@@ -86,17 +85,50 @@ simulate = args.simulate
 if log:
     gen_log_files()
 
+### Spawn subprocesses
+
+core_log = open("Log/roscore.log", "a+", 1)
+relay_log = open("Log/relay.log", "a+", 1)
+student_log = open("Log/student.log", "a+", 1)
+
+#sys.stdout = relay_log
+#sys.stderr = relay_log
+core_p = sp.Popen("roscore", stdout = core_log, stderr = core_log)
+if not simulate:
+    serial_log = open("Log/rosserial.log", "a+", 1)
+    serial_p = sp.Popen(["rosrun", "rosserial_arduino", "serial_node.py", "/dev/ttyACM0"],
+        stdout = serial_log, stderr = serial_log)
+else:
+    #TODO: start simulator with log 
+    pass
+
+
+### Begin relay node
 rospy.init_node('relay', anonymous = True)
 generate_publishers()
 generate_subscribers()
 
-time_pub = rospy.Publisher("time", Float32, queue_size = 100)
+clock_pub = rospy.Publisher("clock", Clock, latch = True, queue_size = 100)
+
 
 if (verbose):
-    print("Spinning...")
+    log_print("Starting student file...")
 
+
+student_p = sp.Popen(["python", "student.py"],
+        stdout = student_log, stderr = student_log)
+
+if (verbose):
+    log_print("Spinning...")
+
+t = rospy.Time(0)
 
 while not rospy.core.is_shutdown():
-    time_pub.publish(time.time())
-    rospy.rostime.wallsleep(.01)
+    clock_pub.publish(t if simulate else rospy.get_rostime()) 
+    if (student_p.poll() != None):
+        log_print("student restarting...")
+        student_p = sp.Popen(["python", "student.py"],
+                stdout = student_log, stderr = student_log)
+    rospy.sleep(0.01)
+
 

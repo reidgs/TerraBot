@@ -13,11 +13,10 @@ led_level = 0
 hum  = 0
 w_level = 3
 
-def get_time():
-    return time.time()
 
 light_time = 0
-cam_time = 0
+cam_time = -123423140
+rospy.set_param("use_sim_time", True)
 
 rospy.init_node("student", anonymous = True)
 
@@ -55,7 +54,7 @@ level_sensor = rospy.Subscriber("level_output", Int32, level_reaction)
 tds_sensor = rospy.Subscriber("tds_output", Int32, tds_reaction)
 
 while not rospy.core.is_shutdown():
-    time_now = get_time()
+    time_now = rospy.get_time()
 
     if time_now - light_time > 6 * 3600:
         led_level ^= 255
@@ -63,12 +62,12 @@ while not rospy.core.is_shutdown():
         led_pub.publish(led_level)
 
     if time_now - cam_time > 1800:
-        time_stamp = "Photos/" + str(time.time()) + ".jpg"
+        time_stamp = "Photos/" + str(rospy.get_time()) + ".jpg"
         subprocess.call("raspistill -n -md 2 -awb off -awbg 1,1 -ss 30000 -o %s" % time_stamp, shell = True)
         cam_time = time_now
 
     fan_pub.publish(True if hum > 70 else False)
     wpump_pub.publish(True if w_level == 0 else False)
-    rospy.rostime.wallsleep(1)
+    rospy.sleep(1)
 
 
