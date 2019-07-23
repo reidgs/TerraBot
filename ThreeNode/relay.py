@@ -99,7 +99,7 @@ if not simulate:
     serial_p = sp.Popen(["rosrun", "rosserial_arduino", "serial_node.py", "/dev/ttyACM0"],
         stdout = serial_log, stderr = serial_log)
 else:
-    #TODO: start simulator with log 
+    #TODO: start simulator with log
     pass
 
 
@@ -121,10 +121,9 @@ student_p = sp.Popen(["python", "student.py"],
 if (verbose):
     log_print("Spinning...")
 
-t = rospy.Time(0)
 
 while not rospy.core.is_shutdown():
-    clock_pub.publish(t if simulate else rospy.get_rostime()) 
+    clock_pub.publish(rospy.get_rostime())
     if (student_p.poll() != None):
         log_print("student restarting...")
         student_p = sp.Popen(["python", "student.py"],

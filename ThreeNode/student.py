@@ -3,7 +3,7 @@
 #mock file of student
 import rospy
 import subprocess
-from std_msgs.msg import Int32, Bool, String
+from std_msgs.msg import Float32, Int32, Bool, String
 import time
 
 light = 0
@@ -56,7 +56,7 @@ def time_cb(data):
 temp_sensor = rospy.Subscriber("temp_output", Int32, temp_reaction)
 humid_sensor = rospy.Subscriber("humid_output", Int32, humid_reaction)
 light_sensor = rospy.Subscriber("light_output", Int32, light_reaction)
-level_sensor = rospy.Subscriber("level_output", Int32, level_reaction)
+level_sensor = rospy.Subscriber("level_output", Float32, level_reaction)
 tds_sensor = rospy.Subscriber("tds_output", Int32, tds_reaction)
 
 time_sub = rospy.Subscriber("time", Float32, time_cb)
