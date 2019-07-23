@@ -28,15 +28,6 @@ def generate_subscribers():
         subscribers[name] = rospy.Subscriber(sub_name, to_ard[name], cb)
 
 
-#time_update = {}
-
-#def nothing(data):
- #   True
-
-#what is this
-#for n in sensor_names + actuator_names:
- #   callback_dict[n] = nothing
-
 def light_update():
     values['light'] = values['led']
 
@@ -55,10 +46,7 @@ def temp_update():
 def cur_update():
     values['cur'] = 'idk'
 
-#what is this
-#time_update['light'] = light_update
-
-#how to set /sim_time parameter..?
+rospy.set_param("use_sim_time", True)
 interval = 1
 while  not rospy.core.is_shutdown():
     if rospy.get_time() - current_time >= interval:
