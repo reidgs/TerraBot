@@ -35,7 +35,7 @@ def time_cb(data):
     global time_now
     if data.data - time_now >= interval:
         time_now = data.data
-        rospy.loginfo(True) 
+        
         #update sensors after calculations
         light_update()
         level_update()
