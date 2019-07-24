@@ -19,10 +19,8 @@ SimpleDHT22 dht(DHT_pin);
 
 int light_pin = A0;
 
-int l1_pin = A15;
-int l2_pin = A14;
-int l3_pin = A13;
-int lb_pin = A12;
+int trig_pin = 48;
+int echo_pin = 50;
 
 int tds_pin = A1;
 int cur_pin = A2;
@@ -43,7 +41,6 @@ long light_count = 0;
 
 long cur_sum = 0;
 long cur_count = 0;
-
 
 
 //Frequency Adjustment
@@ -89,13 +86,15 @@ ros::Subscriber<std_msgs::Float32> time_sub("time", &time_cb);
 
 
 // Sensor helpers
-int get_level() {
-  digitalWrite(lb_pin, HIGH);
-  lvl =  analogRead(l3_pin) > 100 ? 3 :
-         analogRead(l2_pin) > 100 ? 2 :
-         analogRead(l1_pin) > 100 ? 1 : 0;
-  digitalWrite(lb_pin, LOW);
-  return lvl;
+float get_level() {
+  float duration, distance;
+  digitalWrite(trig_pin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig_pin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig_pin, LOW);
+  duration = float(pulseIn(echo_pin, HIGH));
+  return duration / 5.82;
 }
 
 // Sensors
@@ -109,7 +108,7 @@ ros::Publisher temp_pub("temp_raw", &temp_msg);
 std_msgs::Int32 light_msg;
 ros::Publisher light_pub("light_raw", &light_msg);
 
-std_msgs::Int32 level_msg;
+std_msgs::Float32 level_msg;
 ros::Publisher level_pub("level_raw", &level_msg);
 
 std_msgs::Int32 tds_msg;
@@ -125,7 +124,8 @@ void setup(){
   pinMode(npump_pin, OUTPUT);
   pinMode(apump_pin, OUTPUT);
   pinMode(fan_pin, OUTPUT);
-  pinMode(lb_pin, OUTPUT);
+  pinMode(trig_pin, OUTPUT);
+  pinMode(echo_pin, INPUT);
 
   nh.initNode();
   nh.subscribe(freq_sub);
@@ -155,8 +155,8 @@ void loop(){
     cur_sum += analogRead(cur_pin);
   }
 
-  if(time_now - last_update > interval){
-      last_update = time_now;
+  if(millis() - last_update > interval){
+      last_update += interval;
       dht.read(&temperature, &humidity, NULL);
 
       temp_msg.data = temperature;
