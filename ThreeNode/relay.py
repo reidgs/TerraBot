@@ -107,9 +107,14 @@ else:
 rospy.init_node('relay', anonymous = True)
 generate_publishers()
 generate_subscribers()
+last_ping = 0
+
+def ping_cb(data):
+    global last_ping, simulate 
+    last_ping = t if simulate else rospy.get_rostime()
 
 clock_pub = rospy.Publisher("clock", Clock, latch = True, queue_size = 100)
-
+ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
 
 if (verbose):
     log_print("Starting student file...")
@@ -123,12 +128,18 @@ if (verbose):
 
 t = rospy.Time(0)
 while not rospy.core.is_shutdown():
+    
     clock_pub.publish(t if simulate else rospy.get_rostime())
-    t += rospy.Duration(0.01)
-    if (student_p.poll() != None):
+   
+    cur_time = t if simulate else rospy.get_time()
+    if (student_p.poll() != None) or \
+            ((cur_time - 30) % 300 == 0 and cur_time - last_pinged > 60):
+        
         log_print("student restarting...")
         student_p = sp.Popen(["python", "student.py"],
                 stdout = student_log, stderr = student_log)
+
+    t += rospy.Duration(0.01)
     rospy.sleep(0.001)
 
 

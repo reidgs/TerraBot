@@ -58,6 +58,9 @@ tds_sensor = rospy.Subscriber("tds_output", Int32, tds_reaction)
 
 while not rospy.core.is_shutdown():
     time_now = rospy.get_time()
+    
+    if time_now % 300 == 0:
+        ping_pub.publish(True)
 
     if time_now - light_time > 12 * 3600:
         led_level ^= 255
