@@ -14,7 +14,7 @@ w_level = 3
 
 time_now = 0
 light_time = 0
-cam_time = -123423140
+cam_time = 0
 rospy.set_param("use_sim_time", True)
 
 rospy.init_node("student", anonymous = True)
@@ -75,7 +75,7 @@ while not rospy.core.is_shutdown():
         cam_time = time_now
 
     fan_pub.publish(True if hum > 70 else False)
-    wpump_pub.publish(True if w_level == 0 else False)
-    rospy.sleep(1)
+    wpump_pub.publish(True if w_level < 2 else False)
+    rospy.sleep(0.01)
 
 
