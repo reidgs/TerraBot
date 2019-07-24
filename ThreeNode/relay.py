@@ -13,6 +13,7 @@ import time
 verbose = False
 log = False
 simulate = False
+t = rospy.Time(0)
 
 log_files = {}
 publishers = {}
@@ -47,9 +48,10 @@ def generate_publishers():
                             latch = True, queue_size = 100)
 
 def cb_generic(name, data):
+    global t
     if (log):
         log_file = log_files[name]
-        log_file.write(str(time.time()) + ", " + str(data.data) + "\n")
+        log_file.write(str(t) + ", " + str(data.data) + "\n")
         log_file.flush()
         if (verbose):
             log_print ("Logging %s data" % name)
@@ -108,7 +110,7 @@ rospy.init_node('relay', anonymous = True)
 generate_publishers()
 generate_subscribers()
 
-clock_pub = rospy.Publisher("clock", Clock, latch = True, queue_size = 100)
+clock_pub = rospy.Publisher("clock", Clock, latch = True, queue_size = 1000)
 
 
 if (verbose):
@@ -123,12 +125,14 @@ if (verbose):
 
 t = rospy.Time(0)
 while not rospy.core.is_shutdown():
-    clock_pub.publish(t if simulate else rospy.get_rostime())
+    if simulate:
+        t = rospy.get_rostime()
+    clock_pub.publish(t)
     t += rospy.Duration(0.01)
     if (student_p.poll() != None):
         log_print("student restarting...")
         student_p = sp.Popen(["python", "student.py"],
                 stdout = student_log, stderr = student_log)
-    rospy.sleep(0.001)
+    rospy.sleep(0.01)
 
 

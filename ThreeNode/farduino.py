@@ -88,10 +88,8 @@ values['freq'] = 10
 while  not rospy.core.is_shutdown():
 
     if rospy.get_time() - cur_time >= 1.0/values['freq']:
-
-        cur_time = rospy.get_time()
         cur_interval = 1.0/values['freq']
-        print([(k,values[k]) for k in values.keys()])
+        cur_time += cur_interval
         #update sensors (calculations) + publish
         for sensor in sensor_names:
             globals()[sensor + '_update'](cur_interval)
