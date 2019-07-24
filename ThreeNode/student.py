@@ -58,6 +58,9 @@ tds_sensor = rospy.Subscriber("tds_output", Int32, tds_reaction)
 
 while not rospy.core.is_shutdown():
     time_now = rospy.get_time()
+    
+    if time_now % 300 == 0:
+        ping_pub.publish(True)
 
     if time_now - light_time > 12 * 3600:
         led_level ^= 255
@@ -70,7 +73,7 @@ while not rospy.core.is_shutdown():
         cam_time = time_now
 
     fan_pub.publish(True if hum > 70 else False)
-    wpump_pub.publish(True if w_level > 100 else False)
+    wpump_pub.publish(False if w_level > 100 else True)
     rospy.sleep(1)
 
 

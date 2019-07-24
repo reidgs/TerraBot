@@ -33,8 +33,10 @@ def generate_publishers():
 def update_request(name, data):
     global values
     values[name] = data.data
+
 def generate_cb(name):
     return (lambda data: update_request(name,data))
+
 def generate_subscribers():
     global subscribers
     for name in actuator_names:
@@ -76,22 +78,21 @@ def cur_update(cur_interval):
     values['cur'] += pump_current if values['apump'] else 0
     values['cur'] += fan_current if values['fan'] else 0
 
-rospy.set_param("use_sim_time", True)
 rospy.init_node('Simulator', anonymous=True)
-cur_time = 0
 
 generate_values()
 generate_publishers()
 generate_subscribers()
 values['freq'] = 10
+cur_time = rospy.get_time()
 
-while  not rospy.core.is_shutdown():
-
+while not rospy.core.is_shutdown():
+    
     if rospy.get_time() - cur_time >= 1.0/values['freq']:
         cur_interval = 1.0/values['freq']
-        cur_time += cur_interval
+        cur_time = rospy.get_time()
         #update sensors (calculations) + publish
         for sensor in sensor_names:
             globals()[sensor + '_update'](cur_interval)
             publishers[sensor].publish(farduino_types[sensor](values[sensor]))
-
+        print(values)
