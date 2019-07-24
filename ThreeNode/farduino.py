@@ -25,8 +25,10 @@ def update_request(name, data):
     global values
     print (name)
     values[name] = data.data
+
 def generate_cb(name):
     return (lambda data: update_request(name,data))
+
 def generate_subscribers():
     global subscribers
     for name in actuator_names:
