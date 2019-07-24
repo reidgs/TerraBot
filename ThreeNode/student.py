@@ -3,7 +3,7 @@
 #mock file of student
 import rospy
 import subprocess
-from std_msgs.msg import Int32, Bool, String, Float32
+from std_msgs.msg import Float32, Int32, Bool, String
 import time
 
 light = 0
