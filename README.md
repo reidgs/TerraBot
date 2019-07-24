@@ -1,3 +1,31 @@
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [Autonomous Agents TerraBot Mk1](#autonomous-agents-terrabot-mk1)
+    - [Overview](#overview)
+        - [The System](#the-system)
+        - [Whats in the box?](#whats-in-the-box)
+    - [Understanding ROS](#understanding-ros)
+    - [Setting up the virtual machine](#setting-up-the-virtual-machine)
+        - [Installing Virtual Box](#installing-virtual-box)
+        - [Downloading the Operating system](#downloading-the-operating-system)
+        - [Downloading the Simulator](#downloading-the-simulator)
+        - [Downloading ROS](#downloading-ros)
+    - [Running the Simulator](#running-the-simulator)
+    - [Understanding the System](#understanding-the-system)
+        - [Misc Notes](#misc-notes)
+            - [Health Ping](#health-ping)
+            - [Frequency](#frequency)
+            - [Time](#time)
+    - [Understanding the Simulator](#understanding-the-simulator)
+        - [Running the Simulator](#running-the-simulator-1)
+        - [Camera](#camera)
+        - [Time](#time-1)
+    - [Uploading to the Greenhouse](#uploading-to-the-greenhouse)
+    - [Grading](#grading)
+
+<!-- markdown-toc end -->
+
 # Autonomous Agents TerraBot Mk1 #
 
 ## Overview ##
