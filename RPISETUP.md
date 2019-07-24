@@ -3,7 +3,7 @@
 ## Installing OS ##
 [here](https://ubuntu-mate.org/download/)  
 Use balenaEtcher to write to the sd card  
-(desktop is not 100% needed but makes setup a little early)
+(desktop is not 100% needed but makes setup a little easier)
 
 
 ## Setting up ##
@@ -11,11 +11,12 @@ Use balenaEtcher to write to the sd card
 Connect to CMU Secure (WPA2 Enterprise and PEAP security) No certificate
 needed. Use you Andrew ID and password. 
 
-Name the computer AS-House-1 (or whichever number house)
-make password robotanist
+Name the computer AA-House-1 (or whichever number house).  
+Make password robotanist
 
 Log in automatically
 
+`sudo apt update`  
 `raspi-config` and enable camera and SSH
 
 ### SSH ###
@@ -34,6 +35,8 @@ may be necessary.
 install ROS from [here](https://wiki.ros.org/melodic/Installation/Ubuntu)
 (easiest to do over SSH)
 sudo apt install the following packages
+| Name                          |
+|-------------------------------|
 | build-essential               |
 | git                           |
 | arduino                       |
@@ -57,7 +60,9 @@ Remember it is a restricted repository so you need to have permission.
 for consistency sake download it into the documents folder as well.
 
 Make sure that the code in the Make file for the ArduinoCode is correct.
-(check that USER\_LIB_PATH = /home/as-house-1/Documents/sketchbook)
+(check that USER\_LIB_PATH = /home/ad-house-1/Documents/sketchbook)
+
+
 
 
 
