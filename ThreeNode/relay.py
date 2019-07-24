@@ -110,8 +110,8 @@ generate_subscribers()
 last_ping = 0
 
 def ping_cb(data):
-    global last_ping, simulate 
-    last_ping = t if simulate else rospy.get_rostime()
+    global last_ping, simulate, t 
+    last_ping = t if simulate else rospy.get_time()
 
 clock_pub = rospy.Publisher("clock", Clock, latch = True, queue_size = 100)
 ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
@@ -132,9 +132,10 @@ while not rospy.core.is_shutdown():
     clock_pub.publish(t if simulate else rospy.get_rostime())
    
     cur_time = t if simulate else rospy.get_time()
-    if (student_p.poll() != None) or \
-            ((cur_time - 30) % 300 == 0 and cur_time - last_pinged > 60):
-        
+    if  cur_time - last_pinged > 3600:
+        student_p.terminate()
+
+    if (student_p.poll() != None):
         log_print("student restarting...")
         student_p = sp.Popen(["python", "student.py"],
                 stdout = student_log, stderr = student_log)
