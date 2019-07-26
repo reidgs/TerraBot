@@ -15,11 +15,12 @@ pump_current = 10
 fan_current = 5
 
 
-
 def generate_values():
     global values
     for name in actuator_names + sensor_names:
-        values[name] = farduino_types[name](0)
+        values[name] = init_sensors[name]
+    for name in actuator_names: 
+        values[name] = init_actuators[name]
 
 def generate_publishers():
     global publishers
@@ -49,15 +50,11 @@ def light_update(cur_interval):
 
 def level_update(cur_interval):
     values['level'] += cur_interval * flow_rate if bool(values['wpump']) else 0
-    values['level'] -= evap_rate * cur_interval
-    if values['level'] < 0:
-        values['level'] = 0
+    values['level'] -= evap_rate * cur_interval if values['level'] > 0 else 0
 
 def tds_update(cur_interval):
     values['tds'] += (cur_interval * flow_rate) if values['npump'] else 0
-    values['tds'] -= evap_rate * cur_interval
-    if values['tds'] < 0:
-        values['tds'] = 0
+    #convert amt of ntr to tds (consider water vol)
 
 def humid_update(cur_interval):
     values['humid'] += -cur_interval if bool(values['fan']) else cur_interval
@@ -95,4 +92,3 @@ while not rospy.core.is_shutdown():
         for sensor in sensor_names:
             globals()[sensor + '_update'](cur_interval)
             publishers[sensor].publish(farduino_types[sensor](values[sensor]))
-        print(values)

@@ -20,23 +20,6 @@ from_ard = {
     'humid'   : Int32,
 }
 
-farduino_types = {
-    'led'   : int,
-    'wpump' : bool,
-    'npump' : bool,
-    'apump' : bool,
-    'fan'   : bool,
-    'freq'  : float,
-    'tds'   : int,
-    'cur'   : int,
-    'light' : int,
-    'level' : float,
-    'temp'  : int,
-    'humid'   : int,
-}
-
-
-
 
 to_stu = {
     'tds'   : Int32,
