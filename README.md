@@ -35,17 +35,7 @@ with recently sprouted seeds. The goal of the assignment is to provide the best 
 for the plants during a two week grow cycle. Each cycle will come with new challenges, so
 be prepared!  
 
-### The System ###
-The physical greenhouse you are assigned is only part of the system which you will be 
-working with, which is in turn a small part of the system the entire class will working with!  
-In control of each box there is a aurdino managing the sensors and actuators and a raspberry
-pi where you will run your code. At the beginning of the grow cycle you will be allowed
-to upload your code onto your assigned raspberry pi. If, during any point of the grow cycle,
-you feel as if you must re-upload your code you are free to do so at a penalty. The point
-of this assignment is for the greenhouse to be self sustaining, so it would not make sense
-to constantly be changing the program!
-
-### Whats in the box? ###
+### Sensors and Actuators ###
 In order to help maintain a healthy environment for the plants you will need to be able 
 to understand the sensor data to determine the current state and activate the actuators
 to improve that state when necessary.
@@ -61,22 +51,47 @@ given tasks. These include:
 | Temperature (temporary)     | Int32        | Fan (fan)             | Bool         |
 | Humidity (humid)            | Int32        |                       |              |
 
+TODO WHAT DOES EACH SENSOR MEASURE, WHAT ARE ALLOWABLE/EXPECTED VALUES OF THE SENSOR, WHAT FREQUENCY DO THEY CAPTURE DATA IF KNOWN, IS THERE A DIFFERENCE BETWEEN INT32 and Int32?
 
+TODO WHAT DOES EACH ACTUATOR DO, WHAT ARE THE LED ALLOWABLE VALUES
 
-## Understanding ROS ##
-In order for you to communicate to and from the machine we will be using the Robot Operating System
-(ROS). For the purposes of this assignment we will only be scratching the surface of what ROS is 
-capable of. We will be Using ROS mostly for its messaging features. Each sensor and actuator will
-send information over a ROS topic of a specific type (shown above). In order to work with the system
-your code will create a ROS node which subscribes to each of the sensors topics and publishes to 
-actuators.  
-A visual is included in the "understanding the system" section to help further explain.  
-The Terrorium consists of three nodes, one for an arduino, one for a relay to translate data,
-and one that you will include. In order to get your code working with the ROS messaging system
-follow the tutorial on their web-site [here](https://wiki.ros.org/ROS/Tutorials).
+QUESTION - SHOULD WE PUBLISH A MESSAGE OF THE CURRENT ACTUATOR STATE? IF THINGS CRASH AND THE LEDs ARE ON, HOW DOES THE AGENT KNOW THAT?
+
+### TerraBot Software Architecture ###
+An arduino communicates directly with these sensors and actuators and forwards that data to a raspberry pi. 
+The raspberry pi, running ROS (Robot Operating System), receives the sensor data, cleans it, and makes it available
+for your AI agent in the formats above. Additionally, it receives your agent's actuator commands as defined above, 
+and relays them back to the arduino. 
+
+![system_diagram](./system_diagram.jpg)
+
+The above image shows an overview of the connections between the different nodes in the system.
+Notice all the topics connected to the student, as those are the ones you will be using to 
+regulate your greenhouse.
+
+## ROS Communication ##
+The TerraBot consists of three ROS <i>nodes</i> or processes, one for the arduino communication with the raw data, 
+one hardware feed for publishing the clean data and listening for actuation commands, 
+and one that you will write for your agent. 
+The hardware feed <i>publishes</i> sensor data and <i>subscribes</i> to actuation commands over ROS topics 
+of specific types (shown above). 
+Your agent will be a ROS <i>node</i> which subscribes to each of the sensors topics, plans actions, and publishes to 
+actuators.   
+In order to get your code working with the ROS messaging system
+follow the tutorial on the ROS website [here](https://wiki.ros.org/ROS/Tutorials).
 You may find the other tutorials there helpful as well! Be sure to check 
 your code to make sure that it is publishing and subscribing as you intend when bug fixing.
-## Setting up the virtual machine ##
+
+<!--## Understanding the System ##
+As mentioned earlier, there are three ROS nodes in this system: the one you will provide, a relay node,
+and the arduino. All communication to and from the arduino is done via the relay node, meaning you should
+never access the same topics as the arduino. In the relay the data is translated from its raw input
+to a more usable scale (or vice versa), this is done via an external interference file. In order to
+reliably simulate errors which may happen by chance if run in the real world the interference file
+may be malicious causing the relay to act incorrectly.-->
+
+
+## Getting Started ##
 Because of the nature of the assignment it is impossible to run any tests of your code before
 or between grow cycles. In response you could simply change your code once it is on the machines,
 but each time you do you will be penalized! In order to avoid those penalties and allow you to
@@ -88,6 +103,8 @@ ubuntu virtual machine.
 ### Installing Virtual Box ###
 Follow the instructions [here](https://www.wikihow.com/Install-VirtualBox) for installing 
 VirtualBox, a software which help you easily create virtual machines.
+
+QUESTION - I THINK WE CAN ZIP UP THE WHOLE OS, WILL THESE INSTRUCTIONS CHANGE FOR THAT?
 
 ### Downloading the Operating system ###
 We recommend that you download ubuntu 32 bit [here](https://ubuntu-mate.org/download/) to most
@@ -103,21 +120,14 @@ On an ubuntu virtual machine please follow the instruction
 Keep in mind that only the Desktop install is neccesary. Depending on your internet connection
 this step may take a while.
 
+### Connecting to the Raspberry Pi ###
+
+WE SHOULD INCLUDE THE 
+
 ## Running the Simulator ##
+TODO RUNNING THE SIMULATOR
 
-## Understanding the System ##
-As mentioned earlier, there are three ROS nodes in this system: the one you will provide, a relay node
-, and the arduino. All communication to and from the arduino is done via the relay node, meaning you should
-never access the same topics as the aurdino. In the relay the data is translated from its raw input
-to a more usable scale (or vice versa), this is done via an external interference file. In order to
-reliably simulate errors which may happen by chance if run in the real world the interference file
-may be malicious causing the relay to act incorrectly.
 
-![system_diagram](./system_diagram.jpg)
-
-The above image shows an overview of the connections between the different nodes in the system.
-Notice all the topics connected to the student, as those are the ones you will be using to 
-regulate your greenhouse.
 
 ### Misc Notes ###
 In order to allow for greater control of the system and to ensure the accuracy of the simulator
