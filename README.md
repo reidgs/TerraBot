@@ -46,7 +46,7 @@ given tasks. These include:
 
 | Sensors                     | Message Type | Actuators             | Message Type |
 |-----------------------------|--------------|-----------------------|--------------|
-| Total disolved solids (tds) | INT32        | LED (led)             | Int32        |
+| Total disolved solids (tds) | Int32        | LED (led)             | Int32        |
 | Current (cur)               | Float32      | Water Pump (wpump)    | Bool         |
 | Light (light)               | Int32        | Nutrient Pump (npump) | Bool         |
 | Water Level (level)         | Int32        | Air Pump (apump)      | Bool         |
