@@ -1,6 +1,8 @@
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
+UPDATE TOC!
+
 - [Autonomous Agents TerraBot Mk1](#autonomous-agents-terrabot-mk1)
     - [Overview](#overview)
         - [The System](#the-system)
@@ -51,6 +53,8 @@ given tasks. These include:
 | Temperature (temporary)     | Int32        | Fan (fan)             | Bool         |
 | Humidity (humid)            | Int32        |                       |              |
 
+WHAT ABOUT CAMERA SENSOR?
+
 TODO WHAT DOES EACH SENSOR MEASURE, WHAT ARE ALLOWABLE/EXPECTED VALUES OF THE SENSOR, WHAT FREQUENCY DO THEY CAPTURE DATA IF KNOWN, IS THERE A DIFFERENCE BETWEEN INT32 and Int32?
 
 TODO WHAT DOES EACH ACTUATOR DO, WHAT ARE THE LED ALLOWABLE VALUES
@@ -92,44 +96,47 @@ may be malicious causing the relay to act incorrectly.-->
 
 
 ## Getting Started ##
-Because of the nature of the assignment it is impossible to run any tests of your code before
-or between grow cycles. In response you could simply change your code once it is on the machines,
-but each time you do you will be penalized! In order to avoid those penalties and allow you to
-test your code, we have included a simulator which closely mimics an actual greenhouse. In order
-to run a simulated version of the system you will need to have ROS installed on your 
-own machine. Because of the OS restrictions we believe that the best way to do this is with a
-ubuntu virtual machine.
+We are providing a simulator to test your code before deploying it on the TerraBot. Follow the instructions to get
+started with the simulator and also to log into your raspberry pi. 
 
-### Installing Virtual Box ###
-Follow the instructions [here](https://www.wikihow.com/Install-VirtualBox) for installing 
-VirtualBox, a software which help you easily create virtual machines.
-
-QUESTION - I THINK WE CAN ZIP UP THE WHOLE OS, WILL THESE INSTRUCTIONS CHANGE FOR THAT?
-
-### Downloading the Operating system ###
-We recommend that you download ubuntu 32 bit [here](https://ubuntu-mate.org/download/) to most
-accurately mimic the experience that you will have on the pi. (any ubuntu distro should be valid
-though this is the only one we have tested)
-
-### Downloading the Simulator ###
-TODO Find out how students will get the simulator
-
-### Downloading ROS ###
-On an ubuntu virtual machine please follow the instruction
-[here](https://wiki.ros.org/melodic/Installation/Ubuntu_) for installing ROS.
+### TerraBot Simulator Installation ###
+The simulator and ROS require Ubuntu distributions. We suggest installing a VirtualBox VM on your computer so that you 
+can implement your agent.
+- VirtualBox: [Instructions here](https://www.wikihow.com/Install-VirtualBox) for installing 
+VirtualBox.
+- Ubuntu: download ubuntu 32 bit [here](https://ubuntu-mate.org/download/) to most
+accurately mimic the software on the pi. (any ubuntu distro should be valid though this is the only one we have tested)
+- ROS: [Instructions here](https://wiki.ros.org/melodic/Installation/Ubuntu_) for installing ROS.
 Keep in mind that only the Desktop install is neccesary. Depending on your internet connection
 this step may take a while.
-
-### Connecting to the Raspberry Pi ###
-
-WE SHOULD INCLUDE THE 
+- TerraBot Simulator 
+QUESTION - I THINK WE CAN ZIP UP THE WHOLE OS, WILL THESE INSTRUCTIONS CHANGE FOR THAT?
+TODO Find out how students will get the simulator
 
 ## Running the Simulator ##
-TODO RUNNING THE SIMULATOR
+The simulator works in a way almost identical to the three node process which will run when your
+code is uploaded to the raspberry pi. The code for your node and the relay node is the exact same
+as it would be on the pi. Instead of having an arduino node, however, the simulator comes with a 
+farduino (fake arduino) node which mimics the actions of the arduino node. This difference should
+in no way affect the way your code operates, and should not be noticeable from the perspective
+of your node.
+
+In order to run the simulator, run the relay.py with the -s flag, the multiplier you wish for the speed, 
+and the time which you would like it to start at (seconds since epoch).  
+For example if I wanted to run the simulator at 1x speed at time=0 I would run:  
+>`python relay.py -s 1 0`  
+For error checking it is recommended that you include the -l flag for logging as well.  
+EX: 5x speed with logging
+>`python relay.py -l -s 5 0`  
+
+### Connecting to the Raspberry Pi ###
+WE SHOULD INCLUDE THE INSTRUCTIONS FOR GETTING STARTED WITH THE ACTUAL PI, WHERE IS CODE LOCATED, WHERE SHOULD THEY MOVE THEIR CODE, HOW DO THEY RUN IT, ETC
 
 
+### Uploading Code ###
 
-### Misc Notes ###
+
+## Deployment and Testing ##
 In order to allow for greater control of the system and to ensure the accuracy of the simulator
 there are a few extra processes which you have access to. On top of the previously mentioned sensors
 and actuators there will also be a health ping, time, and frequency node which you must consider.
@@ -139,49 +146,26 @@ Because of the long lasting nature of this project it is possible that there may
 errors in your code which cause it to crash. Crashed code means no control over the system and 
 certain doom for your plants! In order to avoid this outcome we have included restart functionality.
 When the relay begins it will run your code and listen for a ping. If your ping is not heard within
-a set amount of time (default 60 min) it will assume your program has crashed and restart it.
+a set amount of time (default 60 min) it will assume your program has crashed and restart it automatically.
 
 #### Frequency ####
 The frequency topic is used to determine how often the arduino will read from the sensors. 
 The more often you read the more accurate your data will be, but the more power you will draw.
-Notice that this setting is variable, meaning it can be changed over the course of the program.
+Notice that this setting is variable, meaning it can be changed over the course of the deployment.
 
 #### Time ####
-There are many reasons why you may want to be able to access the time in your code, but it is also
-important that the execution of the simulator is identical to the relay (even if sped up). 
-To ensure consistency between the two your code should refrain from referencing outside functions
+One of the most convenient aspects of the simulator is its ability to manipulate time to 
+suit the users needs. By default the simulator will begin running at 1x speed at the epoch,
+but that can be configured with the -s flag.
+
+It is also important that the execution of the simulator is identical to the relay (even if sped up). 
+To ensure consistency between your code in simulation and on TerraBot, you should refrain from referencing outside functions
 (OS time.time()) and should instead refer to the ROS time topic via rospy.get_time(). 
-
-## Understanding the Simulator ##
-The simulator works in a way almost identical to the three node process which will run when your
-code is uploaded to the raspberry pi. The code for your node and the relay node is the exact same
-as it would be on the pi. Instead of having an arduino node, however, the simulator comes with a 
-farduino (fake arduino) node which mimics the actions of the arduino node. This difference should
-in no way affect the way your code operates, and should not be noticeable from the perspective
-of your node.
-
-### Running the Simulator ###
-In order to get the simulator all you need to do is run the relay.py with the -s flag, the
-multiplier you wish for the speed, and the time which you would like it to start at (seconds since
-epoch).  
-For example if I wanted to run the simulator at 1x speed at epoch I would run:  
->`python relay.py -s 1 0`  
-For error checking it is recommended that you include the -l flag for logging as well.  
-EX: 5x speed with logging
->`python relay.py -l -s 5 0`  
-
 
 ### Camera ###
 The one aspect of the system which we are not able to simulate is the camera. Any call to 
 raspistill will result in an error as there is no camera connected to the virtual machine
 and raspistill is not installed.
 
-### Time ###
-One of the most convenient aspects of the simulator is its ability to manipulate time to 
-suit the users needs. By default the simulator will begin running at 1x speed at the epoch,
-but that can be configured with the -s flag.
-
-## Uploading to the Greenhouse ##
-
-## Grading ##
+CAN WE RENAME raspistill? It looks like rapist...
 
