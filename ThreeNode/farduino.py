@@ -17,7 +17,7 @@ fan_current = 5
 
 def generate_values():
     global values
-    for name in actuator_names + sensor_names:
+    for name in sensor_names:
         values[name] = init_sensors[name]
     for name in actuator_names: 
         values[name] = init_actuators[name]
