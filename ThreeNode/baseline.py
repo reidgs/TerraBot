@@ -1,22 +1,6 @@
 #!/usr/bin/env python
 
 
-#python types
-farduino_types = {
-    'led'   : int,
-    'wpump' : bool,
-    'npump' : bool,
-    'apump' : bool,
-    'fan'   : bool,
-    'freq'  : float,
-    'tds'   : int,
-    'cur'   : int,
-    'light' : int,
-    'level' : float,
-    'temp'  : int,
-    'humid' : int,
-}
-
 #initial values
 
 init_internals = {

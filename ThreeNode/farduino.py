@@ -2,12 +2,44 @@
 import rospy
 from std_msgs.msg import Int32,Bool,Float32,String
 from topic_def import *
-from baseline import *
+import argparse
+
+parser = argparse.ArgumentParser(description = "simulator parser for Autonomous Systems")
+parser.add_argument('-g', '--grade', action = 'store_true')
+args = parser.parse_args()
+grading = args.grade
+
+if grading:
+    try:
+        from grader1 import *
+    except:
+        return 'no grading file found'
+else:
+    try:
+        from baseline import *
+    except: 
+        return 'no baseline file found'
 
 actuator_vars = init_actuators
 internal_vars = init_internals
 publishers = {}
 subscribers = {}
+
+farduino_types = {
+    'led'   : int,
+    'wpump' : bool,
+    'npump' : bool,
+    'apump' : bool,
+    'fan'   : bool,
+    'freq'  : float,
+    'tds'   : int,
+    'cur'   : int,
+    'light' : int,
+    'level' : float,
+    'temp'  : int,
+    'humid' : int,
+}
+
 
 ###CONSTANTS
 evap_rate = 0.1 #ml/s
@@ -38,7 +70,6 @@ def generate_subscribers():
         subscribers[name] = rospy.Subscriber(sub_name,
                                 to_ard[name],
                                 generate_cb(actuator_vars, name))
-
 
 def amb_light(time):
     return 0
