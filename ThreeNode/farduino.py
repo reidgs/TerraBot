@@ -2,8 +2,10 @@
 import rospy
 from std_msgs.msg import Int32,Bool,Float32,String
 from topic_def import *
+from baseline import *
 
-values = {}
+actuator_vars = init_actuators
+internal_vars = init_internals
 publishers = {}
 subscribers = {}
 
@@ -15,13 +17,6 @@ pump_current = 10
 fan_current = 5
 
 
-def generate_values():
-    global values
-    for name in sensor_names:
-        values[name] = init_sensors[name]
-    for name in actuator_names: 
-        values[name] = init_actuators[name]
-
 def generate_publishers():
     global publishers
     for name in sensor_names:
@@ -31,64 +26,118 @@ def generate_publishers():
                             latch = True, queue_size = 100)
 
 #used when generating subs
-def update_request(name, data):
-    global values
-    values[name] = data.data
+def update_keyval(dictionary, name, data):
+    dictionary[name] = data.data
 
-def generate_cb(name):
-    return (lambda data: update_request(name,data))
+def generate_cb(dictionary, name):
+    return (lambda data: update_keyval(dictionary,name,data))
 
 def generate_subscribers():
     global subscribers
     for name in actuator_names:
         sub_name = name + "_raw"
 
-        subscribers[name] = rospy.Subscriber(sub_name, to_ard[name], generate_cb(name))
+        subscribers[name] = rospy.Subscriber(sub_name,
+                                to_ard[name],
+                                generate_cb(actuator_vars, name))
 
+    for name in internals.keys():
+        sub_name = name + "_override"
+        subscribers[name] = rospy.Subscriber(sub_name,
+                                Float32,
+                                internal_cb(internal_vars, name))
+
+### INTERNAL UPDATE FUNCTIONS ###
 def light_update(cur_interval):
-    values['light'] = values['led'] * 3
+    internal_vars['total_light'] = actuator_vars['led'] * 3
 
-def level_update(cur_interval):
-    values['level'] += cur_interval * flow_rate if bool(values['wpump']) else 0
-    values['level'] -= evap_rate * cur_interval if values['level'] > 0 else 0
 
-def tds_update(cur_interval):
-    values['tds'] += (cur_interval * flow_rate) if values['npump'] else 0
+def volume_update(cur_interval):
+    internal_vars['volume'] += cur_interval * flow_rate if actuator_vars['wpump']) else 0
+    internal_vars['volume'] -= evap_rate * cur_interval if internal_vars['volume'] > 0 else 0
+
+def nutrient_update(cur_interval):
+    internal_vars['nutrient'] += (cur_interval * flow_rate) if actuator_vars['npump'] else 0
     #convert amt of ntr to tds (consider water vol)
 
-def humid_update(cur_interval):
-    values['humid'] += -cur_interval if bool(values['fan']) else cur_interval
-    if values['humid'] < 50 :
-        values['humid'] = 50
-    if values['humid'] > 100 :
-        values['humid'] = 100
+def humidity_update(cur_interval):
+    internal_vars['humidity'] += -cur_interval if bool(actuator_vars['fan']) else cur_interval
+    if internal_vars['humidity'] < 50 :
+        internal_vars['humidity'] = 50
+    if internal_vars['humidity'] > 100 :
+        internal_vars['humidity'] = 100
+
+def temperature_update(cur_interval):
+    internal_vars['temperature'] = 1 if values['fan'] else 0
+
+def current_update(cur_interval):
+    internal_vars['current'] = 512
+    internal_vars['current'] += led_current * actuator_vars['led']
+    internal_vars['current'] += pump_current if actuator_vars['wpump'] else 0
+    internal_vars['current'] += pump_current if actuator_vars['npump'] else 0
+    internal_vars['current'] += pump_current if actuator_vars['apump'] else 0
+    internal_vars['current'] += fan_current if actuator_vars['fan'] else 0
+
+update_funcs = {
+    'volume'   : volume_update,
+    'nutrient' : nutrient_update,
+    'total_light' : light_update,
+    'temperature' : temperature_update,
+    'humidity'  : humidity_update,
+    'current' : current_update
+}
 
 
-def temp_update(cur_interval):
-    values['temp'] = 1 if values['fan'] else 0
+### INTERNAL TO SENSOR TRANSLATION ###
+def get_tds():
+    return internal_vars['nutrient'] / internal_vars['volume']
 
-def cur_update(cur_interval):
-    values['cur'] = 512
-    values['cur'] += led_current * values['led']
-    values['cur'] += pump_current if values['wpump'] else 0
-    values['cur'] += pump_current if values['npump'] else 0
-    values['cur'] += pump_current if values['apump'] else 0
-    values['cur'] += fan_current if values['fan'] else 0
+def get_cur():
+    return internal_vars['current']
+
+def get_light():
+    return internal_vars['total_light']
+
+def get_level():
+    return internal_vars['volume'] / 10
+
+def get_temp():
+    return internal_vars['temperature']
+
+def get_humid():
+    return internal_vars['humidity']
+
+sensor_funcs = {
+    'tds'   : get_tds,
+    'cur'   : get_cur,
+    'light' : get_light,
+    'level' : get_level,
+    'temp'  : get_temp,
+    'humid'   : get_humid,
+}
+
 
 rospy.init_node('Simulator', anonymous=True)
 
-generate_values()
 generate_publishers()
 generate_subscribers()
 values['freq'] = 10
-cur_time = rospy.get_time()
+last_pub = rospy.get_time()
+last_update = rospy.get_time()
 
 while not rospy.core.is_shutdown():
-    
-    if rospy.get_time() - cur_time >= 1.0/values['freq']:
-        cur_interval = 1.0/values['freq']
-        cur_time = rospy.get_time()
+    now = rospy.get_time()
+    cur_interval = now - last_update
+    for f in update_funcs:
+        f(cur_interval)
+
+    last_pub = rospy.get_time()
+
+    if rospy.get_time() - last_pub >= 1.0/values['freq']:
+        last_pub_time = rospy.get_time()
         #update sensors (calculations) + publish
         for sensor in sensor_names:
-            globals()[sensor + '_update'](cur_interval)
-            publishers[sensor].publish(farduino_types[sensor](values[sensor]))
+            publishers[sensor].publish(
+                farduino_types[sensor](
+                    sensor_funcs[sensor])
+                )

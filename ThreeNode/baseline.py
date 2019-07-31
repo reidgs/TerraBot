@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-#types
+
+#python types
 farduino_types = {
     'led'   : int,
     'wpump' : bool,
@@ -16,23 +17,24 @@ farduino_types = {
     'humid' : int,
 }
 
-
 #initial values
-init_sensors = {
-    'tds'   : 0
-    'cur'   : 0,
-    'level' : 0.0,
-    'light' : 0,
-    'temp'  : 0
-    'humid' : 0
+
+init_internals = {
+    'volume'   : 0.0,
+    'nutrient'   : 0.0,
+    'ambient_light' : 0.0,
+    'total_light' : 0.0,
+    'temperature' : 0.0,
+    'humidity'  : 0.0,
+    'current' : 0.0
 }
 
 init_actuators = {
-    'led'   : 0
-    'wpump' : False
-    'npump' : False
-    'apump' : False
-    'fan'   : False
+    'led'   : 0,
+    'wpump' : False,
+    'npump' : False,
+    'apump' : False,
+    'fan'   : False,
     'freq'  : 1.0
 }
 
