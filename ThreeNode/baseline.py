@@ -20,13 +20,12 @@ farduino_types = {
 #initial values
 
 init_internals = {
-    'volume'   : 0.0,
-    'nutrient'   : 0.0,
-    'ambient_light' : 0.0,
-    'total_light' : 0.0,
+    'volume'      : 0.0,
+    'nutrient'    : 0.0,
+    'light'       : 0.0,
     'temperature' : 0.0,
-    'humidity'  : 0.0,
-    'current' : 0.0
+    'humidity'    : 0.0,
+    'current'     : 0.0
 }
 
 init_actuators = {
@@ -35,7 +34,7 @@ init_actuators = {
     'npump' : False,
     'apump' : False,
     'fan'   : False,
-    'freq'  : 1.0
+    'freq'  : 10.0
 }
 
 
