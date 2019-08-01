@@ -9,11 +9,11 @@ init_internals = {
     'current'     : 0.0
 }
 
-init_actuators = { 
-    'wpump' : True, 
+init_actuators = {
+    'wpump' : True,
     'apump' : True,
     'led'   : 100,
-    'fan'   : True
+    'fan'   : True,
     'npump' : False
 }
 
@@ -22,6 +22,6 @@ expected_actuators = {
     'wpump' : True,
     'apump' : True,
     'led'   : 100,
-    'fan'   : True
+    'fan'   : True,
     'npump' : False
 }
