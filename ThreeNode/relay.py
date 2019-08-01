@@ -10,11 +10,16 @@ from rosgraph_msgs.msg import Clock
 import argparse
 import time
 
+### Default values for the optional variables
 verbose = False
+grade = False
 log = False
 simulate = False
+still_running = True
+
 global clock_time
 
+### lists which will be populated based on the topic_def.py
 log_files = {}
 publishers = {}
 subscribers = {}
@@ -92,26 +97,24 @@ grade = args.grade
 if log:
     gen_log_files()
 
-### Start roscore
-
+### Open logs for roscore and relay
 core_log = open("Log/roscore.log", "a+", 0)
 relay_log = open("Log/relay.log", "a+", 0)
 
-#sys.stdout = relay_log
-#sys.stderr = relay_log
+### Start up roscore, redirecting output to logging files
 core_p = sp.Popen("roscore", stdout = core_log, stderr = core_log)
 
 ### Begin relay node
 rospy.init_node('relay', anonymous = True)
 rospy.set_param("use_sim_time", True)
 
-clock_time = rospy.Time(0)
-last_ping = rospy.Time(0)
 generate_publishers()
 generate_subscribers()
 
 clock_pub = rospy.Publisher("clock", Clock, latch = True, queue_size = 1000)
 
+### Health Ping callback function
+### Records the most recent ping
 def ping_cb(data):
     global last_ping, simulate, clock_time 
     last_ping = clock_time if simulate else rospy.get_rostime()
@@ -120,54 +123,63 @@ ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
 
 ### Spawn subprocesses
 
+### Simulator starts up Student and Farduino 
+#TODO add baseline functionality
 if simulate:
     sim_log = open("Log/simulator.log", "a+", 0)
+    ### Initiates the Simulator and redirects output
     sim_p = sp.Popen(["python", "farduino.py"],
         stdout = sim_log, stderr = sim_log)
     student_log = open("Log/student.log", "a+", 0)
+    ### Initiates the Student file and redirects output
     student_p = sp.Popen(["python", "student.py"],
         stdout = student_log, stderr = student_log)
 
-
-elif grade: 
-    grader_p = spawn_grading(grading_files[cur])
-
-else:
+### Running the real arduino proccess
+elif not grade:
     serial_log = open("Log/rosserial.log", "a+", 0)
+    ### Initiates the Arduino and redirects output
     serial_p = sp.Popen(["rosrun", "rosserial_arduino",
         "serial_node.py", "/dev/ttyACM0"],
         stdout = serial_log, stderr = serial_log)
     student_log = open("Log/student.log", "a+", 0)
+    ### Initiates the Student file and redirects output
     student_p = sp.Popen(["python", "student.py"],
         stdout = student_log, stderr = student_log)
 
-
-if (verbose):
-    log_print("Starting student file...")
 
 
 if (verbose):
     log_print("Spinning...")
 
 
+### Loop for the entire system, should only ever break if grading
+while still_running:
+    ### TODO add grading functionality
+    if grade:
+        True
+    ### We must begin simulated time and health ping
+    clock_time = rospy.Time(0)
+    last_ping = rospy.Time(0) 
+    ### Loop for a single iteration of a grading scheme(infinite if not grading)
+    while not rospy.core.is_shutdown():
+        ### If not simulating get real time
+        if not simulate:
+            clock_time = rospy.get_rostime()
+        clock_pub.publish(clock_time)
+        ### TODO add grading functionality
+        if grade:
+            True
+        ### TODO Fix the ping so that it actually works
+        last_ping = clock_time
+        if  clock_time.to_sec() - last_ping.to_sec() > 3600:
+            log_print("no ping since %f, terminating..."%last_ping.to_sec())
+            student_p.terminate()
 
-
-while not rospy.core.is_shutdown():
-    if not simulate:
-        clock_time = rospy.get_rostime()
-    clock_pub.publish(clock_time)
-    
-    cur_time = clock_time
-    last_ping = clock_time
-    if  cur_time.to_sec() - last_ping.to_sec() > 3600:
-        log_print("no ping since %f, terminating..."%last_ping.to_sec())
-        student_p.terminate()
-
-    if (student_p.poll() != None):
-        log_print("student restarting...")
-        student_p = sp.Popen(["python", "student.py"],
-                stdout = student_log, stderr = student_log)
-    
-    clock_time += rospy.Duration(0.1)
-    rospy.sleep(0.1/speedup)
-
+        if (student_p.poll() != None):
+            log_print("student restarting...")
+            student_p = sp.Popen(["python", "student.py"],
+                    stdout = student_log, stderr = student_log)
+        
+        clock_time += rospy.Duration(0.1)
+        rospy.sleep(0.1/speedup)
