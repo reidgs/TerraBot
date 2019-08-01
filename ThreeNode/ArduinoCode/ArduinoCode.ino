@@ -9,8 +9,8 @@
 #include <std_msgs/Bool.h>
 #include <SimpleDHT.h>
 
-byte temperature = 0;
-byte humidity = 0;
+byte temperature;
+byte humidity;
 int lvl = 0;
 
 ros::NodeHandle  nh;
@@ -33,6 +33,7 @@ int apump_pin = 10;
 int fan_pin = 8;
 
 float last_update = 0;
+float last_dht = 0;
 float time_now = 0;
 float interval = 1000;
 
@@ -155,14 +156,19 @@ void loop(){
     cur_sum += analogRead(cur_pin);
   }
 
-  if(millis() - last_update > interval){
-      last_update += interval;
+  if(millis() - last_dht > 2500){
       dht.read(&temperature, &humidity, NULL);
+      last_dht = millis();
+  }
 
-      temp_msg.data = temperature;
+  if(millis() - last_update > interval){
+      last_update = millis();
+      if (temperature)
+        temp_msg.data = temperature;
       temp_pub.publish(&temp_msg);
 
-      humid_msg.data = humidity;
+      if (humidity) 
+        humid_msg.data = humidity;
       humid_pub.publish(&humid_msg);
 
       light_msg.data = light_sum / light_count;
