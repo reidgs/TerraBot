@@ -78,13 +78,16 @@ parser = argparse.ArgumentParser(description = "relay parser for Autonomous Syst
 parser.add_argument('-v', '--verbose', action = 'store_true')
 parser.add_argument('-l', '--log', action = 'store_true')
 parser.add_argument('-s', '--simulate', action = 'store_true')
+parser.add_argument('-g', '--grade', action = 'store_true')
 parser.add_argument('--speedup', default = 1, type = float)
+
 args = parser.parse_args()
 
 verbose = args.verbose
 log = args.log
 simulate = args.simulate
 speedup = args.speedup
+grade = args.grade
 
 if log:
     gen_log_files()
@@ -117,26 +120,37 @@ ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
 
 ### Spawn subprocesses
 
-if not simulate:
+if simulate:
+    sim_log = open("Log/simulator.log", "a+", 0)
+    sim_p = sp.Popen(["python", "farduino.py"],
+        stdout = sim_log, stderr = sim_log)
+    student_log = open("Log/student.log", "a+", 0)
+    student_p = sp.Popen(["python", "student.py"],
+        stdout = student_log, stderr = student_log)
+
+
+elif grade: 
+    grader_p = spawn_grading(grading_files[cur])
+
+else:
     serial_log = open("Log/rosserial.log", "a+", 0)
     serial_p = sp.Popen(["rosrun", "rosserial_arduino",
         "serial_node.py", "/dev/ttyACM0"],
         stdout = serial_log, stderr = serial_log)
-else:
-    sim_log = open("Log/simulator.log", "a+", 0)
-    sim_p = sp.Popen(["python", "farduino.py"],
-        stdout = sim_log, stderr = sim_log)
+    student_log = open("Log/student.log", "a+", 0)
+    student_p = sp.Popen(["python", "student.py"],
+        stdout = student_log, stderr = student_log)
 
 
 if (verbose):
     log_print("Starting student file...")
 
-student_log = open("Log/student.log", "a+", 0)
-student_p = sp.Popen(["python", "student.py"],
-        stdout = student_log, stderr = student_log)
 
 if (verbose):
     log_print("Spinning...")
+
+
+
 
 while not rospy.core.is_shutdown():
     if not simulate:
