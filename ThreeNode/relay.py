@@ -25,6 +25,8 @@ log_files = {}
 publishers = {}
 subscribers = {}
 
+actuator_vars = {}
+
 def gen_log_files():
     global log_files
 
@@ -61,6 +63,9 @@ def cb_generic(name, data):
         log_file.flush()
         if (verbose):
             log_print ("Logging %s data" % name)
+    if grade:
+        actuator_vars[name] = data.data
+
     edited = interf.get_inter(name)(data.data)
     publishers[name].publish(edited)
 
@@ -176,16 +181,34 @@ while still_running:
     ### Loop for a single iteration of a grading scheme(infinite if not grading)
     while not rospy.core.is_shutdown():
         ### If not simulating get real time
-        print("spin")
+        #print("spin")
         if not simulate and not grade:
             clock_time = rospy.get_rostime()
         clock_pub.publish(clock_time)
         ### TODO add grading functionality
         if grade:
-            grader.run_command(clock_time)
+            task = 'unaccomplished'
+            cur_cmd = grader.run_command(clock_time)
+            start_time = clock_time
             if grader.finished:
                 print("break")
                 break
+            instr,actu,state,dur = cmd[0],cmd[1],cmd[2],cmd[3]
+            if instr == 'WAIT':
+                while clock_time <= start_time + dur:
+                    if actuator_vars[actu] == state:
+                        task = 'accomplished'
+                        break
+            elif instr == 'ENSURE':
+                while clock_time <= start_time + dur:
+                    if actuator_vars[actu] == state:
+                        task = 'accomplished'
+                    else:
+                        task = 'unaccmplished'
+                        break
+            print(task)
+
+
 
         ### TODO Fix the ping so that it actually works
         last_ping = clock_time

@@ -1,5 +1,5 @@
 baseline.py
 
-WAIT,"wpump",4
-ENSURE,"!wpump",4
+WAIT,wpump,True,4
+ENSURE,led,100,4
 QUIT
