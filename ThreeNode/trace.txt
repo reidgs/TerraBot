@@ -1,5 +1,7 @@
 baseline.py
 
-WAIT,wpump,True,4
-ENSURE,led,100,4
+START
+WAIT,grader_vars['wpump'],4
+ENSURE,grader_vars['wpump'],4
+WAIT,grader_vars['led']==255,20
 QUIT

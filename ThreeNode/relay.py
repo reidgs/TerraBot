@@ -25,8 +25,6 @@ log_files = {}
 publishers = {}
 subscribers = {}
 
-actuator_vars = {}
-
 def gen_log_files():
     global log_files
 
@@ -64,7 +62,7 @@ def cb_generic(name, data):
         if (verbose):
             log_print ("Logging %s data" % name)
     if grade:
-        actuator_vars[name] = data.data
+        grader.grader_vars[name] = data.data
 
     edited = interf.get_inter(name)(data.data)
     publishers[name].publish(edited)
@@ -100,6 +98,7 @@ log = args.log
 simulate = args.mode == "sim"
 speedup = args.speedup
 grade = args.mode == "grade"
+mode = args.mode
 
 if log:
     gen_log_files()
@@ -144,7 +143,7 @@ if simulate:
         stdout = student_log, stderr = student_log)
 
 ### Running the real arduino proccess
-elif not grade:
+elif mode == "serial":
     serial_log = open("Log/rosserial.log", "a+", 0)
     ### Initiates the Arduino and redirects output
     serial_p = sp.Popen(["rosrun", "rosserial_arduino",
@@ -187,27 +186,11 @@ while still_running:
         clock_pub.publish(clock_time)
         ### TODO add grading functionality
         if grade:
-            task = 'unaccomplished'
             cur_cmd = grader.run_command(clock_time)
             start_time = clock_time
             if grader.finished:
                 print("break")
                 break
-            instr,actu,state,dur = cmd[0],cmd[1],cmd[2],cmd[3]
-            if instr == 'WAIT':
-                while clock_time <= start_time + dur:
-                    if actuator_vars[actu] == state:
-                        task = 'accomplished'
-                        break
-            elif instr == 'ENSURE':
-                while clock_time <= start_time + dur:
-                    if actuator_vars[actu] == state:
-                        task = 'accomplished'
-                    else:
-                        task = 'unaccmplished'
-                        break
-            print(task)
-
 
 
         ### TODO Fix the ping so that it actually works
