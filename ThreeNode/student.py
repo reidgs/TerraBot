@@ -7,14 +7,11 @@ from std_msgs.msg import Float32, Int32, Bool, String
 import time
 
 light = 0
-led_level = 0
+led_level = 255
 hum  = 0
 w_level = 3
 
 
-time_now = 0
-light_time = 0
-cam_time = 0
 rospy.set_param("use_sim_time", True)
 
 rospy.init_node("student", anonymous = True)
@@ -55,14 +52,17 @@ light_sensor = rospy.Subscriber("light_output", Int32, light_reaction)
 level_sensor = rospy.Subscriber("level_output", Float32, level_reaction)
 tds_sensor = rospy.Subscriber("tds_output", Int32, tds_reaction)
 
+time_now = rospy.get_time()
+light_time = rospy.get_time()
+cam_time = 0
 
 while not rospy.core.is_shutdown():
     time_now = rospy.get_time()
-    
+
     if time_now % 300 == 0:
         ping_pub.publish(True)
 
-    if time_now - light_time > 12 * 3600:
+    if time_now - light_time > 12:
         led_level ^= 255
         light_time = time_now
         led_pub.publish(led_level)
@@ -72,7 +72,7 @@ while not rospy.core.is_shutdown():
         subprocess.call("raspistill -n -md 2 -awb off -awbg 1,1 -ss 30000 -o %s" % time_stamp, shell = True)
         cam_time = time_now
 
-    fan_pub.publish(True if hum > 70 else False)
+    #fan_pub.publish(True if hum > 70 else False)
     wpump_pub.publish(False if w_level > 100 else True)
     rospy.sleep(1)
 

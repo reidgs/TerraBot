@@ -9,6 +9,7 @@ from std_msgs.msg import Int32,Bool,Float32,String
 from rosgraph_msgs.msg import Clock
 import argparse
 import time
+import grader
 
 ### Default values for the optional variables
 verbose = False
@@ -83,6 +84,7 @@ parser = argparse.ArgumentParser(description = "relay parser for Autonomous Syst
 parser.add_argument('-v', '--verbose', action = 'store_true')
 parser.add_argument('-l', '--log', action = 'store_true')
 parser.add_argument('-s', '--simulate', action = 'store_true')
+parser.add_argument('-m', '--mode', default = "serial")
 parser.add_argument('-g', '--grade', action = 'store_true')
 parser.add_argument('--speedup', default = 1, type = float)
 
@@ -90,9 +92,9 @@ args = parser.parse_args()
 
 verbose = args.verbose
 log = args.log
-simulate = args.simulate
+simulate = args.mode == "sim"
 speedup = args.speedup
-grade = args.grade
+grade = args.mode == "grade"
 
 if log:
     gen_log_files()
@@ -116,21 +118,22 @@ clock_pub = rospy.Publisher("clock", Clock, latch = True, queue_size = 1000)
 ### Health Ping callback function
 ### Records the most recent ping
 def ping_cb(data):
-    global last_ping, simulate, clock_time 
+    global last_ping, simulate, clock_time
     last_ping = clock_time if simulate else rospy.get_rostime()
 
 ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
 
 ### Spawn subprocesses
 
-### Simulator starts up Student and Farduino 
+### Simulator starts up Student and Farduino
 #TODO add baseline functionality
+student_log = open("Log/student.log", "a+", 0)
+
 if simulate:
     sim_log = open("Log/simulator.log", "a+", 0)
     ### Initiates the Simulator and redirects output
     sim_p = sp.Popen(["python", "farduino.py"],
         stdout = sim_log, stderr = sim_log)
-    student_log = open("Log/student.log", "a+", 0)
     ### Initiates the Student file and redirects output
     student_p = sp.Popen(["python", "student.py"],
         stdout = student_log, stderr = student_log)
@@ -142,7 +145,6 @@ elif not grade:
     serial_p = sp.Popen(["rosrun", "rosserial_arduino",
         "serial_node.py", "/dev/ttyACM0"],
         stdout = serial_log, stderr = serial_log)
-    student_log = open("Log/student.log", "a+", 0)
     ### Initiates the Student file and redirects output
     student_p = sp.Popen(["python", "student.py"],
         stdout = student_log, stderr = student_log)
@@ -157,19 +159,34 @@ if (verbose):
 while still_running:
     ### TODO add grading functionality
     if grade:
-        True
+        grader.open_trace("trace.txt")
+
+        student_p = sp.Popen(["python", "student.py"],
+            stdout = student_log, stderr = student_log)
+
+        sim_log = open("Log/simulator.log", "a+", 0)
+        ### Initiates the Simulator and redirects output
+        sim_p = sp.Popen(["python", "farduino.py", grader.bfile],
+            stdout = sim_log, stderr = sim_log)
+
+
     ### We must begin simulated time and health ping
     clock_time = rospy.Time(0)
-    last_ping = rospy.Time(0) 
+    last_ping = rospy.Time(0)
     ### Loop for a single iteration of a grading scheme(infinite if not grading)
     while not rospy.core.is_shutdown():
         ### If not simulating get real time
-        if not simulate:
+        print("spin")
+        if not simulate and not grade:
             clock_time = rospy.get_rostime()
         clock_pub.publish(clock_time)
         ### TODO add grading functionality
         if grade:
-            True
+            grader.run_command(clock_time)
+            if grader.finished:
+                print("break")
+                break
+
         ### TODO Fix the ping so that it actually works
         last_ping = clock_time
         if  clock_time.to_sec() - last_ping.to_sec() > 3600:
@@ -180,6 +197,13 @@ while still_running:
             log_print("student restarting...")
             student_p = sp.Popen(["python", "student.py"],
                     stdout = student_log, stderr = student_log)
-        
+
         clock_time += rospy.Duration(0.1)
         rospy.sleep(0.1/speedup)
+    #sim_p.terminate()
+    student_p.terminate()
+    reload(grader)
+    break;
+
+core_p.terminate()
+
