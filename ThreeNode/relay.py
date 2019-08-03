@@ -64,7 +64,7 @@ def cb_generic(name, data):
     if grade:
         grader.grader_vars[name] = data.data
 
-    edited = interf.get_inter(name)(data.data)
+    edited = interf.get_inter(name,clock_time)(data.data)
     publishers[name].publish(edited)
 
 def generate_cb(name):
@@ -102,6 +102,8 @@ mode = args.mode
 
 if log:
     gen_log_files()
+
+parse_interf('interf.txt')
 
 ### Open logs for roscore and relay
 core_log = open("Log/roscore.log", "a+", 0)

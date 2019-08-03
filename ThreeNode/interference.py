@@ -1,29 +1,66 @@
 import rospy
 from std_msgs.msg import Int32,Bool,Float32,String
-from topic_def import sensor_names, actuator_names
+from topic_def import *
 
+act_interf = {}
+schedules = {}
+next_update ={}
 
-
-#interference functions
-
-interf_dict = {}
+###interference functions###
 
 def identity(x):
     return x
 
-def light_inter(x):
-    return int(x*3.41+13.531)  #converted to lux
+def off(x):
+    return 0
 
-def cur_inter(x):
-    return (x-512)*.0491 #converted to amps
+def noise(x):
+    return x+10
 
 
+### default ###
 for n in sensor_names + actuator_names:
-    interf_dict[n] = identity
+    act_interf[n] = identity
+    schedules[n] = {}
+    
 
-interf_dict['light'] = light_inter
-interf_dict['cur'] = cur_inter
+def parse_interf(path):
+    global l
+    with open(path) as f:
+        lines = [l for l in f.read().splitlines() if l.strip()]
+    lst = [l.strip().split(",") for l in lines]
+    for l in lst:
+        schedules[l[1]][l[0]] = l[2]
+        next_update[l[1]] = min(schedules[l[1]], key=int) 
 
-def get_inter(name):
-    return interf_dict[name]
+states_funcs = {
+    'normal' : identity,
+    'noise'  : noise,
+    'off'    : off
+}
+
+
+
+### interf passthrough ###
+def get_inter(name, time):
+    if next_update[name] != -1 and \
+            time >= int(next_update[name]):
+        print(True)
+        state = schedules[name].pop(next_update[name])
+        next_update[name] = min(schedules[name], key=int) \
+                if len(schedules[name]) > 0 else -1
+        act_interf[name] = states_funcs[state]
+    return act_interf[name]
+
+
+
+
+###conversion functions###
+
+#def light_inter(x):
+ #   return int(x*3.41+13.531)  #converted to lux
+
+#def cur_inter(x):
+ #   return (x-512)*.0491 #converted to amps
+
 
