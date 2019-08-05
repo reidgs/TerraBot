@@ -58,6 +58,12 @@ regulate your greenhouse.
 
 ## ROS Communication ##
 
+In order to get your code working with the ROS messaging system,
+follow the tutorial on the ROS website [here](https://wiki.ros.org/ROS/Tutorials).
+Please read/skim the tutorials concerning ROS communication (Nodes, Topics, Publishers + Subscribers) to gain a general understanding of ROS.
+You may find the other tutorials there helpful as well.
+
+
 The TerraBot consists of three ROS *nodes* or processes, one for the arduino communication with the raw data,
 one hardware feed for publishing the clean data and listening for actuation commands,
 and one that you will write for your agent.
@@ -65,17 +71,37 @@ The hardware feed *publishes* sensor data and *subscribes* to actuation commands
 of specific types (shown above).
 Your agent will be a ROS *node* which subscribes to each of the sensors topics, plans actions, and publishes to
 actuators.
-In order to get your code working with the ROS messaging system
-follow the tutorial on the ROS website [here](https://wiki.ros.org/ROS/Tutorials).
-You may find the other tutorials there helpful as well! Be sure to check
+ 
+Be sure to check
 your code to make sure that it is publishing and subscribing as you intend when bug fixing.
 
 ## Understanding the System ##
 
-As mentioned earlier, there are three ROS nodes in this system: the one you will provide, a relay node,
-and the arduino. All communication to and from the arduino is done via the relay node, meaning you should
-never access the same topics as the arduino. In the relay the data is translated from its raw input
-to a more usable scale (or vice versa), this is done via an external interference file. In order to
+As mentioned earlier, there are three ROS nodes in this system: the student, which you will provide, the relay,
+and the arduino.
+
+### Student Node ###
+
+### Relay Node ###
+Running the relay will start up a total of 4 nodes. First the master node, roscore, and then the three other nodes: student, relay and Arduino. 
+
+The relay relaies actuator data from the student node to the Arduino node:
+The relay subscribes to the topics to which the student node publishes. It also publishes to the topics to which the Arduino subscribes to.
+
+The realy also relains sensor data from the 
+
+It also publishes to the same topics 
+
+### Arduino Node ###
+Sensors and actuators are being controlled in the Arduino node:
+
+* The Arduino reads in all sensor data and translates them from raw values to more meaningful values that are then published to the Relay node. 
+* The Arduino also subscribes to topics containing data values that are published by the Relay node. These meaningful values are translated to its raw form, with which the Arduino can write to the actuators.
+
+All communication to and from the arduino is done via the relay node, meaning you should
+never access the same topics as the Arduino. 
+
+this is done via an external interference file. In order to
 reliably simulate errors which may happen by chance if run in the real world the interference file
 may be malicious causing the relay to act incorrectly.
 
