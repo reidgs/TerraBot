@@ -1,7 +1,3 @@
 0,wpump,off
-0,led,noise
-20,led,normal
 20,wpump,normal
-30,wpump,off
 10,wpump,off
-3,wpump,noise

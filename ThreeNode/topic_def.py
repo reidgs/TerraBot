@@ -13,7 +13,7 @@ to_ard = {
 
 from_ard = {
     'tds'   : Int32,
-    'cur'   : Int32,
+    'cur'   : Float32,
     'light' : Int32,
     'level' : Float32,
     'temp'  : Int32,

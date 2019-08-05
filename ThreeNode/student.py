@@ -7,7 +7,7 @@ from std_msgs.msg import Float32, Int32, Bool, String
 import time
 
 light = 0
-led_level = 255
+led_level = 0
 hum  = 0
 w_level = 3
 
@@ -53,7 +53,7 @@ level_sensor = rospy.Subscriber("level_output", Float32, level_reaction)
 tds_sensor = rospy.Subscriber("tds_output", Int32, tds_reaction)
 
 time_now = rospy.get_time()
-light_time = rospy.get_time()
+light_time = rospy.get_time() - 13 * 3600
 cam_time = 0
 
 while not rospy.core.is_shutdown():
@@ -62,7 +62,7 @@ while not rospy.core.is_shutdown():
     if time_now % 300 == 0:
         ping_pub.publish(True)
 
-    if time_now - light_time > 12:
+    if time_now - light_time > 12 * 3600:
         led_level ^= 255
         light_time = time_now
         led_pub.publish(led_level)

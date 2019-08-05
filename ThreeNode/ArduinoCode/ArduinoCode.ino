@@ -57,7 +57,7 @@ void led_activate( const std_msgs::Int32& cmd_msg){
 }
 
 void wpump_activate(const std_msgs::Bool& cmd_msg){
-  analogWrite(wpump_pin, cmd_msg.data ? 255 : 0);
+  analogWrite(wpump_pin, cmd_msg.data ? 100 : 0);
 }
 
 void npump_activate(const std_msgs::Bool& cmd_msg){
@@ -115,7 +115,7 @@ ros::Publisher level_pub("level_raw", &level_msg);
 std_msgs::Int32 tds_msg;
 ros::Publisher tds_pub("tds_raw", &tds_msg);
 
-std_msgs::Int32 cur_msg;
+std_msgs::Float32 cur_msg;
 ros::Publisher cur_pub("cur_raw", &cur_msg);
 
 
@@ -145,6 +145,9 @@ void setup(){
   nh.advertise(cur_pub);
 }
 
+float to_amp(int analog) {
+  return (float(analog) - 512) * .0491;
+}
 void loop(){
   if (light_count < 1000) {
     light_count++;
@@ -182,7 +185,7 @@ void loop(){
       tds_msg.data = analogRead(tds_pin);
       tds_pub.publish(&tds_msg);
 
-      cur_msg.data = cur_sum / cur_count;
+      cur_msg.data = to_amp(cur_sum / cur_count);
       cur_sum = 0;
       cur_count = 0;
       cur_pub.publish(&cur_msg);

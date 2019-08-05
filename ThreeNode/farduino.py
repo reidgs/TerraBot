@@ -28,7 +28,7 @@ farduino_types = {
     'fan'   : bool,
     'freq'  : float,
     'tds'   : int,
-    'cur'   : int,
+    'cur'   : float,
     'light' : int,
     'level' : float,
     'temp'  : int,
@@ -39,9 +39,9 @@ farduino_types = {
 ###CONSTANTS
 evap_rate = 0.1 #ml/s
 flow_rate = 30.0 #ml/s
-led_current = 0.25
-pump_current = 10
-fan_current = 5
+led_current = 3.2/255
+pump_current = .2
+fan_current = .06
 
 def generate_publishers():
     global publishers
