@@ -61,10 +61,10 @@ def cb_generic(name, data):
         log_file.flush()
         if (verbose):
             log_print ("Logging %s data" % name)
-    if grade:
-        grader.grader_vars[name] = data.data
 
     edited = interf.get_inter(name,clock_time)(data.data)
+    if grade:
+        grader.grader_vars[name] = edited
     publishers[name].publish(edited)
 
 def generate_cb(name):
@@ -99,7 +99,7 @@ simulate = args.mode == "sim"
 speedup = args.speedup
 grade = args.mode == "grade"
 mode = args.mode
-
+print(mode)
 if log:
     gen_log_files()
 
@@ -134,7 +134,7 @@ ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
 ### Simulator starts up Student and Farduino
 #TODO add baseline functionality
 student_log = open("Log/student.log", "a+", 0)
-
+student_p = None
 if simulate:
     sim_log = open("Log/simulator.log", "a+", 0)
     ### Initiates the Simulator and redirects output

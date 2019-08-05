@@ -153,7 +153,7 @@ while not rospy.core.is_shutdown():
         last_pub = rospy.get_time()
         #update sensors (calculations) + publish
         print("==========================")
-        print(rospy.get_rostime())
+        print(rospy.get_time())
         print(internal_vars)
         print(actuator_vars)
         for sensor in sensor_names:

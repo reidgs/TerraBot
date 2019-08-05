@@ -26,12 +26,12 @@ for n in sensor_names + actuator_names:
     
 
 def parse_interf(path=None):
-    global l
     if path == None:
         return 
     with open(path) as f:
-        lines = [l for l in f.read().splitlines() if l.strip()]
-    lst = [l.strip().split(",") for l in lines]
+        lines = [l.strip().split(",") for l in f.readlines()]
+    lst = lines
+    print(lst)
     for l in lst:
         schedules[l[1]][l[0]] = l[2]
     for s in schedules:
@@ -49,7 +49,7 @@ states_funcs = {
 ### interf passthrough ###
 def get_inter(name, time):
     if next_update[name] != -1 and \
-            time >= int(next_update[name]):
+            time.to_sec() >= int(next_update[name]):
         state = schedules[name].pop(next_update[name])
         next_update[name] = min(schedules[name], key=int) \
                 if len(schedules[name]) > 0 else -1
