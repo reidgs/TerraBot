@@ -103,7 +103,7 @@ mode = args.mode
 if log:
     gen_log_files()
 
-parse_interf('interf.txt')
+interf.parse_interf('interf.txt')
 
 ### Open logs for roscore and relay
 core_log = open("Log/roscore.log", "a+", 0)
