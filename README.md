@@ -5,6 +5,10 @@
     - [TerraBot Software Architecture](#terrabot-software-architecture)
   - [ROS Communication](#ros-communication)
   - [Understanding the System](#understanding-the-system)
+    - [Student Node](#student-node)
+    - [Relay Node](#relay-node)
+        + [Interference File](#interference-file)
+    - [Arduino Node](#arduino-node)
   - [Getting Started](#getting-started)
     - [TerraBot Simulator Installation](#terrabot-simulator-installation)
   - [Running the Simulator](#running-the-simulator)
@@ -85,12 +89,24 @@ and the arduino.
 ### Relay Node ###
 Running the relay will start up a total of 4 nodes. First the master node, roscore, and then the three other nodes: student, relay and Arduino. 
 
-The relay relaies actuator data from the student node to the Arduino node:
-The relay subscribes to the topics to which the student node publishes. It also publishes to the topics to which the Arduino subscribes to.
+The relay transfers actuator data from the student node to the Arduino node:
+The relay subscribes to the topics to which the student node publishes. It also publishes to the topics to which the Arduino subscribes.
 
-The realy also relains sensor data from the 
+The realy also transfers sensor data from the Arduino node to the student node:
+The relay subscribes to the topics to which teh Arudino publishes. It also publishes to the topics to which the studnet subscribes.
+ 
+In the transfering process, the data received by the relay node are passed though functions via an external interference file. In order to reliably simulate errors which may happen by chance if run in the real world, the interference file
+may be malicious and cause the relay to act incorrectly.
 
-It also publishes to the same topics 
+#### Interference File ####
+The interference file may take in a path to a .txt file containing a schedule of times to interfere with data. There are three types of functions, through one of which your data will be passed. These are: normal, noise, and off. 
+
+* normal : trasfers data directly without any modifications
+* noise : modifies data before transfering
+* off : sets all data to 0 (or type equivelent) 
+
+*If no file is passed in, there will be no intereference in the transfer of data.*
+
 
 ### Arduino Node ###
 Sensors and actuators are being controlled in the Arduino node:
@@ -100,10 +116,6 @@ Sensors and actuators are being controlled in the Arduino node:
 
 All communication to and from the arduino is done via the relay node, meaning you should
 never access the same topics as the Arduino. 
-
-this is done via an external interference file. In order to
-reliably simulate errors which may happen by chance if run in the real world the interference file
-may be malicious causing the relay to act incorrectly.
 
 ## Getting Started ##
 
@@ -157,11 +169,11 @@ and actuators there will also be a health ping, time, and frequency node which y
 
 ### Health Ping ###
 
-Because of the long lasting nature of this project it is possible that there may be unforeseen
-errors in your code which cause it to crash. Crashed code means no control over the system and
-certain doom for your plants! In order to avoid this outcome we have included restart functionality.
-When the relay begins it will run your code and listen for a ping. If your ping is not heard within
-a set amount of time (default 60 min) it will assume your program has crashed and restart it automatically.
+Because of the long lasting nature of this project, it is possible that there may be unforeseen
+errors in your code which will cause it to crash. Crashed code means no control over the system and
+certain doom for your plants! In order to avoid this outcome, we have included restart functionality.
+When the relay begins, it will run your code and listen for a ping. If your ping is not heard within
+a set amount of time (default 60 min), it will assume your program has crashed and restart it automatically.
 
 ### Frequency ###
 
