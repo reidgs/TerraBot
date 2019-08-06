@@ -56,8 +56,8 @@ and relays them back to the arduino.
 
 ![system diagram](https://user-images.githubusercontent.com/37941547/62577548-2a2c4080-b86d-11e9-9571-c5b06707976a.jpg)
 
-The above image shows an overview of the connections between the different nodes (represented by an oval) in the system.
-Notice all the topics (represented by a rectangle) connected to the student, as those are the ones you will be using to
+The above image shows an overview of the connections between the different nodes (represented by ovals) in the system.
+Notice all the topics (represented by rectangles) connected to the student, as those are the ones you will be using to
 regulate your greenhouse.
 
 ## ROS Communication ##
