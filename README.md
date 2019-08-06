@@ -5,6 +5,10 @@
     - [TerraBot Software Architecture](#terrabot-software-architecture)
   - [ROS Communication](#ros-communication)
   - [Understanding the System](#understanding-the-system)
+    - [Student Node](#student-node)
+    - [Relay Node](#relay-node)
+        + [Interference File](#interference-file)
+    - [Arduino Node](#arduino-node)
   - [Getting Started](#getting-started)
     - [TerraBot Simulator Installation](#terrabot-simulator-installation)
   - [Running the Simulator](#running-the-simulator)
@@ -29,7 +33,7 @@ be prepared!
 | Sensors                      | These Sensors allow the user to determine the systems state |              |            |
 | Total Dissolved Solids (tds) | EC of water (useful for nutrient monitoring)                | Int32        |            |
 | Current (cur)                | The current draw of the system.                             | Float32      |            |
-| Light (light)                | Light in the system                                         | Ant32        |            |
+| Light (light)                | Light in the system                                         | Int32        |            |
 | Water level (level)          | The current hight of the water                              | Int32        |            |
 | Temperature (temp)           | Internal temperature of the system                          | Int32        |            |
 | Humidity (humid)             | Internal relative humidity                                  | Int32        |            |
@@ -47,7 +51,7 @@ be prepared!
 
 An arduino communicates directly with these sensors and actuators and forwards that data to a raspberry pi.
 The raspberry pi, running ROS (Robot Operating System), receives the sensor data, cleans it, and makes it available
-for your AI agent in the formats above. Additionally, it receives your agent's actuator commands as defined above,
+for your AI agent in the formats above. Additionally, it receives your agent's actuator commands as defined above
 and relays them back to the arduino.
 
 ![system_diagram](./system_diagram.jpg)
@@ -60,7 +64,7 @@ regulate your greenhouse.
 
 In order to get your code working with the ROS messaging system,
 follow the tutorial on the ROS website [here](https://wiki.ros.org/ROS/Tutorials).
-Please read/skim the tutorials concerning ROS communication (Nodes, Topics, Publishers + Subscribers) to gain a general understanding of ROS.
+Please look over the tutorials concerning ROS communication (Nodes, Topics, Publishers + Subscribers) to gain a general understanding of ROS.
 You may find the other tutorials there helpful as well.
 
 
@@ -81,16 +85,29 @@ As mentioned earlier, there are three ROS nodes in this system: the student, whi
 and the arduino.
 
 ### Student Node ###
+The student node is your reactive agent. You will be able to access sensor data by subscribing to the topics to which the relay publishes. You will also be able to write data to the actuators by publishing to the topics to which the relay subscribes.
 
 ### Relay Node ###
 Running the relay will start up a total of 4 nodes. First the master node, roscore, and then the three other nodes: student, relay and Arduino. 
 
-The relay relaies actuator data from the student node to the Arduino node:
-The relay subscribes to the topics to which the student node publishes. It also publishes to the topics to which the Arduino subscribes to.
+The relay transfers actuator data from the student node to the Arduino node:
+The relay subscribes to the topics to which the student node publishes. It also publishes to the topics to which the Arduino subscribes.
 
-The realy also relains sensor data from the 
+The realy also transfers sensor data from the Arduino node to the student node:
+The relay subscribes to the topics to which the Arudino publishes. It also publishes to the topics to which the studnet subscribes.
+ 
+In the transfering process, the data received by the relay node are passed though functions via an external interference file. In order to reliably simulate errors which may happen by chance if run in the real world, the interference file
+may be malicious and cause the relay to act incorrectly.
 
-It also publishes to the same topics 
+#### Interference File ####
+The interference file may take in a path to a .txt file containing a schedule of times to interfere with data. There are three types of functions, through one of which your data will be passed. These are: normal, noise, and off. 
+
+* normal : trasfers data directly without any modifications
+* noise : modifies data before transfering
+* off : sets all data to 0 (or type equivelent) 
+
+*If no file is passed in, there will be no intereference in the transfer of data.*
+
 
 ### Arduino Node ###
 Sensors and actuators are being controlled in the Arduino node:
@@ -100,10 +117,6 @@ Sensors and actuators are being controlled in the Arduino node:
 
 All communication to and from the arduino is done via the relay node, meaning you should
 never access the same topics as the Arduino. 
-
-this is done via an external interference file. In order to
-reliably simulate errors which may happen by chance if run in the real world the interference file
-may be malicious causing the relay to act incorrectly.
 
 ## Getting Started ##
 
@@ -132,7 +145,7 @@ The simulator works in a way almost identical to the three node process which wi
 code is uploaded to the raspberry pi. The code for your node and the relay node is the exact same
 as it would be on the pi. Instead of having an arduino node, however, the simulator comes with a
 farduino (fake arduino) node which mimics the actions of the arduino node. This difference should
-in no way affect the way your code operates, and should not be noticeable from the perspective
+in no way affect the way your code operates and should not be noticeable from the perspective
 of your node.
 
 In order to run the simulator, run the relay.py with the -s flag, the multiplier you wish for the speed,
@@ -151,33 +164,33 @@ EX: 5x speed with logging
 
 ## Deployment and Testing ##
 
-In order to allow for greater control of the system and to ensure the accuracy of the simulator
-there are a few extra processes which you have access to. On top of the previously mentioned sensors
-and actuators there will also be a health ping, time, and frequency node which you must consider.
+In order to allow for greater control of the system and to ensure the accuracy of the simulator,
+there are a few extra processes to which you have access. In addition to the previously mentioned sensors
+and actuators, there will also be a health ping, variable time speed, and a frequency topic which you must consider.
 
 ### Health Ping ###
 
-Because of the long lasting nature of this project it is possible that there may be unforeseen
-errors in your code which cause it to crash. Crashed code means no control over the system and
-certain doom for your plants! In order to avoid this outcome we have included restart functionality.
-When the relay begins it will run your code and listen for a ping. If your ping is not heard within
-a set amount of time (default 60 min) it will assume your program has crashed and restart it automatically.
+Because of the long lasting nature of this project, it is possible that there may be unforeseen
+errors in your code which will cause it to crash. Crashed code means no control over the system and
+certain doom for your plants! In order to avoid this outcome, we have included restart functionality.
+When the relay begins, it will run your code and listen for a ping. If your ping is not heard within
+a set amount of time (default 60 min), it will assume your program has crashed and restart it automatically.
 
 ### Frequency ###
 
 The frequency topic is used to determine how often the arduino will read from the sensors.
-The more often you read the more accurate your data will be, but the more power you will draw.
+The more often you read, the more accurate your data will be, but the more power you will draw as well.
 Notice that this setting is variable, meaning it can be changed over the course of the deployment.
 
 ### Time ###
 
-One of the most convenient aspects of the simulator is its ability to manipulate time to
-suit the users needs. By default the simulator will begin running at 1x speed at the epoch,
+One of the most convenient aspects of the simulator is its ability to manipulate time in order to
+suit the user's needs. By default the simulator will begin running at 1x speed at the epoch,
 but that can be configured with the -s flag.
 
 It is also important that the execution of the simulator is identical to the relay (even if sped up).
-To ensure consistency between your code in simulation and on TerraBot, you should refrain from referencing outside functions
-(OS time.time()) and should instead refer to the ROS time topic via rospy.get_time().
+**To ensure consistency between your code in simulation and on TerraBot, you should refrain from referring to outside functions
+(OS time.time()) and should instead refer to the ROS time topic via rospy.get_time().**
 
 ### Camera ###
 
