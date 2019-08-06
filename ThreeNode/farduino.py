@@ -5,7 +5,7 @@ from topic_def import *
 import argparse
 
 parser = argparse.ArgumentParser(description = "simulator parser for Autonomous Systems")
-parser.add_argument('baseline', type = str, default = "baseline.py", nargs = "?")
+parser.add_argument('baseline', type = str, default = "baseline.txt", nargs = "?")
 args = parser.parse_args()
 print(args.baseline)
 try:

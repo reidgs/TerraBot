@@ -3,6 +3,7 @@ import rospy
 grader_vars = {}
 
 bfile = ""
+interf_file = ""
 
 cmds = []
 cmd_ind = 0
@@ -11,19 +12,12 @@ cmd_start = rospy.Time(0)
 finished = False
 
 def open_trace(path):
-    global cmds, bfile, grader_vars
+    global cmds, bfile, interf_file, grader_vars
     lines = open(path).readlines()
     bfile = lines[0].strip()
+    interf_file = lines[1].strip()
     cmds = [line.strip().split(",") for line in lines[2:]]
 
-    try:
-        exec(open(bfile).read())
-        grader_vars = init_actuators
-    except:
-        print('no baseline file found')
-        exit()
-
-    return bfile
 
 def run_command(time):
     global cmds,cmd_ind,cmd_start,finished

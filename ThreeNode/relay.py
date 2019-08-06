@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, sys
+import os, sys, glob
 import subprocess as sp
 import signal
 import rospy
@@ -17,13 +17,14 @@ grade = False
 log = False
 simulate = False
 still_running = True
-
-global clock_time
+tick_interval = 0.01
+clock_time = rospy.Time(0)
 
 ### lists which will be populated based on the topic_def.py
 log_files = {}
 publishers = {}
 subscribers = {}
+grader_vars = {}
 
 def gen_log_files():
     global log_files
@@ -54,7 +55,7 @@ def generate_publishers():
                             latch = True, queue_size = 100)
 
 def cb_generic(name, data):
-    global clock_time
+    global clock_time, grader_vars
     if (log):
         log_file = log_files[name]
         log_file.write(str(clock_time.to_sec()) + ", " + str(data.data) + "\n")
@@ -64,7 +65,7 @@ def cb_generic(name, data):
 
     edited = interf.get_inter(name,clock_time)(data.data)
     if grade:
-        grader.grader_vars[name] = edited
+        grader_vars[name] = edited
     publishers[name].publish(edited)
 
 def generate_cb(name):
@@ -86,24 +87,39 @@ def generate_subscribers():
 parser = argparse.ArgumentParser(description = "relay parser for Autonomous Systems")
 parser.add_argument('-v', '--verbose', action = 'store_true')
 parser.add_argument('-l', '--log', action = 'store_true')
-parser.add_argument('-s', '--simulate', action = 'store_true')
-parser.add_argument('-m', '--mode', default = "serial")
-parser.add_argument('-g', '--grade', action = 'store_true')
+parser.add_argument('-m', '--mode', default = "serial",
+        choices = ['serial', 'sim', 'grade'],
+        help = "if no mode given, serial is used")
 parser.add_argument('--speedup', default = 1, type = float)
+parser.add_argument('--baseline', default = "baseline.txt")
+parser.add_argument('--interference', default = None)
+parser.add_argument('-t','--tracefile', default = None,
+        help = "if --tracedir is also set, this argument is ignored")
+parser.add_argument('-T','--tracedir', default = None)
 
 args = parser.parse_args()
 
 verbose = args.verbose
 log = args.log
-simulate = args.mode == "sim"
-speedup = args.speedup
-grade = args.mode == "grade"
 mode = args.mode
-print(mode)
+simulate = mode == "sim"
+grade = mode == "grade"
+ser = mode == "serial"
+speedup = args.speedup
+if grade and (args.tracefile == None and args.tracedir == None):
+    print("no tracefile or tracedir given, run ./relay.py -h for usage")
+    quit()
+
+#initialize trace file array
+tracefiles = []
+if args.tracedir != None:
+    tracefiles = glob.glob(args.tracedir + "/*.trc")
+else:
+    tracefiles = [args.tracefile]
+
 if log:
     gen_log_files()
 
-interf.parse_interf('interf.txt')
 
 ### Open logs for roscore and relay
 core_log = open("Log/roscore.log", "a+", 0)
@@ -135,6 +151,8 @@ ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
 #TODO add baseline functionality
 student_log = open("Log/student.log", "a+", 0)
 student_p = None
+sim_p = None
+
 if simulate:
     sim_log = open("Log/simulator.log", "a+", 0)
     ### Initiates the Simulator and redirects output
@@ -143,6 +161,11 @@ if simulate:
     ### Initiates the Student file and redirects output
     student_p = sp.Popen(["python", "student.py"],
         stdout = student_log, stderr = student_log)
+    print("waiting for nodes")
+    rospy.sleep(2)
+    print("ok")
+
+
 
 ### Running the real arduino proccess
 elif mode == "serial":
@@ -154,6 +177,9 @@ elif mode == "serial":
     ### Initiates the Student file and redirects output
     student_p = sp.Popen(["python", "student.py"],
         stdout = student_log, stderr = student_log)
+    print("waiting for nodes")
+    rospy.sleep(2)
+    print("ok")
 
 
 
@@ -162,36 +188,55 @@ if (verbose):
 
 
 ### Loop for the entire system, should only ever break if grading
-while still_running:
+while len(tracefiles) > 0 or not grade:
     ### TODO add grading functionality
+    ### We must begin simulated time and health ping
+    clock_time = rospy.Time(0)
+    last_ping = rospy.Time(0)
+    clock_pub.publish(clock_time)
+
     if grade:
-        grader.open_trace("trace.txt")
+        reload(grader)
+        reload(interf)
+
+        tfile = tracefiles.pop(0)
+        dirname = os.path.dirname(tfile) + "/"
+
+        grader.open_trace(tfile)
+        if (grader.interf_file == ""):
+            interf.parse_interf()
+        else:
+            interf.parse_interf(dirname + grader.interf_file)
 
         student_p = sp.Popen(["python", "student.py"],
             stdout = student_log, stderr = student_log)
 
         sim_log = open("Log/simulator.log", "a+", 0)
         ### Initiates the Simulator and redirects output
-        sim_p = sp.Popen(["python", "farduino.py", grader.bfile],
+
+        exec(open(dirname + grader.bfile).read())
+        grader_vars = init_actuators
+
+        sim_p = sp.Popen(["python", "farduino.py", dirname + grader.bfile],
             stdout = sim_log, stderr = sim_log)
+        print("running %s"%tfile)
+        rospy.sleep(1)
 
 
-    ### We must begin simulated time and health ping
-    clock_time = rospy.Time(0)
-    last_ping = rospy.Time(0)
     ### Loop for a single iteration of a grading scheme(infinite if not grading)
     while not rospy.core.is_shutdown():
         ### If not simulating get real time
         #print("spin")
-        if not simulate and not grade:
+        if mode == "serial":
             clock_time = rospy.get_rostime()
         clock_pub.publish(clock_time)
         ### TODO add grading functionality
         if grade:
+            grader.grader_vars = grader_vars
             cur_cmd = grader.run_command(clock_time)
             start_time = clock_time
             if grader.finished:
-                print("break")
+                print("done")
                 break
 
 
@@ -206,12 +251,13 @@ while still_running:
             student_p = sp.Popen(["python", "student.py"],
                     stdout = student_log, stderr = student_log)
 
-        clock_time += rospy.Duration(0.1)
-        rospy.sleep(0.1/speedup)
-    #sim_p.terminate()
+        clock_time += rospy.Duration(tick_interval)
+        rospy.sleep(tick_interval/speedup)
+
+    sim_p.terminate()
+    sim_p.wait()
     student_p.terminate()
-    reload(grader)
-    break;
+    student_p.wait()
 
 core_p.terminate()
 

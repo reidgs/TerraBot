@@ -23,15 +23,14 @@ for n in sensor_names + actuator_names:
     act_interf[n] = identity
     schedules[n] = {}
     next_update[n] = -1
-    
+
 
 def parse_interf(path=None):
     if path == None:
-        return 
+        return
     with open(path) as f:
         lines = [l.strip().split(",") for l in f.readlines()]
     lst = lines
-    print(lst)
     for l in lst:
         schedules[l[1]][l[0]] = l[2]
     for s in schedules:

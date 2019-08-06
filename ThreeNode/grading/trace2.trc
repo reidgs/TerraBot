@@ -1,0 +1,8 @@
+water_high.txt
+
+START
+WAIT,not grader_vars['wpump'],10
+ENSURE,not grader_vars['wpump'],10
+WAIT,grader_vars['led']==255,20
+ENSURE,grader_vars['led']==255,20
+QUIT
