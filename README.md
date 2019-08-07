@@ -1,24 +1,28 @@
-# Autonomous Agents TerraBot Mk1 #
+# Autonomous Agents TerraBot #
 
-- [Autonomous Agents TerraBot Mk1](#autonomous-agents-terrabot-mk1)
-  - [Overview](#overview)
-    - [TerraBot Software Architecture](#terrabot-software-architecture)
-  - [ROS Communication](#ros-communication)
-  - [Understanding the System](#understanding-the-system)
-    - [Student Node](#student-node)
-    - [Relay Node](#relay-node)
-        + [Interference File](#interference-file)
-    - [Arduino Node](#arduino-node)
+- [Overview](#overview)
+  - [Software Architecture](#terrabot-software-architecture)
+- [ROS Communication](#ros-communication)
+- [Understanding the System](#understanding-the-system)
+  - [Student Node](#student-node)
+  - [Relay Node](#relay-node)
+      + [Interference File](#interference-file)
+  - [Arduino Node](#arduino-node)
+- [Running the System](#running-the-system)
+  - [Connecting to the Raspberry Pi](#connecting-to-the-raspberry-pi)
+  - [Uploading Code](#uploading-code)
+  - [Deployment and Testing](#deployment-and-testing)
+- [Simulator](#simulator)
   - [Getting Started](#getting-started)
     - [TerraBot Simulator Installation](#terrabot-simulator-installation)
-  - [Running the Simulator](#running-the-simulator)
-    - [Connecting to the Raspberry Pi](#connecting-to-the-raspberry-pi)
-    - [Uploading Code](#uploading-code)
-  - [Deployment and Testing](#deployment-and-testing)
-    - [Health Ping](#health-ping)
-    - [Frequency](#frequency)
-    - [Time](#time)
-    - [Camera](#camera)
+    - [Running the Simulator](#running-the-simulator)
+  - [Additional Processes](#extra-processes)
+    + [Health Ping](#health-ping)
+    + [Frequency](#frequency)
+    + [Time](#time)
+    + [Camera](#camera)
+  
+    
 
 ## Overview ##
 
@@ -118,12 +122,30 @@ Sensors and actuators are being controlled in the Arduino node:
 All communication to and from the arduino is done via the relay node, meaning you should
 never access the same topics as the Arduino. 
 
-## Getting Started ##
+## Running the System ##
+### Connecting to the Raspberry Pi ###
+//TODO INCLUDE THE INSTRUCTIONS FOR GETTING STARTED WITH THE ACTUAL PI, WHERE IS CODE LOCATED, WHERE SHOULD THEY MOVE THEIR CODE, HOW DO THEY RUN IT, ETC
+
+### Uploading Code ###
+
+## Deployment and Testing ##
+
+## Simulator ##
 
 We are providing a simulator to test your code before deploying it on the TerraBot. Follow the instructions to get
 started with the simulator and also to log into your raspberry pi.
 
-### TerraBot Simulator Installation ###
+
+The simulator works in a way almost identical to the three node process which will run when your
+code is uploaded to the raspberry pi. The code for your node and the relay node is the exact same
+as it would be on the pi. Instead of having an arduino node, however, the simulator comes with a
+farduino (fake arduino) node which mimics the actions of the arduino node. This difference should
+in no way affect the way your code operates and should not be noticeable from the perspective
+of your node.
+
+### Getting Started ###
+
+#### TerraBot Simulator Installation ####
 
 The simulator and ROS require Ubuntu distributions. We suggest installing a VirtualBox VM on your computer so that you
 can implement your agent.
@@ -139,14 +161,7 @@ this step may take a while.
 QUESTION - I THINK WE CAN ZIP UP THE WHOLE OS, WILL THESE INSTRUCTIONS CHANGE FOR THAT?
 //TODO Find out how students will get the simulator
 
-## Running the Simulator ##
-
-The simulator works in a way almost identical to the three node process which will run when your
-code is uploaded to the raspberry pi. The code for your node and the relay node is the exact same
-as it would be on the pi. Instead of having an arduino node, however, the simulator comes with a
-farduino (fake arduino) node which mimics the actions of the arduino node. This difference should
-in no way affect the way your code operates and should not be noticeable from the perspective
-of your node.
+#### Running the Simulator ####
 
 In order to run the simulator, run the relay.py with the -s flag, the multiplier you wish for the speed,
 and the time which you would like it to start at (seconds since epoch).  
@@ -156,34 +171,24 @@ For error checking it is recommended that you include the -l flag for logging as
 EX: 5x speed with logging
 >`python relay.py -l -s 5 0`  
 
-### Connecting to the Raspberry Pi ###
-
-//TODO INCLUDE THE INSTRUCTIONS FOR GETTING STARTED WITH THE ACTUAL PI, WHERE IS CODE LOCATED, WHERE SHOULD THEY MOVE THEIR CODE, HOW DO THEY RUN IT, ETC
-
-### Uploading Code ###
-
-## Deployment and Testing ##
-
+### Extra Processes ###
 In order to allow for greater control of the system and to ensure the accuracy of the simulator,
 there are a few extra processes to which you have access. In addition to the previously mentioned sensors
 and actuators, there will also be a health ping, variable time speed, and a frequency topic which you must consider.
 
-### Health Ping ###
-
+#### Health Ping ####
 Because of the long lasting nature of this project, it is possible that there may be unforeseen
 errors in your code which will cause it to crash. Crashed code means no control over the system and
 certain doom for your plants! In order to avoid this outcome, we have included restart functionality.
 When the relay begins, it will run your code and listen for a ping. If your ping is not heard within
 a set amount of time (default 60 min), it will assume your program has crashed and restart it automatically.
 
-### Frequency ###
-
+#### Frequency ####
 The frequency topic is used to determine how often the arduino will read from the sensors.
 The more often you read, the more accurate your data will be, but the more power you will draw as well.
 Notice that this setting is variable, meaning it can be changed over the course of the deployment.
 
-### Time ###
-
+#### Time ####
 One of the most convenient aspects of the simulator is its ability to manipulate time in order to
 suit the user's needs. By default the simulator will begin running at 1x speed at the epoch,
 but that can be configured with the -s flag.
@@ -192,10 +197,15 @@ It is also important that the execution of the simulator is identical to the rel
 **To ensure consistency between your code in simulation and on TerraBot, you should refrain from referring to outside functions
 (OS time.time()) and should instead refer to the ROS time topic via rospy.get_time().**
 
-### Camera ###
-
+#### Camera ####
 The one aspect of the system which we are not able to simulate is the camera. Any call to
 raspistill will result in an error as there is no camera connected to the virtual machine
 and raspistill is not installed.
 
 //TODOCAN WE RENAME raspistill? It looks like rapist...
+
+
+
+## Grading ##
+
+
