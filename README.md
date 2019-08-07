@@ -32,18 +32,18 @@ with recently sprouted seeds. The goal of the assignment is to provide the best 
 for the plants during a two week grow cycle. Each cycle will come with new challenges, so
 be prepared!  
 
-| Name                         | Description                                                 | Message Type | Range      |
+| Name (topic name)            | Description                                                 | Message Type | Range      |
 | ---------------------------- | ----------------------------------------------------------- | ------------ | ---------- |
-| Sensors                      | These Sensors allow the user to determine the systems state |              |            |
+| **_Sensors_**                |**_Use these to determine the system's state_**              |  **_—_**     |  **_—_** |
 | Total Dissolved Solids (tds) | EC of water (useful for nutrient monitoring)                | Int32        |            |
-| Current (cur)                | The current draw of the system.                             | Float32      |            |
-| Light (light)                | Light in the system                                         | Int32        |            |
-| Water level (level)          | The current hight of the water                              | Int32        |            |
+| Current (cur)                | The current draw of the system                              | Float32      |            |
+| Light (light)                | Light intesnity in the system                               | Int32        |            |
+| Water level (level)          | Height of the water                                         | Int32        |            |
 | Temperature (temp)           | Internal temperature of the system                          | Int32        |            |
 | Humidity (humid)             | Internal relative humidity                                  | Int32        |            |
-| Camera                       | Allows to students to photograph the system                 | None         |            |
-| Actuators                    | These Actuators allow the user to adjust the systems state  |              |            |
-| LED (led)                    | Adjust the power going to the systems LED light fixture     | Int32        | 0-255      |
+| Camera                       | Captures a photograph of stystem's state                    |   —          |   —        |
+| **_Actuators_**              |**_Use these to adjust the system's state_**                 | **_—_**      |  **_—_**   |
+| LED (led)                    | Adjust the power of the system's LED light fixture          | Int32        | 0-255      |
 | Water Pump (wpump)           | Toggle whether the water pump is on or off                  | Bool         | true-false |
 | Nutrient Pump (npump)        | Toggle whether the nutrient pump is on or off               | Bool         | true-false |
 | Air Pump (apump)             | Toggle whether the air pump is on or off                    | Bool         | true-false |
@@ -194,8 +194,8 @@ suit the user's needs. By default the simulator will begin running at 1x speed a
 but that can be configured with the -s flag.
 
 It is also important that the execution of the simulator is identical to the relay (even if sped up).
-**To ensure consistency between your code in simulation and on TerraBot, you should refrain from referring to outside functions
-(OS time.time()) and should instead refer to the ROS time topic via rospy.get_time().**
+**_To ensure consistency between your code in simulation and on TerraBot, you should refrain from referring to outside functions
+(OS time.time()) and should instead refer to the ROS time topic via rospy.get_time()._**
 
 #### Camera ####
 The one aspect of the system which we are not able to simulate is the camera. Any call to
