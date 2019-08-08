@@ -56,7 +56,7 @@ The raspberry pi, running ROS (Robot Operating System), receives the sensor data
 for your AI agent in the formats above. Additionally, it receives your agent's actuator commands as defined above
 and relays them back to the arduino.
 
-![system diagram](https://user-images.githubusercontent.com/37941547/62577548-2a2c4080-b86d-11e9-9571-c5b06707976a.jpg)
+![system diagram](https://user-images.githubusercontent.com/37941547/62735531-5ecd0300-b9f9-11e9-8db0-ac95062779a7.jpg)
 
 The above image shows an overview of the connections between the different nodes (represented by ovals) in the system.
 Notice all the topics (represented by rectangles) connected to the student, as those are the ones you will be using to
