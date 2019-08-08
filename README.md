@@ -21,6 +21,7 @@
     + [Frequency](#frequency)
     + [Time](#time)
     + [Camera](#camera)
+- [Grading](#grading)
   
     
 
@@ -35,7 +36,6 @@ be prepared!
 | Name (topic name)            | Description                                                 | Message Type | Range      |
 | ---------------------------- | ----------------------------------------------------------- | ------------ | ---------- |
 | **_Sensors_**                |**_Use these to determine the system's state_**              |  **_—_**     |  **_—_** |
-| Total Dissolved Solids (tds) | EC of water (useful for nutrient monitoring)                | Int32        |            |
 | Current (cur)                | The current draw of the system                              | Float32      |            |
 | Light (light)                | Light intesnity in the system                               | Int32        |            |
 | Water level (level)          | Height of the water                                         | Int32        |            |
@@ -45,8 +45,6 @@ be prepared!
 | **_Actuators_**              |**_Use these to adjust the system's state_**                 | **_—_**      |  **_—_**   |
 | LED (led)                    | Adjust the power of the system's LED light fixture          | Int32        | 0-255      |
 | Water Pump (wpump)           | Toggle whether the water pump is on or off                  | Bool         | true-false |
-| Nutrient Pump (npump)        | Toggle whether the nutrient pump is on or off               | Bool         | true-false |
-| Air Pump (apump)             | Toggle whether the air pump is on or off                    | Bool         | true-false |
 | Fan (fan)                    | Toggle whether the fan is on or off                         | Bool         | true-false |
 
 //TODO QUESTION - SHOULD WE PUBLISH A MESSAGE OF THE CURRENT ACTUATOR STATE? IF THINGS CRASH AND THE LEDs ARE ON, HOW DOES THE AGENT KNOW THAT?
@@ -207,5 +205,5 @@ and raspistill is not installed.
 
 
 ## Grading ##
-
+Grading will take place with the help of the simulator. 
 
