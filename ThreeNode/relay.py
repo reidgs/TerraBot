@@ -253,11 +253,13 @@ while len(tracefiles) > 0 or not grade:
 
         clock_time += rospy.Duration(tick_interval)
         rospy.sleep(tick_interval/speedup)
-
-    sim_p.terminate()
-    sim_p.wait()
-    student_p.terminate()
-    student_p.wait()
+    if grade:
+        sim_p.terminate()
+        sim_p.wait()
+        student_p.terminate()
+        student_p.wait()
+    else:
+        break
 
 core_p.terminate()
 
