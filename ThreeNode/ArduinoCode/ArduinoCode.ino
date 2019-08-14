@@ -28,14 +28,12 @@ int cur_pin = A2;
 
 int led_pin = 9;
 int wpump_pin = 12;
-int npump_pin = 11;
-int apump_pin = 10;
 int fan_pin = 8;
 
 float last_update = 0;
 float last_dht = 0;
 float time_now = 0;
-float interval = 1000;
+int interval = 1000;
 
 long light_sum = 0;
 long light_count = 0;
@@ -46,7 +44,7 @@ long cur_count = 0;
 
 //Frequency Adjustment
 void freq_change( const std_msgs::Float32& cmd_msg){
-  interval = 1000 / cmd_msg.data;
+  interval = round(1000.0 / cmd_msg.data);
 }
 
 ros::Subscriber<std_msgs::Float32> freq_sub("freq_raw", &freq_change);
@@ -56,34 +54,19 @@ void led_activate( const std_msgs::Int32& cmd_msg){
   analogWrite(led_pin, cmd_msg.data);//toggle led
 }
 
-void wpump_activate(const std_msgs::Bool& cmd_msg){
-  analogWrite(wpump_pin, cmd_msg.data ? 100 : 0);
-}
-
-void npump_activate(const std_msgs::Bool& cmd_msg){
-  analogWrite(npump_pin, cmd_msg.data ? 255 : 0);
-}
-
-void apump_activate(const std_msgs::Bool& cmd_msg){
-  analogWrite(apump_pin, cmd_msg.data ? 255 : 0);
+void wpump_activate(const std_msgs::Int32& cmd_msg){
+  analogWrite(wpump_pin, cmd_msg.data);
 }
 
 void fan_activate(const std_msgs::Bool& cmd_msg){
   analogWrite(fan_pin, cmd_msg.data ? 255 : 0);
 }
 
-void time_cb(const std_msgs::Float32& cmd_msg){
-  time_now = cmd_msg.data;
-}
-
 // Actuators
 ros::Subscriber<std_msgs::Int32> led_sub("led_raw", &led_activate);
-ros::Subscriber<std_msgs::Bool> wpump_sub("wpump_raw", &wpump_activate);
-ros::Subscriber<std_msgs::Bool> npump_sub("npump_raw", &npump_activate);
-ros::Subscriber<std_msgs::Bool> apump_sub("apump_raw", &apump_activate);
+ros::Subscriber<std_msgs::Int32> wpump_sub("wpump_raw", &wpump_activate);
 ros::Subscriber<std_msgs::Bool> fan_sub("fan_raw",
 &fan_activate);
-ros::Subscriber<std_msgs::Float32> time_sub("time", &time_cb);
 
 
 // Sensor helpers
@@ -94,7 +77,7 @@ float get_level() {
   digitalWrite(trig_pin, HIGH);
   delayMicroseconds(10);
   digitalWrite(trig_pin, LOW);
-  duration = float(pulseIn(echo_pin, HIGH));
+  duration = float(pulseIn(echo_pin, HIGH, 10000));
   return duration / 5.82;
 }
 
@@ -122,8 +105,6 @@ ros::Publisher cur_pub("cur_raw", &cur_msg);
 void setup(){
   pinMode(led_pin, OUTPUT);
   pinMode(wpump_pin, OUTPUT);
-  pinMode(npump_pin, OUTPUT);
-  pinMode(apump_pin, OUTPUT);
   pinMode(fan_pin, OUTPUT);
   pinMode(trig_pin, OUTPUT);
   pinMode(echo_pin, INPUT);
@@ -133,8 +114,6 @@ void setup(){
 
   nh.subscribe(led_sub);
   nh.subscribe(wpump_sub);
-  nh.subscribe(npump_sub);
-  nh.subscribe(apump_sub);
   nh.subscribe(fan_sub);
 
   nh.advertise(temp_pub);

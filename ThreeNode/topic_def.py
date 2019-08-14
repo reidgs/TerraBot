@@ -4,7 +4,7 @@ actuator_names = ['freq', 'led', 'wpump', 'fan']
 
 to_ard = {
     'led'   : Int32,
-    'wpump' : Bool,
+    'wpump' : Int32,
     'fan'   : Bool,
     'freq'  : Float32
 }
@@ -30,7 +30,7 @@ to_stu = {
 
 from_stu = {
     'led'   : Int32,
-    'wpump' : Bool,
+    'wpump' : Int32,
     'fan'   : Bool,
     'freq'  : Float32
 }
