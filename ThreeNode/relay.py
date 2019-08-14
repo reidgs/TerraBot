@@ -48,13 +48,13 @@ def generate_publishers():
         pub_name = name + "_output"
         publishers[name] = rospy.Publisher(
                             pub_name, to_stu[name],
-                            latch = True, queue_size = 100)
+                            latch = True, queue_size = 1)
 
     for name in actuator_names:
         pub_name = name + "_raw"
         publishers[name] = rospy.Publisher(
                             pub_name, to_ard[name],
-                            latch = True, queue_size = 100)
+                            latch = True, queue_size = 1)
 
 def cb_generic(name, data):
     global clock_time, grader_vars
@@ -109,7 +109,8 @@ simulate = mode == "sim"
 grade = mode == "grade"
 ser = mode == "serial"
 speedup = args.speedup
-run_student = ~args.nostudent
+run_student = not args.nostudent
+print(run_student)
 if grade and (args.tracefile == None and args.tracedir == None):
     print("no tracefile or tracedir given, run ./relay.py -h for usage")
     quit()
@@ -249,11 +250,11 @@ while len(tracefiles) > 0 or not grade:
 
         ### TODO Fix the ping so that it actually works
         last_ping = clock_time
-        if  run_student & (clock_time.to_sec() - last_ping.to_sec() > 3600):
+        if  run_student and (clock_time.to_sec() - last_ping.to_sec() > 3600):
             log_print("no ping since %f, terminating..."%last_ping.to_sec())
             student_p.terminate()
 
-        if (run_student & (student_p.poll() != None)):
+        if (run_student and (student_p.poll() != None)):
             log_print("student restarting...")
             student_p = sp.Popen(["python", "student.py"],
                     stdout = student_log, stderr = student_log)
