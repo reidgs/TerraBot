@@ -19,7 +19,7 @@ simulate = False
 still_running = True
 run_student = True
 #tick_interval = 0.01
-tick_interval = 0.1
+tick_interval = 0.5
 clock_time = rospy.Time(0)
 
 ### lists which will be populated based on the topic_def.py
@@ -110,7 +110,7 @@ grade = mode == "grade"
 ser = mode == "serial"
 speedup = args.speedup
 run_student = not args.nostudent
-print(run_student)
+
 if grade and (args.tracefile == None and args.tracedir == None):
     print("no tracefile or tracedir given, run ./relay.py -h for usage")
     quit()
@@ -140,7 +140,7 @@ rospy.set_param("use_sim_time", True)
 generate_publishers()
 generate_subscribers()
 
-clock_pub = rospy.Publisher("clock", Clock, latch = True, queue_size = 1000)
+clock_pub = rospy.Publisher("clock", Clock, latch = True, queue_size = 1)
 
 ### Health Ping callback function
 ### Records the most recent ping
@@ -149,6 +149,15 @@ def ping_cb(data):
     last_ping = clock_time if simulate else rospy.get_rostime()
 
 ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
+
+### Change the speedup interactively
+def speedup_cb(data):
+    global speedup, simulate
+    if simulate:
+        speedup = data.data
+        print("Speedup %d" %speedup)
+
+speedup_sub = rospy.Subscriber('speedup', Int32, speedup_cb)
 
 ### Spawn subprocesses
 
