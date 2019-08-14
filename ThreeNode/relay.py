@@ -17,7 +17,9 @@ grade = False
 log = False
 simulate = False
 still_running = True
-tick_interval = 0.01
+run_student = True
+#tick_interval = 0.01
+tick_interval = 0.1
 clock_time = rospy.Time(0)
 
 ### lists which will be populated based on the topic_def.py
@@ -96,6 +98,7 @@ parser.add_argument('--interference', default = None)
 parser.add_argument('-t','--tracefile', default = None,
         help = "if --tracedir is also set, this argument is ignored")
 parser.add_argument('-T','--tracedir', default = None)
+parser.add_argument('--nostudent', action = 'store_true')
 
 args = parser.parse_args()
 
@@ -106,6 +109,7 @@ simulate = mode == "sim"
 grade = mode == "grade"
 ser = mode == "serial"
 speedup = args.speedup
+run_student = ~args.nostudent
 if grade and (args.tracefile == None and args.tracedir == None):
     print("no tracefile or tracedir given, run ./relay.py -h for usage")
     quit()
@@ -149,18 +153,20 @@ ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
 
 ### Simulator starts up Student and Farduino
 #TODO add baseline functionality
-student_log = open("Log/student.log", "a+", 0)
-student_p = None
+if run_student:
+    student_log = open("Log/student.log", "a+", 0)
+    student_p = None
 sim_p = None
 
 if simulate:
     sim_log = open("Log/simulator.log", "a+", 0)
     ### Initiates the Simulator and redirects output
     sim_p = sp.Popen(["python", "farduino.py"],
-        stdout = sim_log, stderr = sim_log)
+                     stdout = sim_log, stderr = sim_log)
     ### Initiates the Student file and redirects output
-    student_p = sp.Popen(["python", "student.py"],
-        stdout = student_log, stderr = student_log)
+    if run_student:
+        student_p = sp.Popen(["python", "student.py"],
+                             stdout = student_log, stderr = student_log)
     print("waiting for nodes")
     rospy.sleep(2)
     print("ok")
@@ -175,8 +181,9 @@ elif mode == "serial":
         "serial_node.py", "/dev/ttyACM0"],
         stdout = serial_log, stderr = serial_log)
     ### Initiates the Student file and redirects output
-    student_p = sp.Popen(["python", "student.py"],
-        stdout = student_log, stderr = student_log)
+    if run_student:
+        student_p = sp.Popen(["python", "student.py"],
+                             stdout = student_log, stderr = student_log)
     print("waiting for nodes")
     rospy.sleep(2)
     print("ok")
@@ -242,22 +249,23 @@ while len(tracefiles) > 0 or not grade:
 
         ### TODO Fix the ping so that it actually works
         last_ping = clock_time
-        if  clock_time.to_sec() - last_ping.to_sec() > 3600:
+        if  run_student & (clock_time.to_sec() - last_ping.to_sec() > 3600):
             log_print("no ping since %f, terminating..."%last_ping.to_sec())
             student_p.terminate()
 
-        if (student_p.poll() != None):
+        if (run_student & (student_p.poll() != None)):
             log_print("student restarting...")
             student_p = sp.Popen(["python", "student.py"],
                     stdout = student_log, stderr = student_log)
 
-        clock_time += rospy.Duration(tick_interval)
-        rospy.sleep(tick_interval/speedup)
+        clock_time += rospy.Duration(tick_interval*speedup)
+        rospy.sleep(tick_interval)
     if grade:
         sim_p.terminate()
         sim_p.wait()
-        student_p.terminate()
-        student_p.wait()
+        if run_student:
+            student_p.terminate()
+            student_p.wait()
     else:
         break
 
