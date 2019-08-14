@@ -19,7 +19,7 @@ simulate = False
 still_running = True
 run_student = True
 #tick_interval = 0.01
-tick_interval = 0.1
+tick_interval = 0.5
 clock_time = rospy.Time(0)
 
 ### lists which will be populated based on the topic_def.py
@@ -48,13 +48,13 @@ def generate_publishers():
         pub_name = name + "_output"
         publishers[name] = rospy.Publisher(
                             pub_name, to_stu[name],
-                            latch = True, queue_size = 100)
+                            latch = True, queue_size = 1)
 
     for name in actuator_names:
         pub_name = name + "_raw"
         publishers[name] = rospy.Publisher(
                             pub_name, to_ard[name],
-                            latch = True, queue_size = 100)
+                            latch = True, queue_size = 1)
 
 def cb_generic(name, data):
     global clock_time, grader_vars
@@ -109,7 +109,8 @@ simulate = mode == "sim"
 grade = mode == "grade"
 ser = mode == "serial"
 speedup = args.speedup
-run_student = ~args.nostudent
+run_student = not args.nostudent
+
 if grade and (args.tracefile == None and args.tracedir == None):
     print("no tracefile or tracedir given, run ./relay.py -h for usage")
     quit()
@@ -139,7 +140,7 @@ rospy.set_param("use_sim_time", True)
 generate_publishers()
 generate_subscribers()
 
-clock_pub = rospy.Publisher("clock", Clock, latch = True, queue_size = 1000)
+clock_pub = rospy.Publisher("clock", Clock, latch = True, queue_size = 1)
 
 ### Health Ping callback function
 ### Records the most recent ping
@@ -148,6 +149,15 @@ def ping_cb(data):
     last_ping = clock_time if simulate else rospy.get_rostime()
 
 ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
+
+### Change the speedup interactively
+def speedup_cb(data):
+    global speedup, simulate
+    if simulate:
+        speedup = data.data
+        print("Speedup %d" %speedup)
+
+speedup_sub = rospy.Subscriber('speedup', Int32, speedup_cb)
 
 ### Spawn subprocesses
 
@@ -249,11 +259,11 @@ while len(tracefiles) > 0 or not grade:
 
         ### TODO Fix the ping so that it actually works
         last_ping = clock_time
-        if  run_student & (clock_time.to_sec() - last_ping.to_sec() > 3600):
+        if  run_student and (clock_time.to_sec() - last_ping.to_sec() > 3600):
             log_print("no ping since %f, terminating..."%last_ping.to_sec())
             student_p.terminate()
 
-        if (run_student & (student_p.poll() != None)):
+        if (run_student and (student_p.poll() != None)):
             log_print("student restarting...")
             student_p = sp.Popen(["python", "student.py"],
                     stdout = student_log, stderr = student_log)
