@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os, sys, glob
+import select
 import subprocess as sp
 import signal
 import rospy
@@ -120,6 +121,26 @@ if grade and (args.tracefile == None and args.tracedir == None):
     print("no tracefile or tracedir given, run ./relay.py -h for usage")
     quit()
 
+def terminate_gracefully():
+    global core_p, serial_p, sim_p, student_p
+    if core_p != None:
+        print("Terminating roscore")
+        core_p.terminate()
+        core_p.wait()
+    if sim_p != None:
+        print("Terminating sim")
+        sim_p.terminate()
+        sim_p.wait()
+    if student_p != None:
+        print("Terminating student")
+        student_p.terminate()
+        student_p.wait()
+    if serial_p != None:
+        print("Terminating serial")
+        serial_p.terminate()
+        serial_p.wait()
+    quit()
+
 #initialize trace file array
 tracefiles = []
 if args.tracedir != None:
@@ -168,10 +189,11 @@ speedup_sub = rospy.Subscriber('speedup', Int32, speedup_cb)
 
 ### Simulator starts up Student and Farduino
 #TODO add baseline functionality
+student_p = None
 if run_student:
     student_log = open("Log/student.log", "a+", 0)
-    student_p = None
 sim_p = None
+serial_p = None
 
 if simulate:
     sim_log = open("Log/simulator.log", "a+", 0)
@@ -247,6 +269,14 @@ while len(tracefiles) > 0 or not grade:
 
     ### Loop for a single iteration of a grading scheme(infinite if not grading)
     while not rospy.core.is_shutdown():
+        ### Check for input
+        if sys.stdin in select.select([sys.stdin],[],[],0)[0]:
+            input = sys.stdin.readline()
+            if input[0] == 'q':
+                terminate_gracefully()
+            else:
+                print("Usage: q (quit)")
+
         ### If not simulating get real time
         #print("spin")
         if mode == "serial":
