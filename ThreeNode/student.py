@@ -16,13 +16,11 @@ rospy.set_param("use_sim_time", True)
 
 rospy.init_node("student", anonymous = True)
 
-wpump_pub = rospy.Publisher("wpump_input", Bool, latch = True, queue_size = 100)
-npump_pub = rospy.Publisher("npump_input", Bool, latch = True, queue_size = 100)
-apump_pub = rospy.Publisher("apump_input", Bool, latch = True, queue_size = 100)
-led_pub = rospy.Publisher("led_input", Int32, latch = True, queue_size = 100)
-fan_pub = rospy.Publisher("fan_input", Bool, latch = True, queue_size = 100)
+wpump_pub = rospy.Publisher("wpump_input", Int32, latch = True, queue_size = 1)
+led_pub = rospy.Publisher("led_input", Int32, latch = True, queue_size = 1)
+fan_pub = rospy.Publisher("fan_input", Bool, latch = True, queue_size = 1)
 
-ping_pub = rospy.Publisher("ping", Bool, latch = True, queue_size = 100)
+ping_pub = rospy.Publisher("ping", Bool, latch = True, queue_size = 1)
 
 def humid_reaction(data):
     global hum
@@ -73,7 +71,7 @@ while not rospy.core.is_shutdown():
         cam_time = time_now
 
     #fan_pub.publish(True if hum > 70 else False)
-    wpump_pub.publish(False if w_level > 100 else True)
+    wpump_pub.publish(70 if w_level < 100 else 0)
     rospy.sleep(1)
 
 
