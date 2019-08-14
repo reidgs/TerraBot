@@ -19,7 +19,15 @@ def noise(x):
 
 
 ### default ###
-for n in sensor_names + actuator_names:
+for n in sensor_names:
+    schedules[n] = {}
+    next_update[n] = -1
+    if n == 'level':
+        interf_funcs[n] = identity
+    else:
+        interf_funcs[n] = [identity, identity]
+
+for n in actuator_names:
     interf_funcs[n] = identity
     schedules[n] = {}
     next_update[n] = -1

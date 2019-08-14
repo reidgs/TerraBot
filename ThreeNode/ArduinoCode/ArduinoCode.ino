@@ -7,6 +7,8 @@
 #include <std_msgs/Float32.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Float32MultiArray.h>
+#include <std_msgs/Int32MultiArray.h>
 #include <SimpleDHT.h>
 
 byte temperature;
@@ -83,22 +85,19 @@ float get_level() {
 
 // Sensors
 
-std_msgs::Int32 humid_msg;
+std_msgs::Int32MultiArray humid_msg;
 ros::Publisher humid_pub("humid_raw", &humid_msg);
 
-std_msgs::Int32 temp_msg;
+std_msgs::Int32MultiArray temp_msg;
 ros::Publisher temp_pub("temp_raw", &temp_msg);
 
-std_msgs::Int32 light_msg;
+std_msgs::Int32MultiArray light_msg;
 ros::Publisher light_pub("light_raw", &light_msg);
 
 std_msgs::Float32 level_msg;
 ros::Publisher level_pub("level_raw", &level_msg);
 
-std_msgs::Int32 tds_msg;
-ros::Publisher tds_pub("tds_raw", &tds_msg);
-
-std_msgs::Float32 cur_msg;
+std_msgs::Float32MultiArray cur_msg;
 ros::Publisher cur_pub("cur_raw", &cur_msg);
 
 
@@ -146,14 +145,20 @@ void loop(){
   if(millis() - last_update > interval){
       last_update = millis();
       if (temperature)
-        temp_msg.data = temperature;
+	temp_msg.data_length = 2;
+	int t_array[2] = {temperature, temperature};
+        temp_msg.data = t_array;
       temp_pub.publish(&temp_msg);
 
       if (humidity) 
-        humid_msg.data = humidity;
+	humid_msg.data_length = 2;
+	int h_array[2] = {humidity, humidity};
+        humid_msg.data = h_array;
       humid_pub.publish(&humid_msg);
-
-      light_msg.data = light_sum / light_count;
+	
+      light_msg.data_length = 2;
+      int l_array[2] = { light_sum / light_count, light_sim / light_count };
+      light_msg.data = l_array;
       light_sum = 0;
       light_count = 0;
       light_pub.publish(&light_msg);
@@ -164,7 +169,9 @@ void loop(){
       tds_msg.data = analogRead(tds_pin);
       tds_pub.publish(&tds_msg);
 
-      cur_msg.data = to_amp(cur_sum / cur_count);
+      cur_msg.data_length = 2;
+      float c_array[2] = { to_amp(cur_sum / cur_count), to_amp(cur_sum / cur_count) };
+      cur_msg.data = c_array;
       cur_sum = 0;
       cur_count = 0;
       cur_pub.publish(&cur_msg);

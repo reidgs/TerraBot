@@ -5,7 +5,7 @@ import signal
 import rospy
 import interference as interf
 from topic_def import *
-from std_msgs.msg import Int32,Bool,Float32,String
+from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray
 from rosgraph_msgs.msg import Clock
 import argparse
 import time
@@ -64,8 +64,13 @@ def cb_generic(name, data):
         log_file.flush()
         if (verbose):
             log_print ("Logging %s data" % name)
-
-    edited = interf.get_inter(name,clock_time)(data.data)
+    interf_func = interf.get_inter(name, clock_time)
+    #redundant sensors
+    if (name in sensor_names) and (name != 'level'):
+        edited = data
+        edited.data = [interf_func[0](data.data[0]), interf_func[1](data.data[1])]
+    else:
+        edited = interf_func(data.data)
     if grade:
         grader_vars[name] = edited
     publishers[name].publish(edited)
