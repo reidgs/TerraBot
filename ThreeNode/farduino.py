@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import rospy
-from std_msgs.msg import Int32,Bool,Float32,String
+from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray
 from topic_def import *
 import argparse
 
@@ -19,21 +19,6 @@ internal_vars = init_internals
 print(actuator_vars)
 publishers = {}
 subscribers = {}
-
-farduino_types = {
-    'led'   : int,
-    'wpump' : bool,
-    'npump' : bool,
-    'apump' : bool,
-    'fan'   : bool,
-    'freq'  : float,
-    'tds'   : int,
-    'cur'   : float,
-    'light' : int,
-    'level' : float,
-    'temp'  : int,
-    'humid' : int,
-}
 
 
 ###CONSTANTS
@@ -71,16 +56,11 @@ def amb_light(time):
 
 ### INTERNAL UPDATE FUNCTIONS ###
 def light_update(cur_interval):
-    internal_vars['total_light'] = actuator_vars['led'] * 3 + amb_light(rospy.get_time())
+    internal_vars['light'] = actuator_vars['led'] * 3 + amb_light(rospy.get_time())
 
 def volume_update(cur_interval):
-    internal_vars['volume'] += cur_interval * flow_rate if actuator_vars['wpump'] else 0
-    internal_vars['volume'] -= evap_rate * cur_interval
+    internal_vars['volume'] -= cur_interval * flow_rate * actuator_vars['wpump'] / 100
     internal_vars['volume'] = max(0.01, internal_vars['volume'])
-
-def nutrient_update(cur_interval):
-    internal_vars['nutrient'] += (cur_interval * flow_rate) if actuator_vars['npump'] else 0
-    #convert amt of ntr to tds (consider water vol)
 
 def humidity_update(cur_interval):
     internal_vars['humidity'] += -cur_interval if bool(actuator_vars['fan']) else cur_interval
@@ -93,46 +73,65 @@ def temperature_update(cur_interval):
 def current_update(cur_interval):
     internal_vars['current'] = 512
     internal_vars['current'] += led_current * actuator_vars['led']
-    internal_vars['current'] += pump_current if actuator_vars['wpump'] else 0
-    internal_vars['current'] += pump_current if actuator_vars['npump'] else 0
-    internal_vars['current'] += pump_current if actuator_vars['apump'] else 0
+    internal_vars['current'] += pump_current * actuator_vars['wpump'] / 100
     internal_vars['current'] += fan_current if actuator_vars['fan'] else 0
+
+def smoist_update(cur_interval):
+    internal_vars['smoist'] += cur_interval * actuator_vars['wpump'] / 100
+
 
 update_funcs = {
     'volume'   : volume_update,
-    'nutrient' : nutrient_update,
-    'total_light' : light_update,
+    'light' : light_update,
     'temperature' : temperature_update,
     'humidity'  : humidity_update,
-    'current' : current_update
+    'current' : current_update,
+    'smoist'      : smoist_update
 }
 
 ### INTERNAL TO SENSOR TRANSLATION ###
-def get_tds():
-    return internal_vars['nutrient'] / internal_vars['volume']
 
 def get_cur():
-    return internal_vars['current']
+    c_array = Float32MultiArray()
+    d = float(internal_vars['current'])
+    c_array.data = [d,d]
+    return c_array
 
 def get_light():
-    return internal_vars['total_light']
+    l_array = Int32MultiArray()
+    d = int(internal_vars['light'])
+    l_array.data = [d,d] 
+    return l_array
 
 def get_level():
-    return internal_vars['volume'] / 20
+    return float(internal_vars['volume'] / 20)
 
 def get_temp():
-    return internal_vars['temperature']
+    t_array = Int32MultiArray()
+    d = int(internal_vars['temperature'])
+    t_array.data = [d,d]
+    return t_array
 
 def get_humid():
-    return internal_vars['humidity']
+    h_array = Int32MultiArray()
+    d = int(internal_vars['humidity'])
+    h_array.data = [d,d]
+    return h_array
+
+def get_smoist():
+    s_array = Int32MultiArray()
+    d = int(internal_vars['smoist'])
+    s_array.data = [d,d]
+    return s_array
+
 
 sensor_funcs = {
-    'tds'   : get_tds,
-    'cur'   : get_cur,
-    'light' : get_light,
-    'level' : get_level,
-    'temp'  : get_temp,
-    'humid'   : get_humid,
+    'cur'    : get_cur,
+    'light'  : get_light,
+    'level'  : get_level,
+    'temp'   : get_temp,
+    'humid'  : get_humid,
+    'smoist' : get_smoist
 }
 
 rospy.init_node('Simulator', anonymous=True)
@@ -157,7 +156,4 @@ while not rospy.core.is_shutdown():
         print(internal_vars)
         print(actuator_vars)
         for sensor in sensor_names:
-            publishers[sensor].publish(
-                farduino_types[sensor](
-                    sensor_funcs[sensor]())
-                )
+            publishers[sensor].publish(sensor_funcs[sensor]())

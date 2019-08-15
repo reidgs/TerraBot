@@ -3,7 +3,7 @@
 #mock file of student
 import rospy
 import subprocess
-from std_msgs.msg import Float32, Int32, Bool, String
+from std_msgs.msg import Float32, Int32, Bool, String, Float32MultiArray, Int32MultiArray
 import time
 
 light = 0
@@ -24,31 +24,27 @@ ping_pub = rospy.Publisher("ping", Bool, latch = True, queue_size = 1)
 
 def humid_reaction(data):
     global hum
-    hum = data.data
+    hum = data.data[0]
 
 def temp_reaction(data):
     True
 
 def light_reaction(data):
     global light
-    light = data.data
+    light = data.data[0]
 
 def level_reaction(data):
     global w_level
     w_level = data.data
 
-def tds_reaction(data):
-    True
-
 def cam_reaction(data):
     print ("picture taken\t" + data.data)
 
 
-temp_sensor = rospy.Subscriber("temp_output", Int32, temp_reaction)
-humid_sensor = rospy.Subscriber("humid_output", Int32, humid_reaction)
-light_sensor = rospy.Subscriber("light_output", Int32, light_reaction)
+temp_sensor = rospy.Subscriber("temp_output", Int32MultiArray, temp_reaction)
+humid_sensor = rospy.Subscriber("humid_output", Int32MultiArray, humid_reaction)
+light_sensor = rospy.Subscriber("light_output", Int32MultiArray, light_reaction)
 level_sensor = rospy.Subscriber("level_output", Float32, level_reaction)
-tds_sensor = rospy.Subscriber("tds_output", Int32, tds_reaction)
 
 time_now = rospy.get_time()
 light_time = rospy.get_time() - 13 * 3600
