@@ -4,11 +4,11 @@
 #initial values
 
 init_internals = {
-    'light'       : 0,
-    'temperature' : 0,
-    'humidity'    : 0,
-    'current'     : 0.0,
-    'smoist'      : 0,
+    'light'       : [0,10],
+    'temperature' : [0,0],
+    'humidity'    : [10,50],
+    'current'     : [0.0,0.0],
+    'smoist'      : [0,0],
     'volume'      : 50.0
 }
 

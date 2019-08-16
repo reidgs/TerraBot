@@ -48,33 +48,35 @@ def generate_publishers():
     for name in sensor_names:
         pub_name = name + "_output"
         publishers[name] = rospy.Publisher(
-                            pub_name, to_stu[name],
+                            pub_name, sensor_types[name],
                             latch = True, queue_size = 1)
 
     for name in actuator_names:
         pub_name = name + "_raw"
         publishers[name] = rospy.Publisher(
-                            pub_name, to_ard[name],
+                            pub_name, actuator_types[name],
                             latch = True, queue_size = 1)
 
 def cb_generic(name, data):
     global clock_time, grader_vars
-    if (log):
-        log_file = log_files[name]
-        log_file.write(str(clock_time.to_sec()) + ", " + str(data.data) + "\n")
-        log_file.flush()
-        if (verbose):
-            log_print ("Logging %s data" % name)
     interf_func = interf.get_inter(name, clock_time)
+    original = data.data
+    edited = data
     #redundant sensors
     if (name in sensor_names) and (name != 'level'):
-        edited = data
-        edited.data = [interf_func[0](data.data[0]), interf_func[1](data.data[1])]
+        edited.data = [interf_func[0](name, data.data[0]), \
+                       interf_func[1](name, data.data[1])]
     else:
-        edited = interf_func(data.data)
+        edited.data = interf_func(name, data.data)
     if grade:
         grader_vars[name] = edited
     publishers[name].publish(edited)
+    if (log):
+        log_file = log_files[name]
+        log_file.write(str(clock_time.to_sec()) + ", internal: " + str(original) + ", edited: " + str(edited.data) + "\n")
+        log_file.flush()
+        if (verbose):
+            log_print ("Logging %s data" % name)
 
 def generate_cb(name):
     return (lambda data: cb_generic(name, data))
@@ -84,12 +86,12 @@ def generate_subscribers():
     for name in sensor_names:
         sub_name = name + "_raw"
         cb = generate_cb(name)
-        subscribers[name] = rospy.Subscriber(sub_name, from_ard[name], cb)
+        subscribers[name] = rospy.Subscriber(sub_name, sensor_types[name], cb)
 
     for name in actuator_names:
         sub_name = name + "_input"
         cb = generate_cb(name)
-        subscribers[name] = rospy.Subscriber(sub_name, from_stu[name], cb)
+        subscribers[name] = rospy.Subscriber(sub_name, actuator_types[name], cb)
 
 ###Start of program
 parser = argparse.ArgumentParser(description = "relay parser for Autonomous Systems")
@@ -151,6 +153,8 @@ else:
 if log:
     gen_log_files()
 
+
+interf.parse_interf('interf.txt')
 
 ### Open logs for roscore and relay
 core_log = open("Log/roscore.log", "a+", 0)
@@ -229,7 +233,6 @@ elif mode == "serial":
 
 if (verbose):
     log_print("Spinning...")
-
 
 ### Loop for the entire system, should only ever break if grading
 while len(tracefiles) > 0 or not grade:

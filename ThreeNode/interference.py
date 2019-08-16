@@ -5,18 +5,70 @@ from topic_def import *
 interf_funcs = {}
 schedules = {}
 next_update ={}
+ranges = { 'cur'    : { 'low'  : 512,
+                        'opt'  : 512,
+                        'high' : 550 },
+           'smoist' : { 'low'  : 40,
+                        'opt'  : 50,
+                        'high' : 80 },
+           'light'  : { 'low'  : 50,
+                        'opt'  : 100,
+                        'high' : 255 },
+           'level'  : { 'low'  : 50,
+                        'opt'  : 100,
+                        'high' : 255 },
+           'temp'   : { 'low'  : 50,
+                        'opt'  : 100,
+                        'high' : 255 },
+           'humid'  : { 'low'  : 50,
+                        'opt'  : 100,
+                        'high' : 255 },
+           'freq'   : { 'low'  : 50,
+                        'opt'  : 100,
+                        'high' : 255 },
+           'led'    : { 'low'  : 50,
+                        'opt'  : 100,
+                        'high' : 255 }
+}
+
+types = {
+    
+    'led'   : int,
+    'wpump' : bool,
+    'fan'   : bool,
+    'freq'  : float,
+
+    #type for each sensor value
+    'smoist' : int,
+    'cur'    : float,
+    'light'  : int,
+    'level'  : float,
+    'temp'   : int,
+    'humid'  : int,
+}
+
+
+
 
 ###interference functions###
 
-def identity(x):
+def identity(name, x):
     return x
 
-def off(x):
-    return 0
+def off(name, x):
+    return types[name](0)
 
-def noise(x):
-    return x+10
+def noise(name, x):
+    return types[name](x+types[name](10))
 
+def optimal(name, x):
+    return ranges[name]['opt']
+
+def low(name, x):
+    return ranges[name]['low']
+
+def high(name, x):
+    return ranges[name]['high']
 
 ### default ###
 for n in sensor_names:
@@ -52,10 +104,11 @@ def parse_interf(path=None):
 states_funcs = {
     'normal' : identity,
     'noise'  : noise,
-    'off'    : off
+    'off'    : off,
+    'opt'    : optimal,
+    'low'    : low,
+    'high'   : high
 }
-
-
 
 ### interf passthrough ###
 def get_inter(name, time):

@@ -24,7 +24,7 @@ int light_pin = A0;
 int trig_pin = 48;
 int echo_pin = 50;
 
-int tds_pin = A1;
+int smoist_pin = A1;
 int cur_pin = A2;
 
 
@@ -56,7 +56,7 @@ void led_activate( const std_msgs::Int32& cmd_msg){
   analogWrite(led_pin, cmd_msg.data);//toggle led
 }
 
-void wpump_activate(const std_msgs::Int32& cmd_msg){
+void wpump_activate(const std_msgs::Bool& cmd_msg){
   analogWrite(wpump_pin, cmd_msg.data);
 }
 
@@ -66,9 +66,8 @@ void fan_activate(const std_msgs::Bool& cmd_msg){
 
 // Actuators
 ros::Subscriber<std_msgs::Int32> led_sub("led_raw", &led_activate);
-ros::Subscriber<std_msgs::Int32> wpump_sub("wpump_raw", &wpump_activate);
-ros::Subscriber<std_msgs::Bool> fan_sub("fan_raw",
-&fan_activate);
+ros::Subscriber<std_msgs::Bool> wpump_sub("wpump_raw", &wpump_activate);
+ros::Subscriber<std_msgs::Bool> fan_sub("fan_raw", &fan_activate);
 
 
 // Sensor helpers
@@ -119,7 +118,7 @@ void setup(){
   nh.advertise(humid_pub);
   nh.advertise(light_pub);
   nh.advertise(level_pub);
-  nh.advertise(tds_pub);
+  nh.advertise(smoist_pub);
   nh.advertise(cur_pub);
 }
 
@@ -166,8 +165,8 @@ void loop(){
       level_msg.data = get_level();
       level_pub.publish(&level_msg);
 
-      tds_msg.data = analogRead(tds_pin);
-      tds_pub.publish(&tds_msg);
+      smoist_msg.data = analogRead(smoist_pin);
+      smoist_pub.publish(&smoist_msg);
 
       cur_msg.data_length = 2;
       float c_array[2] = { to_amp(cur_sum / cur_count), to_amp(cur_sum / cur_count) };

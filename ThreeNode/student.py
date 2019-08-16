@@ -16,7 +16,7 @@ rospy.set_param("use_sim_time", True)
 
 rospy.init_node("student", anonymous = True)
 
-wpump_pub = rospy.Publisher("wpump_input", Int32, latch = True, queue_size = 1)
+wpump_pub = rospy.Publisher("wpump_input", Bool, latch = True, queue_size = 1)
 led_pub = rospy.Publisher("led_input", Int32, latch = True, queue_size = 1)
 fan_pub = rospy.Publisher("fan_input", Bool, latch = True, queue_size = 1)
 
@@ -67,7 +67,7 @@ while not rospy.core.is_shutdown():
         cam_time = time_now
 
     #fan_pub.publish(True if hum > 70 else False)
-    wpump_pub.publish(70 if w_level < 100 else 0)
+    wpump_pub.publish(True if w_level < 100 else False)
     rospy.sleep(1)
 
 

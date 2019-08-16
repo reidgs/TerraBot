@@ -2,3 +2,5 @@
 20,wpump,normal
 10,wpump,off
 2,light,normal,noise
+9,light,opt,low
+8,humid,noise,low
