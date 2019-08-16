@@ -37,11 +37,12 @@ float last_dht = 0;
 float time_now = 0;
 int interval = 1000;
 
-long light_sum = 0;
-long light_count = 0;
+//Was long but unsure why
+int light_sum = 0;
+int light_count = 0;
 
-long cur_sum = 0;
-long cur_count = 0;
+int cur_sum = 0;
+int cur_count = 0;
 
 
 //Frequency Adjustment
@@ -56,8 +57,8 @@ void led_activate( const std_msgs::Int32& cmd_msg){
   analogWrite(led_pin, cmd_msg.data);//toggle led
 }
 
-void wpump_activate(const std_msgs::Bool& cmd_msg){
-  analogWrite(wpump_pin, cmd_msg.data);
+void wpump_activate(const std_msgs::Bool cmd_msg){
+  analogWrite(wpump_pin, cmd_msg.data ? 75 : 0);
 }
 
 void fan_activate(const std_msgs::Bool& cmd_msg){
@@ -72,7 +73,7 @@ ros::Subscriber<std_msgs::Bool> fan_sub("fan_raw", &fan_activate);
 
 // Sensor helpers
 float get_level() {
-  float duration, distance;
+  float duration;
   digitalWrite(trig_pin, LOW);
   delayMicroseconds(2);
   digitalWrite(trig_pin, HIGH);
@@ -99,6 +100,8 @@ ros::Publisher level_pub("level_raw", &level_msg);
 std_msgs::Float32MultiArray cur_msg;
 ros::Publisher cur_pub("cur_raw", &cur_msg);
 
+std_msgs::Int32MultiArray smoist_msg;
+ros::Publisher smoist_pub("smoist_raw", &smoist_msg);
 
 void setup(){
   pinMode(led_pin, OUTPUT);
@@ -145,18 +148,18 @@ void loop(){
       last_update = millis();
       if (temperature)
 	temp_msg.data_length = 2;
-	int t_array[2] = {temperature, temperature};
+	long int t_array[2] = {temperature, temperature};
         temp_msg.data = t_array;
       temp_pub.publish(&temp_msg);
 
       if (humidity) 
 	humid_msg.data_length = 2;
-	int h_array[2] = {humidity, humidity};
+	long int h_array[2] = {humidity, humidity};
         humid_msg.data = h_array;
       humid_pub.publish(&humid_msg);
 	
       light_msg.data_length = 2;
-      int l_array[2] = { light_sum / light_count, light_sim / light_count };
+      long int l_array[2] = { light_sum / light_count, light_sum / light_count };
       light_msg.data = l_array;
       light_sum = 0;
       light_count = 0;
@@ -165,7 +168,9 @@ void loop(){
       level_msg.data = get_level();
       level_pub.publish(&level_msg);
 
-      smoist_msg.data = analogRead(smoist_pin);
+      smoist_msg.data_length = 2;
+      long int s_array[2] = {analogRead(smoist_pin), analogRead(smoist_pin)};
+      smoist_msg.data = s_array;
       smoist_pub.publish(&smoist_msg);
 
       cur_msg.data_length = 2;
