@@ -83,6 +83,7 @@ def current_update(cur_interval):
 def smoist_update(cur_interval):
     for i in range(2):
         internal_vars['smoist'][i] += cur_interval if actuator_vars['wpump'] else 0
+        internal_vars['smoist'][i] -= cur_interval * evap_rate
 
 
 update_funcs = {
