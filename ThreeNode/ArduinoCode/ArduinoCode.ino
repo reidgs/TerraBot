@@ -146,18 +146,24 @@ void loop(){
 
   if(millis() - last_update > interval){
       last_update = millis();
+      temp_msg.data_length = 2;
+      long int t_array[2];
       if (temperature)
-	temp_msg.data_length = 2;
 	long int t_array[2] = {temperature, temperature};
-        temp_msg.data = t_array;
+      else
+	long int t_array[2] = {0,0};
+      temp_msg.data = t_array;
       temp_pub.publish(&temp_msg);
 
-      if (humidity) 
-	humid_msg.data_length = 2;
+      humid_msg.data_length = 2;
+      long int h_array[2];
+      if (humidity)
 	long int h_array[2] = {humidity, humidity};
-        humid_msg.data = h_array;
+      else
+	long int h_array[2] = {0,0}
+      humid_msg.data = h_array;
       humid_pub.publish(&humid_msg);
-	
+
       light_msg.data_length = 2;
       long int l_array[2] = { light_sum / light_count, light_sum / light_count };
       light_msg.data = l_array;
