@@ -14,7 +14,7 @@ init_internals = {
 
 init_actuators = {
     'led'   : 0,
-    'wpump' : 0,
+    'wpump' : False,
     'fan'   : False,
     'freq'  : 10.0
 }
