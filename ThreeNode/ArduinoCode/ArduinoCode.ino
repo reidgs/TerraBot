@@ -160,7 +160,7 @@ void loop(){
       if (humidity)
 	long int h_array[2] = {humidity, humidity};
       else
-	long int h_array[2] = {0,0}
+	long int h_array[2] = {0,0};
       humid_msg.data = h_array;
       humid_pub.publish(&humid_msg);
 
