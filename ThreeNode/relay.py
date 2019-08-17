@@ -63,13 +63,11 @@ def cb_generic(name, data):
     original = data.data
     edited = data
     #redundant sensors
-    """
     if (name in sensor_names) and (name != 'level'):
         edited.data = [interf_func[0](name, data.data[0]), \
                        interf_func[1](name, data.data[1])]
     else:
         edited.data = interf_func(name, data.data)
-    """
     edited.data = data.data
     if grade:
         grader_vars[name] = edited
