@@ -7,7 +7,7 @@ import rospy
 import interference as interf
 from topic_def import *
 from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray
-from rosgraph_msgs.msg import Clock
+import rosgraph
 import argparse
 import time
 import grader
@@ -18,7 +18,7 @@ grade = False
 log = False
 simulate = False
 still_running = True
-run_student = True
+run_agent = True
 #tick_interval = 0.01
 tick_interval = 0.5
 clock_time = rospy.Time(0)
@@ -107,7 +107,8 @@ parser.add_argument('--interference', default = None)
 parser.add_argument('-t','--tracefile', default = None,
         help = "if --tracedir is also set, this argument is ignored")
 parser.add_argument('-T','--tracedir', default = None)
-parser.add_argument('--nostudent', action = 'store_true')
+parser.add_argument('--agent', default = 'agent.py',
+        help = "if agent is 'none', agent must be run externally")
 
 args = parser.parse_args()
 
@@ -117,15 +118,14 @@ mode = args.mode
 simulate = mode == "sim"
 grade = mode == "grade"
 ser = mode == "serial"
-speedup = args.speedup
-run_student = not args.nostudent
+run_agent = args.agent != "None" and args.agent != "none"
 
 if grade and (args.tracefile == None and args.tracedir == None):
     print("no tracefile or tracedir given, run ./relay.py -h for usage")
     quit()
 
 def terminate_gracefully():
-    global core_p, serial_p, sim_p, student_p
+    global core_p, serial_p, sim_p, agent_p
     if core_p != None:
         print("Terminating roscore")
         core_p.terminate()
@@ -134,10 +134,10 @@ def terminate_gracefully():
         print("Terminating sim")
         sim_p.terminate()
         sim_p.wait()
-    if student_p != None:
-        print("Terminating student")
-        student_p.terminate()
-        student_p.wait()
+    if agent_p != None:
+        print("Terminating agent")
+        agent_p.terminate()
+        agent_p.wait()
     if serial_p != None:
         print("Terminating serial")
         serial_p.terminate()
@@ -155,7 +155,7 @@ if log:
     gen_log_files()
 
 
-interf.parse_interf('interf.txt')
+interf.parse_interf(args.interference)
 
 ### Open logs for roscore and relay
 core_log = open("Log/roscore.log", "a+", 0)
@@ -165,50 +165,48 @@ relay_log = open("Log/relay.log", "a+", 0)
 core_p = sp.Popen("roscore", stdout = core_log, stderr = core_log)
 
 ### Begin relay node
+if simulate:
+    while not rosgraph.is_master_online():
+        rospy.sleep(1) # Wait for roscore to start up
+    rospy.set_param("use_sim_time", True)
 rospy.init_node('relay', anonymous = True)
-rospy.set_param("use_sim_time", True)
+
+now = 0 if simulate else rospy.get_time()
+last_ping = now
 
 generate_publishers()
 generate_subscribers()
 
-clock_pub = rospy.Publisher("clock", Clock, latch = True, queue_size = 1)
-
 ### Health Ping callback function
 ### Records the most recent ping
 def ping_cb(data):
-    global last_ping, simulate, clock_time
-    last_ping = clock_time if simulate else rospy.get_rostime()
+    global last_ping, now
+    last_ping = now
 
 ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
 
-### Change the speedup interactively
-def speedup_cb(data):
-    global speedup, simulate
-    if simulate:
-        speedup = data.data
-        print("Speedup %d" %speedup)
-
-speedup_sub = rospy.Subscriber('speedup', Int32, speedup_cb)
-
 ### Spawn subprocesses
 
-### Simulator starts up Student and Farduino
+### Simulator starts up Agent and Farduino
 #TODO add baseline functionality
-student_p = None
-if run_student:
-    student_log = open("Log/student.log", "a+", 0)
+agent_p = None
+if run_agent:
+    agent_log = open("Log/agent.log", "a+", 0)
 sim_p = None
 serial_p = None
 
 if simulate:
     sim_log = open("Log/simulator.log", "a+", 0)
     ### Initiates the Simulator and redirects output
-    sim_p = sp.Popen(["python", "farduino.py"],
+    fard_args = ["--baseline", args.baseline, "--speedup", str(args.speedup)]
+    if log:
+        fard_args = fard_args + ["-l"]
+    sim_p = sp.Popen(["python", "my_farduino.py"] + fard_args,
                      stdout = sim_log, stderr = sim_log)
-    ### Initiates the Student file and redirects output
-    if run_student:
-        student_p = sp.Popen(["python", "student.py"],
-                             stdout = student_log, stderr = student_log)
+    ### Initiates the Agent file and redirects output
+    if run_agent:
+        agent_p = sp.Popen(["python", "agent.py"],
+                             stdout = agent_log, stderr = agent_log)
     print("waiting for nodes")
     rospy.sleep(2)
     print("ok")
@@ -222,10 +220,10 @@ elif mode == "serial":
     serial_p = sp.Popen(["rosrun", "rosserial_arduino",
         "serial_node.py", "/dev/ttyACM0"],
         stdout = serial_log, stderr = serial_log)
-    ### Initiates the Student file and redirects output
-    if run_student:
-        student_p = sp.Popen(["python", "student.py"],
-                             stdout = student_log, stderr = student_log)
+    ### Initiates the Agent file and redirects output
+    if run_agent:
+        agent_p = sp.Popen(["python", "agent.py"],
+                             stdout = agent_log, stderr = agent_log)
     print("waiting for nodes")
     rospy.sleep(2)
     print("ok")
@@ -238,10 +236,9 @@ if (verbose):
 ### Loop for the entire system, should only ever break if grading
 while len(tracefiles) > 0 or not grade:
     ### TODO add grading functionality
-    ### We must begin simulated time and health ping
-    clock_time = rospy.Time(0)
-    last_ping = rospy.Time(0)
-    clock_pub.publish(clock_time)
+    ### We must begin health ping
+    now= rospy.get_time()
+    last_ping = now
 
     if grade:
         reload(grader)
@@ -256,8 +253,8 @@ while len(tracefiles) > 0 or not grade:
         else:
             interf.parse_interf(dirname + grader.interf_file)
 
-        student_p = sp.Popen(["python", "student.py"],
-            stdout = student_log, stderr = student_log)
+        agent_p = sp.Popen(["python", "agent.py"],
+            stdout = agent_log, stderr = agent_log)
 
         sim_log = open("Log/simulator.log", "a+", 0)
         ### Initiates the Simulator and redirects output
@@ -265,8 +262,12 @@ while len(tracefiles) > 0 or not grade:
         exec(open(dirname + grader.bfile).read())
         grader_vars = init_actuators
 
-        sim_p = sp.Popen(["python", "farduino.py", dirname + grader.bfile],
-            stdout = sim_log, stderr = sim_log)
+        fard_args = ["--baseline", dirname + grader.bfile,
+                     "--speedup", str(args.speedup)]
+        if log:
+            fard_args = fard_args + ["-l"]
+        sim_p = sp.Popen(["python", "my_farduino.py"] + fard_args,
+                         stdout = sim_log, stderr = sim_log)
         print("running %s"%tfile)
         rospy.sleep(1)
 
@@ -283,38 +284,33 @@ while len(tracefiles) > 0 or not grade:
 
         ### If not simulating get real time
         #print("spin")
-        if mode == "serial":
-            clock_time = rospy.get_rostime()
-        clock_pub.publish(clock_time)
+        now = rospy.get_time()
         ### TODO add grading functionality
         if grade:
             grader.grader_vars = grader_vars
-            cur_cmd = grader.run_command(clock_time)
-            start_time = clock_time
+            cur_cmd = grader.run_command(rospy.Time.from_sec(now))
             if grader.finished:
                 print("done")
                 break
 
 
         ### TODO Fix the ping so that it actually works
-        last_ping = clock_time
-        if  run_student and (clock_time.to_sec() - last_ping.to_sec() > 3600):
-            log_print("no ping since %f, terminating..."%last_ping.to_sec())
-            student_p.terminate()
+        if  run_agent and ((now - last_ping) > 3600):
+            log_print("no ping since %f, terminating..."%last_ping)
+            agent_p.terminate()
 
-        if (run_student and (student_p.poll() != None)):
-            log_print("student restarting...")
-            student_p = sp.Popen(["python", "student.py"],
-                    stdout = student_log, stderr = student_log)
+        if (run_agent and (agent_p.poll() != None)):
+            log_print("agent restarting...")
+            agent_p = sp.Popen(["python", "agent.py"],
+                               stdout = agent_log, stderr = agent_log)
 
-        clock_time += rospy.Duration(tick_interval*speedup)
         rospy.sleep(tick_interval)
     if grade:
         sim_p.terminate()
         sim_p.wait()
-        if run_student:
-            student_p.terminate()
-            student_p.wait()
+        if run_agent:
+            agent_p.terminate()
+            agent_p.wait()
     else:
         break
 

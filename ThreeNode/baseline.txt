@@ -4,12 +4,12 @@
 #initial values
 
 init_internals = {
-    'light'       : [0,10],
-    'temperature' : [0,0],
-    'humidity'    : [10,50],
+    'light'       : [100,100],
+    'temperature' : [15,15],
+    'humidity'    : [40,50],
     'current'     : [0.0,0.0],
-    'smoist'      : [0,0],
-    'volume'      : 50.0
+    'smoist'      : [300,300],
+    'volume'      : 3300.0 # ~14 cups
 }
 
 init_actuators = {
