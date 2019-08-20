@@ -1,8 +1,0 @@
-prefix=/home/casablanca/Desktop/RoBotanist/Prototype/Proto_WS/install
-
-Name: ThreeNodes
-Description: Description of ThreeNodes
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/casablanca/Desktop/RoBotanist/Prototype/Proto_WS/install/lib 
-Requires: 
