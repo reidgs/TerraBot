@@ -190,11 +190,9 @@ Notice that this setting is variable, meaning it can be changed over the course 
 #### Time ####
 One of the most convenient aspects of the simulator is its ability to manipulate time in order to
 suit the user's needs. By default the simulator will begin running at 1x speed at the epoch,
-but that can be configured with the -s flag.
+but that can be configured with the -s flag.It is also important that the execution of the simulator is identical to the relay (even if sped up).
 
-It is also important that the execution of the simulator is identical to the relay (even if sped up).
-**_To ensure consistency between your code in simulation and on TerraBot, you should refrain from referring to outside functions
-(OS time.time()) and should instead refer to the ROS time topic via rospy.get_time()._**
+**_To ensure consistency between your code in simulation and on TerraBot, you should refrain from referring to outside functions (OS time.time()) and should instead refer to the ROS time topic via rospy.get_time()._**
 
 #### Camera ####
 The one aspect of the system which we are not able to simulate is the camera. Any call to
