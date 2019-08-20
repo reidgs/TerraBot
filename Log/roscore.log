@@ -1,0 +1,210 @@
+... logging to /home/aa-sim/.ros/log/8177a5c8-c362-11e9-b19c-080027cff8af/roslaunch-aasim-VirtualBox-9457.log
+Checking log directory for disk usage. This may take awhile.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;roscore
+[1mstarted roslaunch server http://aasim-VirtualBox:43449/[0m
+ros_comm version 1.14.3
+
+
+SUMMARY
+========
+
+PARAMETERS
+ * /rosdistro: melodic
+ * /rosversion: 1.14.3
+
+NODES
+
+auto-starting new master
+[1mprocess[master]: started with pid [9467][0m
+[1mROS_MASTER_URI=http://aasim-VirtualBox:11311/[0m
+]2;roscore http://aasim-VirtualBox:11311/
+[1msetting /run_id to 8177a5c8-c362-11e9-b19c-080027cff8af[0m
+[1mprocess[rosout-1]: started with pid [9478][0m
+started core service [/rosout]
+[rosout-1] killing on exit
+[master] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m
+... logging to /home/aa-sim/.ros/log/c92093f8-c362-11e9-b19c-080027cff8af/roslaunch-aasim-VirtualBox-9824.log
+Checking log directory for disk usage. This may take awhile.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;roscore
+[1mstarted roslaunch server http://aasim-VirtualBox:43109/[0m
+ros_comm version 1.14.3
+
+
+SUMMARY
+========
+
+PARAMETERS
+ * /rosdistro: melodic
+ * /rosversion: 1.14.3
+
+NODES
+
+auto-starting new master
+[1mprocess[master]: started with pid [9834][0m
+[1mROS_MASTER_URI=http://aasim-VirtualBox:11311/[0m
+]2;roscore http://aasim-VirtualBox:11311/
+[1msetting /run_id to c92093f8-c362-11e9-b19c-080027cff8af[0m
+[1mprocess[rosout-1]: started with pid [9845][0m
+started core service [/rosout]
+[rosout-1] killing on exit
+[master] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m
+... logging to /home/aa-sim/.ros/log/f1bd8258-c362-11e9-b19c-080027cff8af/roslaunch-aasim-VirtualBox-10068.log
+Checking log directory for disk usage. This may take awhile.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;roscore
+[1mstarted roslaunch server http://aasim-VirtualBox:46007/[0m
+ros_comm version 1.14.3
+
+
+SUMMARY
+========
+
+PARAMETERS
+ * /rosdistro: melodic
+ * /rosversion: 1.14.3
+
+NODES
+
+auto-starting new master
+[1mprocess[master]: started with pid [10080][0m
+[1mROS_MASTER_URI=http://aasim-VirtualBox:11311/[0m
+]2;roscore http://aasim-VirtualBox:11311/
+[1msetting /run_id to f1bd8258-c362-11e9-b19c-080027cff8af[0m
+[1mprocess[rosout-1]: started with pid [10091][0m
+started core service [/rosout]
+[rosout-1] killing on exit
+[master] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m
+... logging to /home/aa-sim/.ros/log/2c5fe338-c363-11e9-b19c-080027cff8af/roslaunch-aasim-VirtualBox-10259.log
+Checking log directory for disk usage. This may take awhile.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;roscore
+[1mstarted roslaunch server http://aasim-VirtualBox:41033/[0m
+ros_comm version 1.14.3
+
+
+SUMMARY
+========
+
+PARAMETERS
+ * /rosdistro: melodic
+ * /rosversion: 1.14.3
+
+NODES
+
+auto-starting new master
+[1mprocess[master]: started with pid [10271][0m
+[1mROS_MASTER_URI=http://aasim-VirtualBox:11311/[0m
+]2;roscore http://aasim-VirtualBox:11311/
+[1msetting /run_id to 2c5fe338-c363-11e9-b19c-080027cff8af[0m
+[1mprocess[rosout-1]: started with pid [10282][0m
+started core service [/rosout]
+[rosout-1] killing on exit
+[master] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m
+... logging to /home/aa-sim/.ros/log/443d134a-c363-11e9-b19c-080027cff8af/roslaunch-aasim-VirtualBox-10480.log
+Checking log directory for disk usage. This may take awhile.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;roscore
+[1mstarted roslaunch server http://aasim-VirtualBox:45955/[0m
+ros_comm version 1.14.3
+
+
+SUMMARY
+========
+
+PARAMETERS
+ * /rosdistro: melodic
+ * /rosversion: 1.14.3
+
+NODES
+
+auto-starting new master
+[1mprocess[master]: started with pid [10492][0m
+[1mROS_MASTER_URI=http://aasim-VirtualBox:11311/[0m
+]2;roscore http://aasim-VirtualBox:11311/
+[1msetting /run_id to 443d134a-c363-11e9-b19c-080027cff8af[0m
+[1mprocess[rosout-1]: started with pid [10503][0m
+started core service [/rosout]
+[rosout-1] killing on exit
+[master] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m
+... logging to /home/aa-sim/.ros/log/0617f548-c364-11e9-b19c-080027cff8af/roslaunch-aasim-VirtualBox-10775.log
+Checking log directory for disk usage. This may take awhile.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;roscore
+[1mstarted roslaunch server http://aasim-VirtualBox:32855/[0m
+ros_comm version 1.14.3
+
+
+SUMMARY
+========
+
+PARAMETERS
+ * /rosdistro: melodic
+ * /rosversion: 1.14.3
+
+NODES
+
+auto-starting new master
+[1mprocess[master]: started with pid [10787][0m
+[1mROS_MASTER_URI=http://aasim-VirtualBox:11311/[0m
+]2;roscore http://aasim-VirtualBox:11311/
+[1msetting /run_id to 0617f548-c364-11e9-b19c-080027cff8af[0m
+[1mprocess[rosout-1]: started with pid [10798][0m
+started core service [/rosout]
+[rosout-1] killing on exit
+[master] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m
+... logging to /home/aa-sim/.ros/log/e1fa4306-c376-11e9-b19c-080027cff8af/roslaunch-aasim-VirtualBox-11162.log
+Checking log directory for disk usage. This may take awhile.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+]2;roscore
+[1mstarted roslaunch server http://aasim-VirtualBox:39965/[0m
+ros_comm version 1.14.3
+
+
+SUMMARY
+========
+
+PARAMETERS
+ * /rosdistro: melodic
+ * /rosversion: 1.14.3
+
+NODES
+
+auto-starting new master
+[1mprocess[master]: started with pid [11172][0m
+[1mROS_MASTER_URI=http://aasim-VirtualBox:11311/[0m
+]2;roscore http://aasim-VirtualBox:11311/
+[1msetting /run_id to e1fa4306-c376-11e9-b19c-080027cff8af[0m
+[1mprocess[rosout-1]: started with pid [11183][0m
+started core service [/rosout]
+[rosout-1] killing on exit
+[master] killing on exit
+shutting down processing monitor...
+... shutting down processing monitor complete
+[1mdone[0m
