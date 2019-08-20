@@ -102,12 +102,12 @@ parser.add_argument('-m', '--mode', default = "serial",
         choices = ['serial', 'sim', 'grade'],
         help = "if no mode given, serial is used")
 parser.add_argument('--speedup', default = 1, type = float)
-parser.add_argument('--baseline', default = "baseline.txt")
+parser.add_argument('--baseline', default = "grading/baseline.txt")
 parser.add_argument('--interference', default = None)
 parser.add_argument('-t','--tracefile', default = None,
         help = "if --tracedir is also set, this argument is ignored")
 parser.add_argument('-T','--tracedir', default = None)
-parser.add_argument('--agent', default = 'agent.py',
+parser.add_argument('--agent', default = 'none',
         help = "if agent is 'none', agent must be run externally")
 
 args = parser.parse_args()
@@ -205,7 +205,7 @@ if simulate:
                      stdout = sim_log, stderr = sim_log)
     ### Initiates the Agent file and redirects output
     if run_agent:
-        agent_p = sp.Popen(["python", "agent.py"],
+        agent_p = sp.Popen(["python", args.agent],
                              stdout = agent_log, stderr = agent_log)
     print("waiting for nodes")
     rospy.sleep(2)
@@ -222,7 +222,7 @@ elif mode == "serial":
         stdout = serial_log, stderr = serial_log)
     ### Initiates the Agent file and redirects output
     if run_agent:
-        agent_p = sp.Popen(["python", "agent.py"],
+        agent_p = sp.Popen(["python", args.agent],
                              stdout = agent_log, stderr = agent_log)
     print("waiting for nodes")
     rospy.sleep(2)
@@ -253,7 +253,7 @@ while len(tracefiles) > 0 or not grade:
         else:
             interf.parse_interf(dirname + grader.interf_file)
 
-        agent_p = sp.Popen(["python", "agent.py"],
+        agent_p = sp.Popen(["python", args.agent],
             stdout = agent_log, stderr = agent_log)
 
         sim_log = open("Log/simulator.log", "a+", 0)
@@ -301,7 +301,7 @@ while len(tracefiles) > 0 or not grade:
 
         if (run_agent and (agent_p.poll() != None)):
             log_print("agent restarting...")
-            agent_p = sp.Popen(["python", "agent.py"],
+            agent_p = sp.Popen(["python", args.agent],
                                stdout = agent_log, stderr = agent_log)
 
         rospy.sleep(tick_interval)

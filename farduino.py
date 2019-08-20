@@ -83,10 +83,9 @@ def amb_light(time):
 
 ### INTERNAL UPDATE FUNCTIONS ###
 def light_update(cur_interval):
-    for i in range(2):
-        val = internal_vars['light'][i]
-        val = actuator_vars['led'] * 3 + amb_light(rospy.get_time())
-        internal_vars['light'][i] = min(255, max(0, val))
+    val = internal_vars['light']
+    val = actuator_vars['led'] * 3 + amb_light(rospy.get_time())
+    internal_vars['light'] = min(255, max(0, val))
 
 def volume_update(cur_interval):
     if actuator_vars['wpump']:
@@ -94,37 +93,34 @@ def volume_update(cur_interval):
         internal_vars['volume'] = max(0.01, internal_vars['volume'])
 
 def humidity_update(cur_interval):
-    for i in range(2):
-        val = internal_vars['humidity'][i]
-        if actuator_vars['fan']:
-            val -= cur_interval * dehumidity_rate
-        # The moister it is, the faster humidity increases
-        val += cur_interval * humidity_rate * internal_vars['smoist'][i]/600
-        internal_vars['humidity'][i] = min(100, max(0, val))
+    val = internal_vars['humidity']
+    if actuator_vars['fan']:
+        val -= cur_interval * dehumidity_rate
+    # The moister it is, the faster humidity increases
+    val += cur_interval * humidity_rate * internal_vars['smoist']/600
+    internal_vars['humidity'] = min(100, max(0, val))
 
 def temperature_update(cur_interval):
-    for i in range(2):
-        val = internal_vars['temperature'][i]
-        if actuator_vars['fan']:
-            val -= cur_interval * cooling_rate
-        val += (cur_interval * warming_rate * actuator_vars['led']/255.0)
-        internal_vars['temperature'][i] = min(40, max(15, val))
+    val = internal_vars['temperature']
+    if actuator_vars['fan']:
+        val -= cur_interval * cooling_rate
+    val += (cur_interval * warming_rate * actuator_vars['led']/255.0)
+    internal_vars['temperature'] = min(40, max(15, val))
 
 def current_update(cur_interval):
     val = (512 + led_current * actuator_vars['led'] +
            (pump_current if actuator_vars['wpump'] else 0) +
            (fan_current if actuator_vars['fan'] else 0))
-    internal_vars['current'][0] = val
+    internal_vars['current'] = val
     # energy += power; power = current* voltage
-    internal_vars['current'][1] += cur_interval * (val*12)
+    internal_vars['power'] += cur_interval * (val*12)
 
 def smoist_update(cur_interval):
-    for i in range(2):
-        val = internal_vars['smoist'][i]
-        if (actuator_vars['wpump'] and internal_vars['volume'] > 0):
-            val += cur_interval * soak_rate
-        val -= cur_interval * evap_rate
-        internal_vars['smoist'][i] = min(1000, max(0, val))
+    val = internal_vars['smoist']
+    if (actuator_vars['wpump'] and internal_vars['volume'] > 0):
+        val += cur_interval * soak_rate
+    val -= cur_interval * evap_rate
+    internal_vars['smoist'] = min(1000, max(0, val))
 
 
 update_funcs = {
@@ -140,14 +136,14 @@ update_funcs = {
 
 def get_cur():
     c_array = Float32MultiArray()
-    c_array.data = [float(internal_vars['current'][0]), \
-                    float(internal_vars['current'][1])]
+    c_array.data = [float(internal_vars['current']), \
+                    float(internal_vars['power'])]
     return c_array
 
 def get_light():
     l_array = Int32MultiArray()
-    l_array.data = [int(internal_vars['light'][0]), \
-                    int(internal_vars['light'][1])] 
+    l_array.data = [int(internal_vars['light']), \
+                    int(internal_vars['light'])] 
     return l_array
 
 def get_level():
@@ -155,20 +151,20 @@ def get_level():
 
 def get_temp():
     t_array = Int32MultiArray()
-    t_array.data = [int(internal_vars['temperature'][0]), \
-                    int(internal_vars['temperature'][1])]
+    t_array.data = [int(internal_vars['temperature']), \
+                    int(internal_vars['temperature'])]
     return t_array
 
 def get_humid():
     h_array = Int32MultiArray()
-    h_array.data = [int(internal_vars['humidity'][0]), \
-                    int(internal_vars['humidity'][1])]
+    h_array.data = [int(internal_vars['humidity']), \
+                    int(internal_vars['humidity'])]
     return h_array
 
 def get_smoist():
     s_array = Int32MultiArray()
-    s_array.data = [int(internal_vars['smoist'][0]), \
-                    int(internal_vars['smoist'][1])]
+    s_array.data = [int(internal_vars['smoist']), \
+                    int(internal_vars['smoist'])]
     return s_array
 
 
