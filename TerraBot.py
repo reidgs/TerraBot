@@ -201,7 +201,7 @@ if simulate:
     fard_args = ["--baseline", args.baseline, "--speedup", str(args.speedup)]
     if log:
         fard_args = fard_args + ["-l"]
-    sim_p = sp.Popen(["python", "my_farduino.py"] + fard_args,
+    sim_p = sp.Popen(["python", "farduino.py"] + fard_args,
                      stdout = sim_log, stderr = sim_log)
     ### Initiates the Agent file and redirects output
     if run_agent:
@@ -266,7 +266,7 @@ while len(tracefiles) > 0 or not grade:
                      "--speedup", str(args.speedup)]
         if log:
             fard_args = fard_args + ["-l"]
-        sim_p = sp.Popen(["python", "my_farduino.py"] + fard_args,
+        sim_p = sp.Popen(["python", "farduino.py"] + fard_args,
                          stdout = sim_log, stderr = sim_log)
         print("running %s"%tfile)
         rospy.sleep(1)
