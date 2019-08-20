@@ -109,6 +109,8 @@ parser.add_argument('-t','--tracefile', default = None,
 parser.add_argument('-T','--tracedir', default = None)
 parser.add_argument('--agent', default = 'agent.py',
         help = "if agent is 'none', agent must be run externally")
+parser.add_argument('--email', default = None,
+        help = "email address to notify if restarting frequently")
 
 args = parser.parse_args()
 
@@ -118,7 +120,16 @@ mode = args.mode
 simulate = mode == "sim"
 grade = mode == "grade"
 ser = mode == "serial"
-run_agent = args.agent != "None" and args.agent != "none"
+run_agent = (args.agent != "None") and (args.agent != "none")
+
+num_restarts = 0
+max_restarts = 5
+
+### TODO: Implement sending emails (see https://realpython.com/python-send-email/)
+def send_email():
+    global args, num_restarts
+    if (args.email != None):
+        print("Sending email regarding restarts to " + args.email)
 
 if grade and (args.tracefile == None and args.tracedir == None):
     print("no tracefile or tracedir given, run ./relay.py -h for usage")
@@ -205,7 +216,7 @@ if simulate:
                      stdout = sim_log, stderr = sim_log)
     ### Initiates the Agent file and redirects output
     if run_agent:
-        agent_p = sp.Popen(["python", "agent.py"],
+        agent_p = sp.Popen(["python", args.agent],
                              stdout = agent_log, stderr = agent_log)
     print("waiting for nodes")
     rospy.sleep(2)
@@ -222,7 +233,7 @@ elif mode == "serial":
         stdout = serial_log, stderr = serial_log)
     ### Initiates the Agent file and redirects output
     if run_agent:
-        agent_p = sp.Popen(["python", "agent.py"],
+        agent_p = sp.Popen(["python", args.agent],
                              stdout = agent_log, stderr = agent_log)
     print("waiting for nodes")
     rospy.sleep(2)
@@ -253,7 +264,7 @@ while len(tracefiles) > 0 or not grade:
         else:
             interf.parse_interf(dirname + grader.interf_file)
 
-        agent_p = sp.Popen(["python", "agent.py"],
+        agent_p = sp.Popen(["python", args.agent],
             stdout = agent_log, stderr = agent_log)
 
         sim_log = open("Log/simulator.log", "a+", 0)
@@ -294,15 +305,18 @@ while len(tracefiles) > 0 or not grade:
                 break
 
 
-        ### TODO Fix the ping so that it actually works
-        if  run_agent and ((now - last_ping) > 3600):
+        if  run_agent and ((now - last_ping) > 360):
             log_print("no ping since %f, terminating..."%last_ping)
+            last_ping = now
             agent_p.terminate()
 
         if (run_agent and (agent_p.poll() != None)):
             log_print("agent restarting...")
-            agent_p = sp.Popen(["python", "agent.py"],
+            agent_p = sp.Popen(["python", args.agent],
                                stdout = agent_log, stderr = agent_log)
+            num_restarts += 1
+            if (num_restarts == max_restarts): # Send just once
+                send_email()
 
         rospy.sleep(tick_interval)
     if grade:
