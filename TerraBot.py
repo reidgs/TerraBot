@@ -4,13 +4,13 @@ import select
 import subprocess as sp
 import signal
 import rospy
-import interference as interf
-from topic_def import *
+from lib import interference as interf
+from lib import topic_def as tdef
 from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray
 import rosgraph
 import argparse
 import time
-import grader
+from lib import grader
 
 ### Default values for the optional variables
 verbose = False
@@ -35,7 +35,7 @@ def gen_log_files():
     prefix = time.strftime("%Y%m%d_%H%M%S") + ("_sim" if simulate else "")
     os.makedirs("Log/Log_%s" % prefix)
 
-    for name in sensor_names + actuator_names:
+    for name in tdef.sensor_names + tdef.actuator_names:
         file_name = "Log/Log_%s/%s_log.csv" % (prefix, name)
         log_files[name] = open(file_name, 'w+', 0)
 
@@ -45,16 +45,16 @@ def log_print(string):
 def generate_publishers():
     global publishers
 
-    for name in sensor_names:
+    for name in tdef.sensor_names:
         pub_name = name + "_output"
         publishers[name] = rospy.Publisher(
-                            pub_name, sensor_types[name],
+                            pub_name, tdef.sensor_types[name],
                             latch = True, queue_size = 1)
 
-    for name in actuator_names:
+    for name in tdef.actuator_names:
         pub_name = name + "_raw"
         publishers[name] = rospy.Publisher(
-                            pub_name, actuator_types[name],
+                            pub_name, tdef.actuator_types[name],
                             latch = True, queue_size = 1)
 
 def cb_generic(name, data):
@@ -63,7 +63,7 @@ def cb_generic(name, data):
     original = data.data
     edited = data
     #redundant sensors
-    if (name in sensor_names) and (name != 'level'):
+    if (name in tdef.sensor_names) and (name != 'level'):
         edited.data = [interf_func[0](name, data.data[0]), \
                        interf_func[1](name, data.data[1])]
     else:
@@ -84,15 +84,15 @@ def generate_cb(name):
 
 def generate_subscribers():
     global subscribers
-    for name in sensor_names:
+    for name in tdef.sensor_names:
         sub_name = name + "_raw"
         cb = generate_cb(name)
-        subscribers[name] = rospy.Subscriber(sub_name, sensor_types[name], cb)
+        subscribers[name] = rospy.Subscriber(sub_name, tdef.sensor_types[name], cb)
 
-    for name in actuator_names:
+    for name in tdef.actuator_names:
         sub_name = name + "_input"
         cb = generate_cb(name)
-        subscribers[name] = rospy.Subscriber(sub_name, actuator_types[name], cb)
+        subscribers[name] = rospy.Subscriber(sub_name, tdef.actuator_types[name], cb)
 
 ###Start of program
 parser = argparse.ArgumentParser(description = "relay parser for Autonomous Systems")
@@ -277,7 +277,7 @@ while len(tracefiles) > 0 or not grade:
                      "--speedup", str(args.speedup)]
         if log:
             fard_args = fard_args + ["-l"]
-        sim_p = sp.Popen(["python", "farduino.py"] + fard_args,
+        sim_p = sp.Popen(["python", "lib/farduino.py"] + fard_args,
                          stdout = sim_log, stderr = sim_log)
         print("running %s"%tfile)
         rospy.sleep(1)
