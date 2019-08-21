@@ -16,21 +16,25 @@ byte humidity;
 int lvl = 0;
 
 ros::NodeHandle  nh;
-int DHT_pin = 52;
-SimpleDHT22 dht(DHT_pin);
 
-int light_pin = A0;
+int DHT_pin1 = A8;
+int smoist_pin1 = A7;
+int light_pin1 = A6;
+int DHT_pin2 = A5;
+int smoist_pin2 = A4;
+int light_pin2 = A3;
+int trig_pin = A2;
+int echo_pin = A1;
+int cur_pin = A0;
 
-int trig_pin = 48;
-int echo_pin = 50;
 
-int smoist_pin = A1;
-int cur_pin = A2;
+SimpleDHT22 dht1(DHT_pin1);
+SimpleDHT22 dht2(DHT_pin2);
 
 
-int led_pin = 9;
+int led_pin = 11;
 int wpump_pin = 12;
-int fan_pin = 8;
+int fan_pin = 13;
 
 float last_update = 0;
 float last_dht = 0;
@@ -131,7 +135,7 @@ float to_amp(int analog) {
 void loop(){
   if (light_count < 1000) {
     light_count++;
-    light_sum += analogRead(light_pin);
+    light_sum += analogRead(light_pin1);
   }
 
   if (cur_count < 1000) {
@@ -140,7 +144,7 @@ void loop(){
   }
 
   if(millis() - last_dht > 2500){
-      dht.read(&temperature, &humidity, NULL);
+      dht1.read(&temperature, &humidity, NULL);
       last_dht = millis();
   }
 
@@ -175,7 +179,7 @@ void loop(){
       level_pub.publish(&level_msg);
 
       smoist_msg.data_length = 2;
-      long int s_array[2] = {analogRead(smoist_pin), analogRead(smoist_pin)};
+      long int s_array[2] = {analogRead(smoist_pin1), analogRead(smoist_pin2)};
       smoist_msg.data = s_array;
       smoist_pub.publish(&smoist_msg);
 
