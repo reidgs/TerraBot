@@ -102,7 +102,7 @@ parser.add_argument('-m', '--mode', default = "serial",
         choices = ['serial', 'sim', 'grade'],
         help = "if no mode given, serial is used")
 parser.add_argument('--speedup', default = 1, type = float)
-parser.add_argument('--baseline', default = "grading/baseline.txt")
+parser.add_argument('--baseline', default = "param/baseline.txt")
 parser.add_argument('--interference', default = None)
 parser.add_argument('-t','--tracefile', default = None,
         help = "if --tracedir is also set, this argument is ignored")
@@ -133,6 +133,10 @@ def send_email():
 
 if grade and (args.tracefile == None and args.tracedir == None):
     print("no tracefile or tracedir given, run ./relay.py -h for usage")
+    quit()
+
+if grade and not run_agent:
+    print("grader must be ran with an agent")
     quit()
 
 def terminate_gracefully():
@@ -212,7 +216,7 @@ if simulate:
     fard_args = ["--baseline", args.baseline, "--speedup", str(args.speedup)]
     if log:
         fard_args = fard_args + ["-l"]
-    sim_p = sp.Popen(["python", "farduino.py"] + fard_args,
+    sim_p = sp.Popen(["python", "lib/farduino.py"] + fard_args,
                      stdout = sim_log, stderr = sim_log)
     ### Initiates the Agent file and redirects output
     if run_agent:
