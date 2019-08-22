@@ -38,7 +38,7 @@ with recently sprouted seeds. The goal of the assignment is to provide the best 
 for the plants during a two week grow cycle. Each cycle will come with new challenges, so
 be prepared!  
 
-Each terrarium contains two light, temperature, and humidity sensors. The data values are contained in arrays where index 0 contains the sensor reading of the first sensor and index 1 contains the sensor reading of the second sensor.
+*Each terrarium contains two light, temperature, and humidity sensors. The data values are contained in arrays, where index 0 contains the sensor reading of the first sensor and index 1 contains the sensor reading of the second sensor.*
 
 | Name (topic name)            | Description                                                 | Message Type | Range      |
 | ---------------------------- | ----------------------------------------------------------- | ------------ | ---------- |
