@@ -70,7 +70,7 @@ def cb_generic(name, data):
         edited.data = interf_func(name, data.data)
     edited.data = data.data
     if grade:
-        grader_vars[name] = edited
+        grader_vars[name] = edited.data
     publishers[name].publish(edited)
     if (log):
         log_file = log_files[name]
