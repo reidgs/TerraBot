@@ -112,7 +112,7 @@ The interference file may take in a path to a .txt file containing a schedule of
 
 * normal : trasfers data directly without any modifications
 * noise : modifies data before transfering
-* off : sets all data to 0 (or type equivelent) 
+* off : sets all data to 0 (or type equivelent)  
 **_Only for sensors:_**
 * low : sets a low value for that sensor 
 * opt : sets an optimal value for that sensor 
