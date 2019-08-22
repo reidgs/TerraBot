@@ -19,5 +19,5 @@ init_actuators = {
     'freq'  : 10.0
 }
 
-
+clock_start = 0 # Integer seconds since midnight of the first day
 
