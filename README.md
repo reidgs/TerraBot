@@ -38,14 +38,16 @@ with recently sprouted seeds. The goal of the assignment is to provide the best 
 for the plants during a two week grow cycle. Each cycle will come with new challenges, so
 be prepared!  
 
+*Each terrarium contains two light, temperature, and humidity sensors. The data values are contained in arrays, where index 0 contains the sensor reading of the first sensor and index 1 contains the sensor reading of the second sensor.*
+
 | Name (topic name)            | Description                                                 | Message Type | Range      |
 | ---------------------------- | ----------------------------------------------------------- | ------------ | ---------- |
 | **_Sensors_**                |**_Use these to determine the system's state_**              |  **_—_**     |  **_—_** |
-| Current (cur)                | The current draw of the system                              | Float32      |            |
-| Light (light)                | Light intesnity in the system                               | Int32        |            |
-| Water level (level)          | Height of the water                                         | Int32        |            |
-| Temperature (temp)           | Internal temperature of the system                          | Int32        |            |
-| Humidity (humid)             | Internal relative humidity                                  | Int32        |            |
+| Current (cur)                | The current draw of the system (index 0) and total power usage (index 1) | Float32Array |            |
+| Light (light)                | Light intesnity in the system                               | Int32Array   |            |
+| Water level (level)          | Height of the water in the reservoir                        | Float32      |            |
+| Temperature (temp)           | Internal temperature of the system                          | Int32Array   |            |
+| Humidity (humid)             | Internal relative humidity                                  | Int32Array   |            |
 | Camera                       | Captures a photograph of stystem's state                    |   —          |   —        |
 | **_Actuators_**              |**_Use these to adjust the system's state_**                 | **_—_**      |  **_—_**   |
 | LED (led)                    | Adjust the power of the system's LED light fixture          | Int32        | 0-255      |
@@ -215,16 +217,16 @@ and raspistill is not installed.
 
 
 ## Grading ##
-Grading will take place with the help of the simulator and .trc files in the grading directory. You may test your agent by creating your own trace files. If you create multiple .trc files in the grading directory, all the files will be tested; once finished, the simulator will terminate.
+Grading will take place with the help of the simulator and .trc files in the grading directory. You may test your agent by creating your own trace files. If you create multiple .trc files in the grading directory, all the files will be tested. Once finished grading, the simulator will terminate.
 
 ### Trace File ###
-The grader traces through the commands given in this file and acts accordingly. The first line in the trace file is the address to the baseline file, and the second line in teh trace line is the address to the interference file. The commands for grading start on the third line of the trace file. The four commands available are: START, ENSURE, WAIT, and QUIT.
+The grader traces through commands given in this file and acts accordingly. The first line in the trace file is the address to the baseline file, and the second line is the address to the interference file. The commands for grading start on the third line of the trace file. The four commands available are: START, ENSURE, WAIT, and QUIT.
 
 ##### START #####
 The START command starts the grading process. It does not take any arguments.
 
 ##### QUIT #####
-The QUIT command terminates the current grading process. If there are additional trace files that have not been traced, the grader will start tracing through the next file, otherwise, the simulator will terminate all processes. It does not take any arguments.
+The QUIT command terminates the current grading process. If there are additional trace files that have not been traced through, the grader will start tracing through the next file, otherwise, the simulator will terminate all processes. It does not take any arguments.
 
 ##### WAIT #####
 The WAIT command will wait a certain amount of time for a value to evaluate to true. It takes in two arguments seperated by commas: the first argument is the expression being checked, while the second argument is the maximum wait time allotted. This command is finished and the next command starts once: the first argument evaluates to true within the time frame (passed task), or the maximum wait time allotted passes (failed task).
@@ -232,6 +234,6 @@ The WAIT command will wait a certain amount of time for a value to evaluate to t
 > `WAIT,grader_vars['led']==255,5` 
 
 ##### ENSURE #####
-The ENSURE command will ensure the value of the first argument given evaluates to true throughout the whole time period set. It takes in two arguments seperated by commas: the first argument is the expresion being checked, while the second argument is the length of the time period set. This command is finished and the next command starts once: the first argument evaluates to false (failed task), or the time period set passes (passed task).
+The ENSURE command will ensure the value of the first argument given evaluates to true throughout the whole time period set. It takes in two arguments seperated by commas: the first argument is the expresion being checked, while the second argument is the length of the time period. This command is finished and the next command starts once: the first argument evaluates to false (failed task), or the time period set passes (passed task).
 > EX: ensure the water pump is on for 10 seconds  
 >`ENSURE,grader_vars['wpump'],10` 
