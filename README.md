@@ -22,6 +22,11 @@
     + [Time](#time)
     + [Camera](#camera)
 - [Grading](#grading)
+  - [Trace File](#trace-file)
+    + [START](#start)
+    + [QUIT](#quit)
+    + [WAIT](#wait)
+    + [ENSURE](#ensure)
   
     
 
@@ -103,11 +108,16 @@ In the transfering process, the data received by the relay node are passed thoug
 may be malicious and cause the relay to act incorrectly.
 
 #### Interference File ####
-The interference file may take in a path to a .txt file containing a schedule of times to interfere with the trasfer of data between nodes. There are three types of functions, through one of which your data will be passed:
+The interference file may take in a path to a .txt file containing a schedule of times to interfere with the trasfer of data between nodes. There are six functions, through one of which your data will be passed:
 
 * normal : trasfers data directly without any modifications
 * noise : modifies data before transfering
 * off : sets all data to 0 (or type equivelent) 
+**_Only for sensors:_**
+* low : sets a low value for that sensor 
+* opt : sets an optimal value for that sensor 
+* high : set a high value for that sensor
+
 
 *If no file is passed in, there will be no intereference in the transfer of data.*
 
