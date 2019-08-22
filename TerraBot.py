@@ -181,7 +181,7 @@ core_log = open("Log/roscore.log", "a+", 0)
 core_p = sp.Popen("roscore", stdout = core_log, stderr = core_log)
 
 ### Begin relay node
-if simulate:
+if simulate or grade: # Use simulated time if starting simulator
     while not rosgraph.is_master_online():
         rospy.sleep(1) # Wait for roscore to start up
     rospy.set_param("use_sim_time", True)
@@ -227,8 +227,6 @@ if simulate:
     rospy.sleep(2)
     print("ok")
 
-
-
 ### Running the real arduino proccess
 elif mode == "serial":
     serial_log = open("Log/rosserial.log", "a+", 0)
@@ -252,9 +250,6 @@ if (verbose):
 ### Loop for the entire system, should only ever break if grading
 while len(tracefiles) > 0 or not grade:
     ### TODO add grading functionality
-    ### We must begin health ping
-    now= rospy.get_time()
-    last_ping = now
 
     if grade:
         reload(grader)
@@ -269,24 +264,26 @@ while len(tracefiles) > 0 or not grade:
         else:
             interf.parse_interf(dirname + grader.interf_file)
 
+        ### Initiates the Simulator and redirects output
+        sim_log = open("Log/simulator.log", "a+", 0)
+        fard_args = ["--baseline", dirname + grader.bfile,
+                     "--speedup", str(args.speedup)]
+        if log: fard_args = fard_args + ["-l"]
+        sim_p = sp.Popen(["python", "lib/farduino.py"] + fard_args,
+                         stdout = sim_log, stderr = sim_log)
+
         agent_p = sp.Popen(["python", args.agent], bufsize=0,
                            stdout = agent_log, stderr = agent_log)
 
-        sim_log = open("Log/simulator.log", "a+", 0)
-        ### Initiates the Simulator and redirects output
-
+        rospy.sleep(1)
+        print("running %s"%tfile)
         exec(open(dirname + grader.bfile).read())
         grader_vars = init_actuators
 
-        fard_args = ["--baseline", dirname + grader.bfile,
-                     "--speedup", str(args.speedup)]
-        if log:
-            fard_args = fard_args + ["-l"]
-        sim_p = sp.Popen(["python", "lib/farduino.py"] + fard_args,
-                         stdout = sim_log, stderr = sim_log)
-        print("running %s"%tfile)
-        rospy.sleep(1)
-
+    ### We must begin health ping
+    now= rospy.get_time()
+    print("Now " + str(now))
+    last_ping = now
 
     ### Loop for a single iteration of a grading scheme(infinite if not grading)
     while not rospy.core.is_shutdown():
