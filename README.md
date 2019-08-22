@@ -175,26 +175,26 @@ In order to allow for greater control of the system and to ensure the accuracy o
 there are a few extra processes to which you have access. In addition to the previously mentioned sensors
 and actuators, there will also be a health ping, variable time speed, and a frequency topic which you must consider.
 
-#### Health Ping ####
+##### Health Ping #####
 Because of the long lasting nature of this project, it is possible that there may be unforeseen
 errors in your code which will cause it to crash. Crashed code means no control over the system and
 certain doom for your plants! In order to avoid this outcome, we have included restart functionality.
 When the relay begins, it will run your code and listen for a ping. If your ping is not heard within
 a set amount of time (default 60 min), it will assume your program has crashed and restart it automatically.
 
-#### Frequency ####
+##### Frequency #####
 The frequency topic is used to determine how often the arduino will read from the sensors.
 The more often you read, the more accurate your data will be, but the more power you will draw as well.
 Notice that this setting is variable, meaning it can be changed over the course of the deployment.
 
-#### Time ####
+##### Time #####
 One of the most convenient aspects of the simulator is its ability to manipulate time in order to
 suit the user's needs. By default the simulator will begin running at 1x speed at the epoch,
 but that can be configured with the -s flag.It is also important that the execution of the simulator is identical to the relay (even if sped up).
 
 *To ensure consistency between your code in simulation and on TerraBot, you should refrain from referring to outside functions (OS time.time()) and should instead refer to the ROS time topic via rospy.get_time().*
 
-#### Camera ####
+##### Camera #####
 The one aspect of the system which we are not able to simulate is the camera. Any call to
 raspistill will result in an error as there is no camera connected to the virtual machine
 and raspistill is not installed.
@@ -209,18 +209,18 @@ Grading will take place with the help of the simulator and .trc files in the gra
 ### Trace File ###
 The grader traces through the commands given in this file and acts accordingly. The first line in the trace file is the address to the baseline file, and the second line in teh trace line is the address to the interference file. The commands for grading start on the third line of the trace file. The four commands available are: START, ENSURE, WAIT, and QUIT.
 
-#### START ####
+##### START #####
 The START command starts the grading process. It does not take any arguments.
 
-#### QUIT ####
+##### QUIT #####
 The QUIT command terminates the current grading process. If there are additional trace files that have not been traced, the grader will start tracing through the next file, otherwise, the simulator will terminate all processes. It does not take any arguments.
 
-#### WAIT ####
+##### WAIT #####
 The WAIT command will wait a certain amount of time for a value to evaluate to true. It takes in two arguments seperated by commas: the first argument is the expression being checked, while the second argument is the maximum wait time allotted. This command is finished and the next command starts once: the first argument evaluates to true within the time frame (passed task), or the maximum wait time allotted passes (failed task).
 > EX: wait a maximum of 5 seconds for the led's value to be 255  
 > `WAIT,grader_vars['led']==255,5` 
 
-#### ENSURE ####
+##### ENSURE #####
 The ENSURE command will ensure the value of the first argument given evaluates to true throughout the whole time period set. It takes in two arguments seperated by commas: the first argument is the expresion being checked, while the second argument is the length of the time period set. This command is finished and the next command starts once: the first argument evaluates to false (failed task), or the time period set passes (passed task).
 > EX: ensure the water pump is on for 10 seconds  
 >`ENSURE,grader_vars['wpump'],10` 
