@@ -38,14 +38,16 @@ with recently sprouted seeds. The goal of the assignment is to provide the best 
 for the plants during a two week grow cycle. Each cycle will come with new challenges, so
 be prepared!  
 
+Each terrarium contains two light, temperature, and humidity sensors. The data values are contained in arrays where index 0 contains the sensor reading of the first sensor and index 1 contains the sensor reading of the second sensor.
+
 | Name (topic name)            | Description                                                 | Message Type | Range      |
 | ---------------------------- | ----------------------------------------------------------- | ------------ | ---------- |
 | **_Sensors_**                |**_Use these to determine the system's state_**              |  **_—_**     |  **_—_** |
-| Current (cur)                | The current draw of the system                              | Float32      |            |
-| Light (light)                | Light intesnity in the system                               | Int32        |            |
-| Water level (level)          | Height of the water                                         | Int32        |            |
-| Temperature (temp)           | Internal temperature of the system                          | Int32        |            |
-| Humidity (humid)             | Internal relative humidity                                  | Int32        |            |
+| Current (cur)                | The current draw of the system (index 0) and total power usage (index 1) | Float32Array |            |
+| Light (light)                | Light intesnity in the system                               | Int32Array   |            |
+| Water level (level)          | Height of the water in the reservoir                        | Float32      |            |
+| Temperature (temp)           | Internal temperature of the system                          | Int32Array   |            |
+| Humidity (humid)             | Internal relative humidity                                  | Int32Array   |            |
 | Camera                       | Captures a photograph of stystem's state                    |   —          |   —        |
 | **_Actuators_**              |**_Use these to adjust the system's state_**                 | **_—_**      |  **_—_**   |
 | LED (led)                    | Adjust the power of the system's LED light fixture          | Int32        | 0-255      |
