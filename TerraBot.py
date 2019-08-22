@@ -311,8 +311,9 @@ while len(tracefiles) > 0 or not grade:
 
 
         # Ping at least once every 6 minutes, but need to adjust if speedup
-        if  run_agent and ((now - last_ping) > max(360, args.speedup*1.5)):
-            log_print("no ping since %f, terminating..."%last_ping)
+        if  run_agent and ((now - last_ping) > max(360, 2*args.speedup)):
+            log_print("no ping since %d (%d seconds), terminating..."
+                      %(last_ping, now - last_ping))
             last_ping = now
             terminate(agent_p, None)
 
