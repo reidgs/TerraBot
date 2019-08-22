@@ -139,24 +139,26 @@ if grade and not run_agent:
     print("grader must be ran with an agent")
     quit()
 
+def terminate (process, log_file):
+    if (log_file != None): log_file.close()
+    process.terminate()
+    process.wait()
+
 def terminate_gracefully():
     global core_p, serial_p, sim_p, agent_p
+    global core_log, serial_log, sim_log, agent_log
     if core_p != None:
         print("Terminating roscore")
-        core_p.terminate()
-        core_p.wait()
+        terminate(core_p, core_log)
     if sim_p != None:
         print("Terminating sim")
-        sim_p.terminate()
-        sim_p.wait()
+        terminate(sim_p, sim_log)
     if agent_p != None:
         print("Terminating agent")
-        agent_p.terminate()
-        agent_p.wait()
+        terminate(agent_p, agent_log)
     if serial_p != None:
         print("Terminating serial")
-        serial_p.terminate()
-        serial_p.wait()
+        terminate(serial_p, serial_log)
     quit()
 
 #initialize trace file array
@@ -172,9 +174,8 @@ if log:
 
 interf.parse_interf(args.interference)
 
-### Open logs for roscore and relay
+### Open log file for roscore
 core_log = open("Log/roscore.log", "a+", 0)
-relay_log = open("Log/relay.log", "a+", 0)
 
 ### Start up roscore, redirecting output to logging files
 core_p = sp.Popen("roscore", stdout = core_log, stderr = core_log)
@@ -220,8 +221,8 @@ if simulate:
                      stdout = sim_log, stderr = sim_log)
     ### Initiates the Agent file and redirects output
     if run_agent:
-        agent_p = sp.Popen(["python", args.agent],
-                             stdout = agent_log, stderr = agent_log)
+        agent_p = sp.Popen(["python", args.agent], bufsize=0,
+                           stdout = agent_log, stderr = agent_log)
     print("waiting for nodes")
     rospy.sleep(2)
     print("ok")
@@ -237,8 +238,8 @@ elif mode == "serial":
         stdout = serial_log, stderr = serial_log)
     ### Initiates the Agent file and redirects output
     if run_agent:
-        agent_p = sp.Popen(["python", args.agent],
-                             stdout = agent_log, stderr = agent_log)
+        agent_p = sp.Popen(["python", args.agent], bufsize=0,
+                           stdout = agent_log, stderr = agent_log)
     print("waiting for nodes")
     rospy.sleep(2)
     print("ok")
@@ -268,8 +269,8 @@ while len(tracefiles) > 0 or not grade:
         else:
             interf.parse_interf(dirname + grader.interf_file)
 
-        agent_p = sp.Popen(["python", args.agent],
-            stdout = agent_log, stderr = agent_log)
+        agent_p = sp.Popen(["python", args.agent], bufsize=0,
+                           stdout = agent_log, stderr = agent_log)
 
         sim_log = open("Log/simulator.log", "a+", 0)
         ### Initiates the Simulator and redirects output
@@ -309,14 +310,15 @@ while len(tracefiles) > 0 or not grade:
                 break
 
 
-        if  run_agent and ((now - last_ping) > 360):
+        # Ping at least once every 6 minutes, but need to adjust if speedup
+        if  run_agent and ((now - last_ping) > max(360, args.speedup*1.5)):
             log_print("no ping since %f, terminating..."%last_ping)
             last_ping = now
-            agent_p.terminate()
+            terminate(agent_p, None)
 
         if (run_agent and (agent_p.poll() != None)):
             log_print("agent restarting...")
-            agent_p = sp.Popen(["python", args.agent],
+            agent_p = sp.Popen(["python", args.agent], bufsize=0,
                                stdout = agent_log, stderr = agent_log)
             num_restarts += 1
             if (num_restarts == max_restarts): # Send just once
@@ -324,13 +326,11 @@ while len(tracefiles) > 0 or not grade:
 
         rospy.sleep(tick_interval)
     if grade:
-        sim_p.terminate()
-        sim_p.wait()
+        terminate(sim_p, sim_log)
         if run_agent:
-            agent_p.terminate()
-            agent_p.wait()
+            terminate(agent_p, agent_log)
     else:
         break
 
-core_p.terminate()
+terminate(core_p, core_log)
 

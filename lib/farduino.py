@@ -4,16 +4,16 @@ from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiA
 from topic_def import *
 from rosgraph_msgs.msg import Clock
 import time
+from datetime import timedelta
+from math import sqrt
 import argparse
 
 parser = argparse.ArgumentParser(description = "simulator parser for Autonomous Systems")
-parser.add_argument('--baseline', type = str, default = "baseline.txt", nargs = "?")
+parser.add_argument('--baseline', type = str, default = "../param/baseline.txt", nargs = "?")
 parser.add_argument('--speedup', type = float, default = 1, nargs = "?")
 parser.add_argument('-l', '--log', action = 'store_true')
 args = parser.parse_args()
 is_logging = args.log
-#print("Baseline: " + args.baseline)
-#print("Speedup: " + str(args.speedup))
 
 try:
     exec(open(args.baseline).read())
@@ -78,8 +78,50 @@ def speedup_cb(data):
         print("speedup_pub %d" %speedup)
         default_speedup = speedup
 
+### clock_start=0 is defined to be midnight on the first day
+### It is defined in baseline.txt, so can easily start at a different time of day
+# clock_start = 0
+morning = 7*3600  # 7am
+evening = 19*3600 # 7pm
+one_day = 24*3600
+
+num_days = int(clock_start/one_day)
+daylight_start = num_days*one_day + morning
+daylight_end = num_days*one_day + evening
+if (clock_start < daylight_start): daylight_end -= one_day
+elif (clock_start > daylight_end): daylight_start += one_day
+
+light_level_day = 100 # Max ambient light in daytime
+light_level_night = 20 # Ambient light in nighttime
+
+def clock_time(time): return str(timedelta(seconds=time))
+if is_logging: print(" Clock start: %s" %clock_time(clock_start))
+
+def adjust_times(time):
+    global daylight_start, daylight_end
+    if ((daylight_start < daylight_end) and daylight_end <= time):
+        daylight_start += one_day
+        if is_logging: print(" Daylight ends: %s" %clock_time(time))
+    elif (daylight_end < daylight_start) and (daylight_start <= time):
+        daylight_end += one_day # A new day
+        if is_logging: print(" Daylight starts: %s" %clock_time(time))
+
+last_print = 0
+### Light increases from morning to noon and then decreases (non-linearally)
 def amb_light(time):
-    return 100
+    global daylight_start, daylight_end
+    adjust_times(time)
+    dl = light_level_night
+    if (time >= daylight_start) and (daylight_start < daylight_end):
+        dl += ((light_level_day - light_level_night) *
+               sqrt(1 - abs(1 - ((time - daylight_start)/
+                                 ((daylight_end - daylight_start)/2)))))
+    if is_logging:
+        global last_print, clock_start
+        if (time - last_print > 1800):
+            last_print = time
+            print(" Ambient: %.1f (%s)" %(dl, clock_time(time)))
+    return dl
 
 ### INTERNAL UPDATE FUNCTIONS ###
 def light_update(cur_interval):
@@ -97,17 +139,17 @@ def humidity_update(cur_interval):
         val = internal_vars['humidity'][i]
         if actuator_vars['fan']:
             val -= cur_interval * dehumidity_rate
-            # The moister it is, the faster humidity increases
-            val += cur_interval * humidity_rate * internal_vars['smoist'][i]/600
-            internal_vars['humidity'][i] = min(100, max(0, val))
+        # The moister it is, the faster humidity increases
+        val += cur_interval * humidity_rate * internal_vars['smoist'][i]/600
+        internal_vars['humidity'][i] = min(100, max(0, val))
 
 def temperature_update(cur_interval):
     for i in range(2):
         val = internal_vars['temperature'][i]
         if actuator_vars['fan']:
             val -= cur_interval * cooling_rate
-            val += (cur_interval * warming_rate * actuator_vars['led']/255.0)
-            internal_vars['temperature'][i] = min(40, max(15, val))
+        val += (cur_interval * warming_rate * actuator_vars['led']/255.0)
+        internal_vars['temperature'][i] = min(40, max(15, val))
 
 def current_update(cur_interval):
     val = (512 + led_current * actuator_vars['led'] +
@@ -122,8 +164,8 @@ def smoist_update(cur_interval):
         val = internal_vars['smoist'][i]
         if (actuator_vars['wpump'] and internal_vars['volume'] > 0):
             val += cur_interval * soak_rate
-            val -= cur_interval * evap_rate
-            internal_vars['smoist'][i] = min(1000, max(0, val))
+        val -= cur_interval * evap_rate
+        internal_vars['smoist'][i] = min(1000, max(0, val))
 
 
 update_funcs = {
@@ -184,7 +226,7 @@ rospy.init_node('Simulator', anonymous=True)
 
 generate_publishers()
 generate_subscribers()
-now = 0
+now = clock_start
 clock_pub.publish(rospy.Time.from_sec(now))
 last_update = now
 
@@ -211,7 +253,6 @@ while not rospy.core.is_shutdown():
     speedup = min(default_speedup,
                   (max_speedup_pump if actuator_vars['wpump'] else 100000),
                   (max_speedup_fans if actuator_vars['fan'] else 100000))
-    if (old_speedup != speedup):
-        print("Speedup %d" %speedup)
+    if (is_logging and old_speedup != speedup): print("Speedup %d" %speedup)
     now += (tick_interval * speedup)
     clock_pub.publish(rospy.Time.from_sec(now))
