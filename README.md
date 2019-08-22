@@ -216,11 +216,11 @@ The START command starts the grading process. It does not take any arguments.
 The QUIT command terminates the current grading process. If there are additional trace files that have not been traced, the grader will start tracing through the next file, otherwise, the simulator will terminate all processes. It does not take any arguments.
 
 #### WAIT ####
-The WAIT command will wait a certain amount of time for a value to evaluate to true. It takes in two arguments seperated by commas: the first argument is the expression being checked, while the second argument is the maximum wait time allotted.
-e.g. >`WAIT,grader_vars['led']==255,5` (this will wait a maximum of 5 seconds for the led's value to be 255)
-This command is finished and the next command starts once: the first argument evaluates to true within the time frame (passed task), or the maximum wait time allotted passes (failed task).
+The WAIT command will wait a certain amount of time for a value to evaluate to true. It takes in two arguments seperated by commas: the first argument is the expression being checked, while the second argument is the maximum wait time allotted. This command is finished and the next command starts once: the first argument evaluates to true within the time frame (passed task), or the maximum wait time allotted passes (failed task).
+> EX: wait a maximum of 5 seconds for the led's value to be 255  
+> `WAIT,grader_vars['led']==255,5` 
 
-### ENSURE ###
-The ENSURE command will ensure the value of the first argument given evaluates to true throughout the whole time period set. It takes in two arguments seperated by commas: the first argument is the expresion being checked, while the second argument is the length of the time period set. 
-e.g. >`ENSURE,grader_vars['wpump'],10` (this will ensure that the water pump is on for 10 seconds)
-This command is finished and the next command starts once: the first argument evaluates to false (failed task), or the time period set passes (passed task).
+#### ENSURE ####
+The ENSURE command will ensure the value of the first argument given evaluates to true throughout the whole time period set. It takes in two arguments seperated by commas: the first argument is the expresion being checked, while the second argument is the length of the time period set. This command is finished and the next command starts once: the first argument evaluates to false (failed task), or the time period set passes (passed task).
+> EX: ensure the water pump is on for 10 seconds  
+>`ENSURE,grader_vars['wpump'],10` 
