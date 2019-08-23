@@ -33,7 +33,7 @@
 ## Overview ##
 
 Welcome to the Autonomous Agents TerraBot project! For this project you and your partner(s)
-will be given a greenhouse outfitted with multiple sensors and actuators and 10 small pots
+will be given a greenhouse outfitted with multiple sensors and actuators and a grow mat
 with recently sprouted seeds. The goal of the assignment is to provide the best environment
 for the plants during a two week grow cycle. Each cycle will come with new challenges, so
 be prepared!  
@@ -58,8 +58,8 @@ be prepared!
 
 ### TerraBot Software Architecture ###
 
-An arduino communicates directly with these sensors and actuators and forwards that data to a raspberry pi.
-The raspberry pi, running ROS (Robot Operating System), receives the sensor data, cleans it, and makes it available
+An arduino communicates directly with these sensors and actuators, converts this raw data into clean data, and then forwards that data to a raspberry pi.
+The raspberry pi, running ROS (Robot Operating System), receives the sensor data and makes it available
 for your AI agent in the formats above. Additionally, it receives your agent's actuator commands as defined above
 and relays them back to the arduino.
 
@@ -78,7 +78,7 @@ Please look over the tutorials concerning ROS communication (Nodes, Topics, Publ
 You may find the other tutorials there helpful as well.
 
 
-The TerraBot consists of three ROS *nodes* or processes, one for the arduino communication with the raw data,
+The TerraBot consists of three ROS *nodes* or processes, one for the arduino communication with the sensors/actuators,
 one hardware feed for publishing the clean data and listening for actuation commands,
 and one that you will write for your agent.
 The hardware feed *publishes* sensor data and *subscribes* to actuation commands over ROS topics
@@ -91,38 +91,36 @@ your code to make sure that it is publishing and subscribing as you intend when 
 
 ## Understanding the System ##
 
-As mentioned earlier, there are three ROS nodes in this system: the student, which you will provide, the relay,
+As mentioned earlier, there are three ROS nodes in this system: your agent, which you will provide, the main TerraBot,
 and the arduino.
 
-### Student Node ###
+### Agent Node ###
 The student node is your reactive agent. You will be able to access sensor data by subscribing to the topics to which the relay publishes. You will also be able to write data to the actuators by publishing to the topics to which the relay subscribes.
 
-### Relay Node ###
-Running the relay will start up a total of 4 nodes. First the master node, roscore, and then the three other nodes: student, relay and Arduino. 
+### TerraBot Node ###
+Running the TerraBot will start up a total of 4 nodes. First the master node, roscore, and then the three other nodes: your agent, the TerraBot node, and the Arduino node. 
 
-The relay transfers actuator data from the student node to the Arduino node:
-The relay subscribes to the topics to which the student node publishes. It also publishes to the topics to which the Arduino subscribes.
+The TerraBot node transfers actuator data from your agent to the Arduino node:
+It subscribes to the topics to which your agent publishes and publishes to the topics to which the Arduino subscribes.
 
-The realy also transfers sensor data from the Arduino node to the student node:
-The relay subscribes to the topics to which the Arudino publishes. It also publishes to the topics to which the studnet subscribes.
+Vice versa, the TerraBot node transfers sensor data from the Arduino node to your agent:
+It subscribes to the topics to which the Arudino publishes and publishes to the topics to which your agent subscribes.
  
-In the transfering process, the data received by the relay node are passed though functions via an external interference file. In order to reliably simulate errors which may happen by chance if run in the real world, the interference file
+In the transfering process, the data received by the TerraBot node are passed though functions via an external interference file. In order to reliably simulate errors which may happen by chance if run in the real world, the interference file
 may be malicious and cause the relay to act incorrectly.
 
 #### Interference File ####
-The interference file may take in a path to a .txt file containing a schedule of times to interfere with the trasfer of data between nodes. There are six functions, through one of which your data will be passed:
+The interference file may take in a path to a .trc file containing a schedule of times to interfere with the trasfer of data between nodes. There are six functions, through one of which your data will be passed:
 
 * normal : trasfers data directly without any modifications
-* noise : modifies data before transfering
+* noise : slightly modifies data before transfering
 * off : sets all data to 0 (or type equivelent)  
 **_Only for sensors:_**
 * low : sets a low value for that sensor 
 * opt : sets an optimal value for that sensor 
-* high : set a high value for that sensor
-
+* high : sets a high value for that sensor
 
 *If no file is passed in, there will be no intereference in the transfer of data.*
-
 
 ### Arduino Node ###
 Sensors and actuators are being controlled in the Arduino node:
@@ -147,12 +145,11 @@ never access the same topics as the Arduino.
 We are providing a simulator to test your code before deploying it on the TerraBot. Follow the instructions to get
 started with the simulator and also to log into your raspberry pi.
 
-
 The simulator works in a way almost identical to the three node process which will run when your
-code is uploaded to the raspberry pi. The code for your node and the relay node is the exact same
-as it would be on the pi. Instead of having an arduino node, however, the simulator comes with a
-farduino (fake arduino) node which mimics the actions of the arduino node. This difference should
-in no way affect the way your code operates and should not be noticeable from the perspective
+code is uploaded to the raspberry pi. The code for your agent and the TerraBot node is the exact same
+as it would be on the pi. However, instead of having an arduino node, the simulator comes with a
+farduino (fake arduino) node that mimics the actions of the arduino node. This difference should
+in no way affect how your code operates and should not be (significantly) noticeable from the perspective
 of your node.
 
 ### Getting Started ###
@@ -175,13 +172,13 @@ QUESTION - I THINK WE CAN ZIP UP THE WHOLE OS, WILL THESE INSTRUCTIONS CHANGE FO
 
 #### Running the Simulator ####
 
-In order to run the simulator, run the relay.py with the -s flag, the multiplier you wish for the speed,
+In order to run the simulator, run the TerraBot with the simulator mode flag (-m sim), the multiplier you wish for the speed,
 and the time which you would like it to start at (seconds since epoch).  
 For example if I wanted to run the simulator at 1x speed at time=0 I would run:  
->`python relay.py -s 1 0`  
+>`./TerraBot.py -m sim 1 0`  
 For error checking it is recommended that you include the -l flag for logging as well.  
 EX: 5x speed with logging
->`python relay.py -l -s 5 0`  
+>`./TerraBot.py -l -m sim 5 0`  
 
 ### Extra Processes ###
 In order to allow for greater control of the system and to ensure the accuracy of the simulator,
@@ -203,7 +200,7 @@ Notice that this setting is variable, meaning it can be changed over the course 
 ##### Time #####
 One of the most convenient aspects of the simulator is its ability to manipulate time in order to
 suit the user's needs. By default the simulator will begin running at 1x speed at the epoch,
-but that can be configured with the -s flag.It is also important that the execution of the simulator is identical to the relay (even if sped up).
+but that can be configured with flags. It is also important that the execution of the simulator is identical to the relay (even if sped up).
 
 *To ensure consistency between your code in simulation and on TerraBot, you should refrain from referring to outside functions (OS time.time()) and should instead refer to the ROS time topic via rospy.get_time().*
 
