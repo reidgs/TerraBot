@@ -13,5 +13,5 @@ def send(from_address, password, to_address, subject, text):
     server = init(from_address, password)
     msg = ("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s"
            %(from_address, to_address, subject, text))
-    server.sendmail(from_address, to_address, msg)
+    server.sendmail(from_address, to_address.split(','), msg)
     server.close()

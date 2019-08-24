@@ -112,6 +112,8 @@ parser.add_argument('-a', '--agent', default = 'none',
         help = "if agent is 'none', agent must be run externally")
 parser.add_argument('-e', '--email', default = None,
         help = "email address to notify if restarting frequently")
+parser.add_argument('-p', '--password', default = None,
+        help = "email address password")
 
 args = parser.parse_args()
 
@@ -122,6 +124,7 @@ simulate = mode == "sim"
 grade = mode == "grade"
 ser = mode == "serial"
 run_agent = (args.agent != "None") and (args.agent != "none")
+password = args.password
 
 num_restarts = 0
 max_restarts = 5
@@ -137,7 +140,7 @@ def notify_user():
                          %(num_restarts,
                            str(timedelta(seconds=int(rospy.get_time()))))))
 
-if (args.email != None):
+if (args.email != None and password == None):
     password = getpass.getpass("Password please for autoterrabot@gmail.com: ")
 
 if grade and (args.tracefile == None and args.tracedir == None):
@@ -206,7 +209,7 @@ generate_subscribers()
 ### Records the most recent ping
 def ping_cb(data):
     global last_ping, now
-    last_ping = now
+    last_ping = rospy.get_time()
 
 ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
 
