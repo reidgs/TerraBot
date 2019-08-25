@@ -132,7 +132,7 @@ def light_update(cur_interval):
 def volume_update(cur_interval):
     if actuator_vars['wpump']:
         internal_vars['volume'] -= cur_interval * flow_rate
-        internal_vars['volume'] = max(0.01, internal_vars['volume'])
+        internal_vars['volume'] = max(0, internal_vars['volume'])
 
 def humidity_update(cur_interval):
     for i in range(2):
