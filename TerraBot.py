@@ -3,14 +3,15 @@ import os, sys, glob
 import select
 import subprocess as sp
 import signal
-import rospy
+import rospy, rosgraph
 from lib import interference as interf
 from lib import topic_def as tdef
 from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray
-import rosgraph
 import argparse
-import time
+import time, getpass
+from datetime import timedelta
 from lib import grader
+from lib import send_email
 
 ### Default values for the optional variables
 verbose = False
@@ -101,16 +102,18 @@ parser.add_argument('-l', '--log', action = 'store_true')
 parser.add_argument('-m', '--mode', default = "serial",
         choices = ['serial', 'sim', 'grade'],
         help = "if no mode given, serial is used")
-parser.add_argument('--speedup', default = 1, type = float)
-parser.add_argument('--baseline', default = "param/baseline.txt")
-parser.add_argument('--interference', default = None)
+parser.add_argument('-s', '--speedup', default = 1, type = float)
+parser.add_argument('-b', '--baseline', default = "param/baseline.txt")
+parser.add_argument('-i', '--interference', default = None)
 parser.add_argument('-t','--tracefile', default = None,
         help = "if --tracedir is also set, this argument is ignored")
 parser.add_argument('-T','--tracedir', default = None)
-parser.add_argument('--agent', default = 'none',
+parser.add_argument('-a', '--agent', default = 'none',
         help = "if agent is 'none', agent must be run externally")
-parser.add_argument('--email', default = None,
+parser.add_argument('-e', '--email', default = None,
         help = "email address to notify if restarting frequently")
+parser.add_argument('-p', '--password', default = None,
+        help = "email address password")
 
 args = parser.parse_args()
 
@@ -121,15 +124,24 @@ simulate = mode == "sim"
 grade = mode == "grade"
 ser = mode == "serial"
 run_agent = (args.agent != "None") and (args.agent != "none")
+password = args.password
 
 num_restarts = 0
 max_restarts = 5
 
-### TODO: Implement sending emails (see https://realpython.com/python-send-email/)
-def send_email():
-    global args, num_restarts
+### Notify user when agent crashes or hangs multiple times
+def notify_user():
+    global args, password, num_restarts
     if (args.email != None):
         print("Sending email regarding restarts to " + args.email)
+        send_email.send("autoterrabot@gmail.com", password, args.email,
+                        "Problem with your TerraBot agent",
+                        ("Your autonomous agent has had to be restarted %d times.  The current Terrabot time is %s.\r\n\r\nYou should probably contact the instructors to upload a new version.\r\n\r\nSincerely,\r\nTerraBot\r\n"
+                         %(num_restarts,
+                           str(timedelta(seconds=int(rospy.get_time()))))))
+
+if (args.email != None and password == None):
+    password = getpass.getpass("Password please for autoterrabot@gmail.com: ")
 
 if grade and (args.tracefile == None and args.tracedir == None):
     print("no tracefile or tracedir given, run ./relay.py -h for usage")
@@ -197,52 +209,60 @@ generate_subscribers()
 ### Records the most recent ping
 def ping_cb(data):
     global last_ping, now
-    last_ping = now
+    last_ping = rospy.get_time()
 
 ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
 
 ### Spawn subprocesses
 
-### Simulator starts up Agent and Farduino
-#TODO add baseline functionality
-agent_p = None
-if run_agent:
-    agent_log = open("Log/agent.log", "a+", 0)
 sim_p = None
+sim_log = None
+agent_p = None
+agent_log = None
 serial_p = None
+serial_log = None
 
-if simulate:
-    sim_log = open("Log/simulator.log", "a+", 0)
-    ### Initiates the Simulator and redirects output
+### Initiates the Simulator and redirects output
+def start_simulator():
+    global sim_p, sim_log, args
+    if (sim_log == None): sim_log = open("Log/simulator.log", "a+", 0)
     fard_args = ["--baseline", args.baseline, "--speedup", str(args.speedup)]
-    if log:
-        fard_args = fard_args + ["-l"]
-    sim_p = sp.Popen(["python", "lib/farduino.py"] + fard_args,
+    if log: fard_args = fard_args + ["-l"]
+    sim_p = sp.Popen(["python", "lib/my_farduino.py"] + fard_args,
                      stdout = sim_log, stderr = sim_log)
-    ### Initiates the Agent file and redirects output
-    if run_agent:
-        agent_p = sp.Popen(["python", args.agent], bufsize=0,
-                           stdout = agent_log, stderr = agent_log)
+    time.sleep(1) # chance to get started
+    
+def start_agent():
+    global agent_p, agent_log, args
+    if (agent_log == None): agent_log = open("Log/agent.log", "a+", 0)
+    agent_p = sp.Popen(["python", args.agent], bufsize=0,
+                       stdout = agent_log, stderr = agent_log)
+    time.sleep(1) # chance to get started
+    last_ping = rospy.get_time()
+
+### Initiates the Arduino and redirects output
+def start_serial():
+    global serial_p, serial_log
+    if (serial_log == None): serial_log = open("Log/rosserial.log", "a+", 0)
+    serial_p = sp.Popen(["rosrun", "rosserial_arduino",
+                         "serial_node.py", "/dev/ttyACM0"],
+                        stdout = serial_log, stderr = serial_log)
+    time.sleep(1) # chance to get started
+
+### Simulator starts up Agent and Farduino
+if simulate:
     print("waiting for nodes")
-    rospy.sleep(2)
+    start_simulator()
+    ### Initiates the Agent file and redirects output
+    if run_agent: start_agent()
     print("ok")
 
 ### Running the real arduino proccess
 elif mode == "serial":
-    serial_log = open("Log/rosserial.log", "a+", 0)
-    ### Initiates the Arduino and redirects output
-    serial_p = sp.Popen(["rosrun", "rosserial_arduino",
-        "serial_node.py", "/dev/ttyACM0"],
-        stdout = serial_log, stderr = serial_log)
-    ### Initiates the Agent file and redirects output
-    if run_agent:
-        agent_p = sp.Popen(["python", args.agent], bufsize=0,
-                           stdout = agent_log, stderr = agent_log)
     print("waiting for nodes")
-    rospy.sleep(2)
+    start_serial()
+    if run_agent: start_agent()
     print("ok")
-
-
 
 if (verbose):
     log_print("Spinning...")
@@ -264,25 +284,15 @@ while len(tracefiles) > 0 or not grade:
         else:
             interf.parse_interf(dirname + grader.interf_file)
 
-        ### Initiates the Simulator and redirects output
-        sim_log = open("Log/simulator.log", "a+", 0)
-        fard_args = ["--baseline", dirname + grader.bfile,
-                     "--speedup", str(args.speedup)]
-        if log: fard_args = fard_args + ["-l"]
-        sim_p = sp.Popen(["python", "lib/farduino.py"] + fard_args,
-                         stdout = sim_log, stderr = sim_log)
-
-        agent_p = sp.Popen(["python", args.agent], bufsize=0,
-                           stdout = agent_log, stderr = agent_log)
-
-        rospy.sleep(1)
+        args.baseline = dirname + grader.bfile
+        start_simulator()
+        start_agent()
         print("running %s"%tfile)
         exec(open(dirname + grader.bfile).read())
         grader_vars = init_actuators
 
     ### We must begin health ping
     now= rospy.get_time()
-    print("Now " + str(now))
     last_ping = now
 
     ### Loop for a single iteration of a grading scheme(infinite if not grading)
@@ -312,15 +322,16 @@ while len(tracefiles) > 0 or not grade:
             log_print("no ping since %d (%d seconds), terminating..."
                       %(last_ping, now - last_ping))
             last_ping = now
-            terminate(agent_p, None)
+            num_restarts += 1
+            if (num_restarts < max_restarts): # Send just once
+                terminate(agent_p, None)
+            else:
+                notify_user()
+                terminate_gracefully()
 
         if (run_agent and (agent_p.poll() != None)):
             log_print("agent restarting...")
-            agent_p = sp.Popen(["python", args.agent], bufsize=0,
-                               stdout = agent_log, stderr = agent_log)
-            num_restarts += 1
-            if (num_restarts == max_restarts): # Send just once
-                send_email()
+            start_agent()
 
         rospy.sleep(tick_interval)
     if grade:
