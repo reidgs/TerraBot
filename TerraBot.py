@@ -228,7 +228,7 @@ def start_simulator():
     if (sim_log == None): sim_log = open("Log/simulator.log", "a+", 0)
     fard_args = ["--baseline", args.baseline, "--speedup", str(args.speedup)]
     if log: fard_args = fard_args + ["-l"]
-    sim_p = sp.Popen(["python", "lib/my_farduino.py"] + fard_args,
+    sim_p = sp.Popen(["python", "lib/farduino.py"] + fard_args,
                      stdout = sim_log, stderr = sim_log)
     time.sleep(1) # chance to get started
     
