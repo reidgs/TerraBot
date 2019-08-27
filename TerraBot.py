@@ -6,7 +6,7 @@ import signal
 import rospy, rosgraph
 from lib import interference as interf
 from lib import topic_def as tdef
-from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray
+from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray, String
 import argparse
 import time, getpass
 from datetime import timedelta
@@ -208,10 +208,22 @@ generate_subscribers()
 ### Health Ping callback function
 ### Records the most recent ping
 def ping_cb(data):
-    global last_ping, now
+    global last_ping
     last_ping = rospy.get_time()
 
 ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
+
+### Camera callback - take a picture and store in the given location
+def camera_cb(data):
+    global simulate
+    if simulate:
+        print("Camera NYI for simulator")
+    else:
+        print("Taking a picture, storing it in %s" %data.data)
+        sp.call("raspistill -n -md 2 -awb off -awbg 1,1 -ss 30000 -o %s"
+                % data.data, shell = True)
+
+camera_sub = rospy.Subscriber('camera', String, camera_cb)
 
 ### Spawn subprocesses
 

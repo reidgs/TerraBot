@@ -2,8 +2,7 @@
 
 #mock file of student
 import rospy
-import subprocess
-from std_msgs.msg import Float32, Int32, Bool, String, Float32MultiArray, Int32MultiArray
+from std_msgs.msg import Float32, Int32, Bool, String, Float32MultiArray, Int32MultiArray, String
 import time
 
 light = 0
@@ -21,6 +20,7 @@ led_pub = rospy.Publisher("led_input", Int32, latch = True, queue_size = 1)
 fan_pub = rospy.Publisher("fan_input", Bool, latch = True, queue_size = 1)
 
 ping_pub = rospy.Publisher("ping", Bool, latch = True, queue_size = 1)
+camera_pub = rospy.Publisher("camera", String, latch = True, queue_size = 1)
 
 def humid_reaction(data):
     global hum
@@ -63,7 +63,7 @@ while not rospy.core.is_shutdown():
 
     if time_now - cam_time > 3600:
         time_stamp = "Photos/" + str(rospy.get_time()) + ".jpg"
-        subprocess.call("raspistill -n -md 2 -awb off -awbg 1,1 -ss 30000 -o %s" % time_stamp, shell = True)
+        camera_pub.publish(time_stamp)
         cam_time = time_now
 
     #fan_pub.publish(True if hum > 70 else False)
