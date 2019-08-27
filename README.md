@@ -128,6 +128,15 @@ WARNING: If you ^C out, sometimes not all the processes are killed.  You would t
 ### Agent Node ###
 The agent node is how you autonomously control the greenhouse. You will be able to access sensor data by subscribing to the topics to which the TerraBot publishes. You will also be able to write data to the actuators by publishing to the topics to which the TerraBot subscribes.
 
+### Arduino Node ###
+Sensors and actuators are being controlled in the Arduino node:
+
+* The Arduino reads in all sensor data and translates them from raw values to more meaningful values that are then published to the TerraBot node. 
+* The Arduino also subscribes to topics containing data values that are published by the TerraBot node. These meaningful values are translated to its raw form, with which the Arduino can write to the actuators.
+
+All communication to and from the Arduino is done via the TerraBot node, meaning you should
+never access the same topics as the Arduino. 
+
 #### Interference File ####
 The interference file may take in a path to a file containing a schedule of times to manipulate the data being transferred between nodes. There are six functions, through one of which your data will be passed:
 
@@ -140,15 +149,6 @@ The interference file may take in a path to a file containing a schedule of time
 * high : sets a high value for that sensor
 
 *If no file is passed in, there will be no intereference in the transfer of data.*
-
-### Arduino Node ###
-Sensors and actuators are being controlled in the Arduino node:
-
-* The Arduino reads in all sensor data and translates them from raw values to more meaningful values that are then published to the TerraBot node. 
-* The Arduino also subscribes to topics containing data values that are published by the TerraBot node. These meaningful values are translated to its raw form, with which the Arduino can write to the actuators.
-
-All communication to and from the Arduino is done via the TerraBot node, meaning you should
-never access the same topics as the Arduino. 
 
 ## Running the System ##
 ### Connecting to the Raspberry Pi ###
