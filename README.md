@@ -192,12 +192,12 @@ For error checking it is recommended that you include the -l flag for logging, w
 The simulator starts up with default values for the sensors, actuators, and clock.  You can create a 'baseline' file to specify different initial values. Specifically, you need to define "init_internals", "init_actutators", and "clock_start".
 
 init_internals is a dictionary for the initial values of all the sensors.  For light, temperature (in Celcius), humidity, and smoist (soil moisture), the dictionary entries should be an array of two elements, one for each sensor.  For current, the entry is an array of two elements, one for the initial current reading and the second element is the cumulative energy usage.  The volume sensor (water level) is a single float (in milliliters).  Refer to the table at the beginning of this document for the range of allowable values.  For example:
-> init_internals = {
->   'light' : \[100, 100],
->   'temperature' : \[20, 18],
->   'humidity' : \[40, 50], # the two readings are not identical
->   'current' : \[0, 0],
->   'volume' : 3300.0 # ~14 cups
+> init_internals = {<br>
+>   'light' : \[100, 100],<br>
+>   'temperature' : \[20, 18],<br>
+>   'humidity' : \[40, 50], # the two readings are not identical<br>
+>   'current' : \[0, 0],<br>
+>   'volume' : 3300.0 # ~14 cups<br>
 >}
    
 " dictionary for all the actuators
