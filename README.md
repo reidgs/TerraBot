@@ -4,10 +4,12 @@
   - [Software Architecture](#terrabot-software-architecture)
 - [ROS Communication](#ros-communication)
 - [Understanding the System](#understanding-the-system)
-  - [Student Node](#student-node)
-  - [Relay Node](#relay-node)
-      + [Interference File](#interference-file)
+  - [TerraBot Node](#terrabot-node)
+    + [Command line arguments](#terrabot-cmd-line-args)
+    + [Run time commands](#terrabot-run-time-args)
+  - [Agent Node](#agent-node)
   - [Arduino Node](#arduino-node)
+    + [Interfence](#interference-file)
 - [Running the System](#running-the-system)
   - [Connecting to the Raspberry Pi](#connecting-to-the-raspberry-pi)
   - [Uploading Code](#uploading-code)
@@ -16,10 +18,10 @@
   - [Getting Started](#getting-started)
     - [TerraBot Simulator Installation](#terrabot-simulator-installation)
     - [Running the Simulator](#running-the-simulator)
-  - [Additional Processes](#extra-processes)
+    - [Speeding up Time](#speedup)
+  - [Additional Items](#extra-items)
     + [Health Ping](#health-ping)
     + [Frequency](#frequency)
-    + [Time](#time)
     + [Camera](#camera)
 - [Grading](#grading)
   - [Trace File](#trace-file)
@@ -32,18 +34,18 @@
 
 ## Overview ##
 
-Welcome to the Autonomous Agents TerraBot project! For this project you and your partner(s)
+Welcome to the Autonomous Agents TerraBot project! For this project you and your partners
 will be given a greenhouse outfitted with multiple sensors and actuators and a grow mat
-with recently sprouted seeds. The goal of the assignment is to provide the best environment
+with recently germinated seeds. The goal of the assignment is to provide the best environment
 for the plants during a two week grow cycle. Each cycle will come with new challenges, so
 be prepared!  
 
-*Each terrarium contains two light, temperature, and humidity sensors. The data values are contained in arrays, where index 0 contains the sensor reading of the first sensor and index 1 contains the sensor reading of the second sensor.*
+*Each terrarium contains two light, moisture, temperature, and humidity sensors, one water-level sensor, one current sensor, and one camera. For the redundant sensors, data values are contained in arrays, where index 0 contains the sensor reading of the first sensor and index 1 contains the sensor reading of the second sensor.  For the current sensor, the first index is the current, the second is the energy usage, to date.*
 
 | Name (topic name)            | Description                                                 | Message Type | Range      |
 | ---------------------------- | ----------------------------------------------------------- | ------------ | ---------- |
 | **_Sensors_**                |**_Use these to determine the system's state_**              |  **_—_**     |  **_—_** |
-| Current (cur)                | The current draw of the system (index 0) and total power usage (index 1) | Float32Array |            |
+| Current (cur)                | The current draw (index 0) and total energy usage (index 1) | Float32Array |            |
 | Light (light)                | Light intesnity in the system                               | Int32Array   |            |
 | Water level (level)          | Height of the water in the reservoir                        | Float32      |            |
 | Temperature (temp)           | Internal temperature of the system                          | Int32Array   |            |
@@ -51,14 +53,13 @@ be prepared!
 | Camera                       | Captures a photograph of stystem's state                    |   —          |   —        |
 | **_Actuators_**              |**_Use these to adjust the system's state_**                 | **_—_**      |  **_—_**   |
 | LED (led)                    | Adjust the power of the system's LED light fixture          | Int32        | 0-255      |
-| Water Pump (wpump)           | Toggle whether the water pump is on or off                  | Bool         | true-false |
-| Fan (fan)                    | Toggle whether the fan is on or off                         | Bool         | true-false |
+| Water Pump (wpump)           | Toggle whether the water pump is on or off                  | Bool         | True-False |
+| Fan (fan)                    | Toggle whether the fan is on or off                         | Bool         | True-False |
 
-//TODO QUESTION - SHOULD WE PUBLISH A MESSAGE OF THE CURRENT ACTUATOR STATE? IF THINGS CRASH AND THE LEDs ARE ON, HOW DOES THE AGENT KNOW THAT?
 
 ### TerraBot Software Architecture ###
 
-An arduino communicates directly with these sensors and actuators, converts this raw data into clean data, and then forwards that data to a raspberry pi.
+An arduino communicates directly with the sensors and actuators, converts the raw data into clean data, and then forwards that data to a raspberry pi.
 The raspberry pi, running ROS (Robot Operating System), receives the sensor data and makes it available
 for your AI agent in the formats above. Additionally, it receives your agent's actuator commands as defined above
 and relays them back to the arduino.
@@ -67,7 +68,7 @@ and relays them back to the arduino.
 
 
 The above image shows an overview of the connections between the different nodes (ovals) in the system.
-Notice all the topics (rectangles) connected to the student, as those are the ones you will be using to
+Pay particular attention to the topics (rectangles) connected to the agent, as those are the ones you will be using to
 regulate your greenhouse.
 
 ## ROS Communication ##
@@ -78,10 +79,10 @@ Please look over the tutorials concerning ROS communication (Nodes, Topics, Publ
 You may find the other tutorials there helpful as well.
 
 
-The TerraBot consists of three ROS *nodes* or processes, one for the arduino communication with the sensors/actuators,
-one hardware feed for publishing the clean data and listening for actuation commands,
+The TerraBot consists of three ROS *nodes* or processes, one for the arduino (or simulator) communication with the sensors/actuators,
+one relay node for publishing the clean data and listening for actuation commands,
 and one that you will write for your agent.
-The hardware feed *publishes* sensor data and *subscribes* to actuation commands over ROS topics
+The relay node *publishes* sensor data and *subscribes* to actuation commands over ROS topics
 of specific types (shown above).
 Your agent will be a ROS *node* which subscribes to each of the sensors topics, plans actions, and publishes to
 actuators.
@@ -91,26 +92,44 @@ your code to make sure that it is publishing and subscribing as you intend when 
 
 ## Understanding the System ##
 
-As mentioned earlier, there are three ROS nodes in this system: your agent, which you will provide, the main TerraBot,
+As mentioned earlier, there are three ROS nodes in this system: the main TerraBot, the agent node (which you will provide), 
 and the arduino.
 
-### Agent Node ###
-The student node is your reactive agent. You will be able to access sensor data by subscribing to the topics to which the relay publishes. You will also be able to write data to the actuators by publishing to the topics to which the relay subscribes.
-
 ### TerraBot Node ###
-Running the TerraBot will start up a total of 4 nodes. First the master node, roscore, and then the three other nodes: your agent, the TerraBot node, and the Arduino node. 
+Running the TerraBot will start up a total of 4 nodes. Besides the TerraBot node, itself, it will start up the roscore node (which regulates communications), your agent, and either the Arduino code or the simulator.
 
-The TerraBot node transfers actuator data from your agent to the Arduino node:
-It subscribes to the topics to which your agent publishes and publishes to the topics to which the Arduino subscribes.
+The TerraBot node transfers actuator data from your agent to the Arduino/simulator node:
+It subscribes to the topics to which your agent publishes and publishes to the topics to which the Arduino/simulator subscribes.
 
-Vice versa, the TerraBot node transfers sensor data from the Arduino node to your agent:
-It subscribes to the topics to which the Arudino publishes and publishes to the topics to which your agent subscribes.
+Vice versa, the TerraBot node transfers sensor data from the Arduino/simulator node to your agent:
+It subscribes to the topics to which the Arudino/simulator publishes and publishes to the topics to which your agent subscribes.
  
 In the transfering process, the data received by the TerraBot node are passed though functions via an external interference file. In order to reliably simulate errors which may happen by chance if run in the real world, the interference file
 may be malicious and cause the relay to act incorrectly.
 
+### terrabot-cmd-line-args ###
+The following command line arguments are avaiable when running TerraBot.py:
+    -h (--help): show help message and exit
+    -v (--verbose): print more messages describing the workings of the system
+    -l (--log): log all message traffic (in an auto-generated subdirectory of Log)
+    -m (--mode) serial | sim | grade: mode to run in (default is serial)
+    -a (--agent) <python file>: Your agent file (if "none" - the default  - the agent node must be run externally)
+    -i (--interference) <text file>: Set of instructions for when to manipulate sensor and actuator values
+    -s (--speedup) <value>: increase simulated time (only in sim mode; automatically decreases speedup when actuators are on)
+    -b (--baseline) <text file>: Initial clock time, sensor, and actuator values (only in sim mode)
+    -t (--tracefile) <text file>: Set of instructions that describe expected behavior (only in grade mode)
+    -T (--tracedir) <directory name>: Directory containing trace files (only in grade mode)
+
+### terrabot-run-time-args ###
+Currently, the only run-time command is "q", which gracefully quits the system.  
+
+WARNING: If you ^C out, sometimes not all the processes are killed.  You would then need to kill them (the ros, arduino/simulator, and agent processes) individually.  Especially if extra ROS nodes are running, unexpected interactions may occur.
+
+### Agent Node ###
+The agent node is how you autonomously control the greenhouse. You will be able to access sensor data by subscribing to the topics to which the TerraBot publishes. You will also be able to write data to the actuators by publishing to the topics to which the TerraBot subscribes.
+
 #### Interference File ####
-The interference file may take in a path to a .trc file containing a schedule of times to interfere with the trasfer of data between nodes. There are six functions, through one of which your data will be passed:
+The interference file may take in a path to a file containing a schedule of times to manipulate the data being transferred between nodes. There are six functions, through one of which your data will be passed:
 
 * normal : trasfers data directly without any modifications
 * noise : slightly modifies data before transfering
@@ -125,10 +144,10 @@ The interference file may take in a path to a .trc file containing a schedule of
 ### Arduino Node ###
 Sensors and actuators are being controlled in the Arduino node:
 
-* The Arduino reads in all sensor data and translates them from raw values to more meaningful values that are then published to the Relay node. 
-* The Arduino also subscribes to topics containing data values that are published by the Relay node. These meaningful values are translated to its raw form, with which the Arduino can write to the actuators.
+* The Arduino reads in all sensor data and translates them from raw values to more meaningful values that are then published to the TerraBot node. 
+* The Arduino also subscribes to topics containing data values that are published by the TerraBot node. These meaningful values are translated to its raw form, with which the Arduino can write to the actuators.
 
-All communication to and from the arduino is done via the relay node, meaning you should
+All communication to and from the Arduino is done via the TerraBot node, meaning you should
 never access the same topics as the Arduino. 
 
 ## Running the System ##
@@ -142,15 +161,15 @@ never access the same topics as the Arduino.
 
 ## Simulator ##
 
-We are providing a simulator to test your code before deploying it on the TerraBot. Follow the instructions to get
-started with the simulator and also to log into your raspberry pi.
+Since access to the actual greenhouse is somewhat limited, and things can take a long time, we have provided a simulator so that you can test your code before deploying it on the actual hardware. 
 
-The simulator works in a way almost identical to the three node process which will run when your
-code is uploaded to the raspberry pi. The code for your agent and the TerraBot node is the exact same
-as it would be on the pi. However, instead of having an arduino node, the simulator comes with a
-farduino (fake arduino) node that mimics the actions of the arduino node. This difference should
+The simulator uses the same ROS topics as, and works in a way almost identical to, the Arduino node. The code for your agent and the TerraBot node is the exact same
+as it would be on the Raspberry Pi. However, instead of having an Arduino node, the simulator comes with a
+farduino (fake Arduino) node that mimics the actions of the Arduino node. This difference should
 in no way affect how your code operates and should not be (significantly) noticeable from the perspective
-of your node.
+of your agent node.
+
+We are working to try to get the ranges of the sensors, the nominal values, and the rate of change of the sensors, to match the real world.  The values are approximate, however, so you should not assume that the real world and the simulator will behave exactly the same.
 
 ### Getting Started ###
 
@@ -167,54 +186,58 @@ accurately mimic the software on the pi. (any ubuntu distro should be valid thou
 Keep in mind that only the Desktop install is neccesary. Depending on your internet connection
 this step may take a while.
 - TerraBot Simulator
-QUESTION - I THINK WE CAN ZIP UP THE WHOLE OS, WILL THESE INSTRUCTIONS CHANGE FOR THAT?
-//TODO Find out how students will get the simulator
+We will provide you with a virtual machine that already has Ubuntu, ROS, and the TerraBot code installed.  
 
 #### Running the Simulator ####
 
-In order to run the simulator, run the TerraBot with the simulator mode flag (-m sim), the multiplier you wish for the speed,
-and the time which you would like it to start at (seconds since epoch).  
-For example if I wanted to run the simulator at 1x speed at time=0 I would run:  
->`./TerraBot.py -m sim 1 0`  
-For error checking it is recommended that you include the -l flag for logging as well.  
-EX: 5x speed with logging
->`./TerraBot.py -l -m sim 5 0`  
+In order to run the simulator, run the TerraBot with the simulator mode flag (-m sim), and optionally 1) the multiplier you wish for the speed (-s option); and 2) a file that copntains baseline (starting) values for the sensors, actuators, and the time which you would like the simulator to start at (seconds since midnight, day 0 of the simulated run).  
 
-### Extra Processes ###
-In order to allow for greater control of the system and to ensure the accuracy of the simulator,
-there are a few extra processes to which you have access. In addition to the previously mentioned sensors
-and actuators, there will also be a health ping, variable time speed, and a frequency topic which you must consider.
+For error checking it is recommended that you include the -l flag for logging, which will put a file for each topic into an automatically generated subdirectory of the Log directory.  
+>`./TerraBot.py -l -m sim`  
+
+##### Speedup #####
+
+Note that much of what happens in a greenhouse happens very slowly, thus a speedup of 100 or more is recommended for development and testing.  However, what happens when actuators are on can happen very quickly (e.g., watering takes just a few seconds).  To accommodate this, the simulator automatically sets the speed low when either the pump or fans are on and then sets the speed to the user-desired value whenever they are both are off.  Your agent can also publish a "speedup" message to change the default speedup during run time, but this is not standard practice.
+
+For example to run the simulator at 100x speed (i.e., 100 seconds of simulated time for every second of wall clock time), use:  
+>`./TerraBot.py -m sim -s 100`  
+
+*Note: to ensure consistency between your code in simulation and with the actual hardware, you should refrain from referring to outside functions (OS time.time()) and should instead refer to the ROS time topic via rospy.get_time().*
+
+### Extra Items ###
+There are some additional items that you need to know aobut in order to complete the assignments.  Specifically, they involve the health of your agent, the frequency of sensor readings, and access to the camera.
 
 ##### Health Ping #####
 Because of the long lasting nature of this project, it is possible that there may be unforeseen
 errors in your code which will cause it to crash. Crashed code means no control over the system and
-certain doom for your plants! In order to avoid this outcome, we have included restart functionality.
-When the relay begins, it will run your code and listen for a ping. If your ping is not heard within
-a set amount of time (default 60 min), it will assume your program has crashed and restart it automatically.
+certain doom for your plants! In order to avoid this outcome, we have included restart functionality.  
+The TerraBot will subscribe to the "ping" message (the data, a Boolean, is ignored).
+If the TerraBot runs your agent (i.e., the -a flag is not 'none') and has not received a ping within
+a set amount of time (default 6 minutes, either real or simulated time), it will assume your program has crashed and restart it automatically.
+
+After a set number of crashes (currently 5), the TerraBot will quit.  There is a command-line option to send email when this happens, so that the team and the instructors can be notified.  Don't worry about how to do this - it is not necessary for development and testing, and we will use this feature only during the grow cycles.
 
 ##### Frequency #####
-The frequency topic is used to determine how often the arduino will read from the sensors.
-The more often you read, the more accurate your data will be, but the more power you will draw as well.
-Notice that this setting is variable, meaning it can be changed over the course of the deployment.
+It is our intention to eventually have you manage how much energy and water you use.  
+Since reading the sensors takes energy, there is a way to tell the system how frequently for the Arduino will read from the sensors.
+The more often the sensors are read, the more accurate your data will be, but the more energy you will use as well.
+The 'freq' topic takes a Float32 argument, which represents how often the sensors will be read. 
+For example, a frequency of 10 polls the sensors at 10 Hz; a frequency of 0.1 polls the sensors once every 10 seconds.
+Notice that this setting is variable, meaning it can be changed over the course of the deployment by sending a new 'freq' message.
+This is useful, for instance, if you want to read the sensors infrequently until some event occurrs and then change the frequency to do better closed-loop control.
 
-##### Time #####
-One of the most convenient aspects of the simulator is its ability to manipulate time in order to
-suit the user's needs. By default the simulator will begin running at 1x speed at the epoch,
-but that can be configured with flags. It is also important that the execution of the simulator is identical to the relay (even if sped up).
-
-*To ensure consistency between your code in simulation and on TerraBot, you should refrain from referring to outside functions (OS time.time()) and should instead refer to the ROS time topic via rospy.get_time().*
+Note: Currently, each sensor is polled at the same frequency; We may implement separate frequencies for each sensor, at some point.
 
 ##### Camera #####
-The one aspect of the system which we are not able to simulate is the camera. Any call to
-raspistill will result in an error as there is no camera connected to the virtual machine
-and raspistill is not installed.
+The camera is different from the rest of the sensors, as it is controlled directly by the Pi, and not by the Arduino.
+We are still working on incorporating the camera into the TerraBot code -- it will be available (both for the Pi hardware and the simulator) during the course of the semester.
 
-//TODOCAN WE RENAME raspistill? It looks like rapist...
-
-
+# TODOCAN WE RENAME raspistill? It looks like rapist...
 
 ## Grading ##
-Grading will take place with the help of the simulator and .trc files in the grading directory. You may test your agent by creating your own trace files. If you create multiple .trc files in the grading directory, all the files will be tested. Once finished grading, the simulator will terminate.
+Your programming assignments will be graded automatically.  Trace files (.trc) will indicate what behaviors are expected to occur, and the grader, running in conjunction with the simulator, will check to see that all the conditions are successfully met.  The trace files to use can be specified on the command line using either the -t (one trace file) or -T (directory containing multiple trace files), along with the mode set to "grade" (e.g., -m grade).
+
+You may test your agent by creating your own trace files (and your own interference files). We may give you example trace files, as well, but the actual grading will use trace files that you have not previously seen.
 
 ### Trace File ###
 The grader traces through commands given in this file and acts accordingly. The first line in the trace file is the address to the baseline file, and the second line is the address to the interference file. The commands for grading start on the third line of the trace file. The four commands available are: START, ENSURE, WAIT, and QUIT.
@@ -223,14 +246,14 @@ The grader traces through commands given in this file and acts accordingly. The 
 The START command starts the grading process. It does not take any arguments.
 
 ##### QUIT #####
-The QUIT command terminates the current grading process. If there are additional trace files that have not been traced through, the grader will start tracing through the next file, otherwise, the simulator will terminate all processes. It does not take any arguments.
+The QUIT command terminates the current grading process. It does not take any arguments. If there are additional trace files that have not been traced through, the grader will start tracing through the next file, otherwise, the TerraBot will terminate all processes and exit. 
 
 ##### WAIT #####
-The WAIT command will wait a certain amount of time for a value to evaluate to true. It takes in two arguments seperated by commas: the first argument is the expression being checked, while the second argument is the maximum wait time allotted. This command is finished and the next command starts once: the first argument evaluates to true within the time frame (passed task), or the maximum wait time allotted passes (failed task).
+The WAIT command will wait a certain amount of time for a value to evaluate to true. It takes in two arguments seperated by commas: the first argument is the expression being checked, and the second argument is the maximum wait time allowed. This command is finished and the next command starts once either: the first argument evaluates to true within the time frame (passed task), or the maximum wait time passes (failed task).
 > EX: wait a maximum of 5 seconds for the led's value to be 255  
 > `WAIT,grader_vars['led']==255,5` 
 
 ##### ENSURE #####
-The ENSURE command will ensure the value of the first argument given evaluates to true throughout the whole time period set. It takes in two arguments seperated by commas: the first argument is the expresion being checked, while the second argument is the length of the time period. This command is finished and the next command starts once: the first argument evaluates to false (failed task), or the time period set passes (passed task).
-> EX: ensure the water pump is on for 10 seconds  
+The ENSURE command will ensure that the value of the first argument given evaluates to true throughout the whole time period set. It takes in two arguments seperated by commas: the first argument is the expresion being checked, while the second argument is the length of the time period. This command is finished and the next command starts once either: the first argument evaluates to false (failed task), or the time period set passes (passed task).
+> EX: ensure the water pump is on for at least 10 seconds  
 >`ENSURE,grader_vars['wpump'],10` 
