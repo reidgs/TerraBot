@@ -174,7 +174,7 @@ can implement your agent. **We will provide you with a virtual machine that alre
 
 - VirtualBox: [Instructions here](https://www.wikihow.com/Install-VirtualBox) for installing
 VirtualBox.
-- Our distribution contains:
+Our distribution contains:
 * Ubuntu: download ubuntu 32 bit [here](https://ubuntu-mate.org/download/) to most
 accurately mimic the software on the pi. (any ubuntu distro should be valid though this is the only one we have tested)
 * ROS: [Instructions here](https://wiki.ros.org/melodic/Installation/Ubuntu_) for installing ROS.
