@@ -40,7 +40,7 @@ with recently germinated seeds. The goal of the assignment is to provide the bes
 for the plants during a two week grow cycle. Each cycle will come with new challenges, so
 be prepared!  
 
-Each terrarium contains two light, moisture, temperature, and humidity sensors, one water-level sensor, one current sensor, and one camera. For the redundant sensors, data values are contained in arrays, where index 0 contains the sensor reading of the first sensor and index 1 contains the sensor reading of the second sensor.  For the current sensor, the first index is the current, the second is the energy usage, to date.
+Each greenhouse contains two light, moisture, temperature, and humidity sensors, one water-level sensor, one current sensor, and one camera. For the redundant sensors, data values are contained in arrays, where index 0 contains the sensor reading of the first sensor and index 1 contains the sensor reading of the second sensor.  For the current sensor, the first index is the current, the second is the energy usage, to date.
 
 | Name (topic name)            | Description                                                 | Message Type | Range      |
 | ---------------------------- | ----------------------------------------------------------- | ------------ | ---------- |
@@ -59,8 +59,8 @@ Each terrarium contains two light, moisture, temperature, and humidity sensors, 
 
 ### TerraBot Software Architecture ###
 
-An arduino communicates directly with the sensors and actuators, converts the raw data into clean data, and then forwards that data to a raspberry pi.
-The raspberry pi, running ROS (Robot Operating System), receives the sensor data and makes it available
+An Arduino communicates directly with the sensors and actuators, converts the raw data into clean data, and then forwards that data to a Raspberry Pi.
+The Raspberry Pi, running ROS (Robot Operating System), receives the sensor data and makes it available
 for your AI agent in the formats above. Additionally, it receives your agent's actuator commands as defined above
 and relays them back to the arduino.
 
