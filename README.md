@@ -200,9 +200,17 @@ init_internals is a dictionary for the initial values of all the sensors.  For l
 >   'volume' : 3300.0 # ~14 cups<br>
 >}
    
-" dictionary for all the actuators
+"init_actuators" is dictionary for the initial values of all the actuators.  led is an integer, wpump and fan are Booleans, and freq (sensor frequency) is a float.  For example:
+> init_actuators = {<br>
+>   'led' : 0,<br>
+>   'wpump' : False,
+>   'fan' : True, # the fans start on<br>
+>   'freq' : 10.0 # 10 times/second<br>
+>}
 
-" dictionary for all the actuators
+"clock_start" is the number of seconds since midnight of day zero of the simulation run (default is zero, i.e., midnight).
+For example:
+> clock_start = 7*3600 # Start the simulation at 7am
 
 ##### Speeding up Time ####
 Note that much of what happens in a greenhouse happens very slowly, thus a speedup of 100 or more is recommended for development and testing.  However, what happens when actuators are on can happen very quickly (e.g., watering takes just a few seconds).  To accommodate this, the simulator automatically sets the speed low when either the pump or fans are on and then sets the speed to the user-desired value whenever they are both are off.  Your agent can also publish a "speedup" message to change the default speedup during run time, but this is not standard practice.
