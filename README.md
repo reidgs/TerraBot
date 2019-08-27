@@ -153,10 +153,9 @@ The interference file may take in a path to a file containing a schedule of time
 ## Running the System ##
 ### Connecting to the Raspberry Pi ###
 We will provide instructions for how to run on the actual hardware in the near future
-[//]: # (TODO INCLUDE THE INSTRUCTIONS FOR GETTING STARTED WITH THE ACTUAL PI, WHERE IS CODE LOCATED, WHERE SHOULD THEY MOVE THEIR CODE, HOW DO THEY RUN IT, ETC)
+<!-- (TODO INCLUDE THE INSTRUCTIONS FOR GETTING STARTED WITH THE ACTUAL PI, WHERE IS CODE LOCATED, WHERE SHOULD THEY MOVE THEIR CODE, HOW DO THEY RUN IT, ETC)-->
 
 ### Uploading Code ###
-#//TODO
 For all assignments, you will upload your code through Canvas.  We will then grade your assignment using the simulator (see "Grading") and, if it is the start of a grow cycle, upload your agent code and run it on the Raspberry Pi.
 
 ## Deployment and Testing ##
