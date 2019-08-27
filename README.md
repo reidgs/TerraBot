@@ -175,12 +175,12 @@ can implement your agent. **We will provide you with a virtual machine that alre
 - VirtualBox: [Instructions here](https://www.wikihow.com/Install-VirtualBox) for installing
 VirtualBox.
 - Our distribution contains:
--- Ubuntu: download ubuntu 32 bit [here](https://ubuntu-mate.org/download/) to most
+* Ubuntu: download ubuntu 32 bit [here](https://ubuntu-mate.org/download/) to most
 accurately mimic the software on the pi. (any ubuntu distro should be valid though this is the only one we have tested)
--- ROS: [Instructions here](https://wiki.ros.org/melodic/Installation/Ubuntu_) for installing ROS.
+* ROS: [Instructions here](https://wiki.ros.org/melodic/Installation/Ubuntu_) for installing ROS.
 Keep in mind that only the Desktop install is neccesary. Depending on your internet connection
 this step may take a while.
--- TerraBot Simulator
+* TerraBot Simulator
 
 #### Running the Simulator ####
 In order to run the simulator, run the TerraBot with the simulator mode flag (-m sim), and optionally 1) the multiplier you wish for the speed (-s option); and 2) a file that copntains baseline (starting) values for the sensors, actuators, and the time which you would like the simulator to start at (seconds since midnight, day 0 of the simulated run).  
@@ -193,19 +193,19 @@ The simulator starts up with default values for the sensors, actuators, and cloc
 
 init_internals is a dictionary for the initial values of all the sensors.  For light, temperature (in Celcius), humidity, and smoist (soil moisture), the dictionary entries should be an array of two elements, one for each sensor.  For current, the entry is an array of two elements, one for the initial current reading and the second element is the cumulative energy usage.  The volume sensor (water level) is a single float (in milliliters).  Refer to the table at the beginning of this document for the range of allowable values.  For example:
 > init_internals = {<br>
->   <p>'light' : \[100, 100],<br>
->   'temperature' : \[20, 18],<br>
->   'humidity' : \[40, 50], # the two readings are not identical<br>
->   'current' : \[0, 0],<br>
->   'volume' : 3300.0 # ~14 cups<br>
+>     'light' : \[100, 100],<br>
+>     'temperature' : \[20, 18],<br>
+>     'humidity' : \[40, 50], # the two readings are not identical<br>
+>     'current' : \[0, 0],<br>
+>     'volume' : 3300.0 # ~14 cups<br>
 >}
    
 "init_actuators" is dictionary for the initial values of all the actuators.  led is an integer, wpump and fan are Booleans, and freq (sensor frequency) is a float.  For example:
 > init_actuators = {<br>
->   'led' : 0,<br>
->   'wpump' : False,
->   'fan' : True, # the fans start on<br>
->   'freq' : 10.0 # 10 times/second<br>
+>     'led' : 0,<br>
+>     'wpump' : False,
+>     'fan' : True, # the fans start on<br>
+>     'freq' : 10.0 # 10 times/second<br>
 >}
 
 "clock_start" is the number of seconds since midnight of day zero of the simulation run (default is zero, i.e., midnight).
