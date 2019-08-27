@@ -106,7 +106,7 @@ while not rospy.core.is_shutdown():
     sensorsG.time = rospy.get_time()
 
     # Ping every 3 minutes, twice as frequently as timeout in TerraBot
-    if (sensorsG.time - last_ping) >= 18000: ping()
+    if (sensorsG.time - last_ping) >= 180: ping()
 
     ### Check for input
     if sys.stdin in select.select([sys.stdin],[],[],0)[0]:
