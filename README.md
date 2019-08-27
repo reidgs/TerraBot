@@ -91,12 +91,10 @@ Be sure to check
 your code to make sure that it is publishing and subscribing as you intend when bug fixing.
 
 ## Understanding the System ##
-
-As mentioned earlier, there are three ROS nodes in this system: the main TerraBot, the agent node (which you will provide), 
-and the arduino.
+Running the TerraBot will start up a total of 4 nodes. Besides the TerraBot node, itself, it will start up the roscore node (which regulates communications), your agent, and either the Arduino code or the simulator.
 
 ### TerraBot Node ###
-Running the TerraBot will start up a total of 4 nodes. Besides the TerraBot node, itself, it will start up the roscore node (which regulates communications), your agent, and either the Arduino code or the simulator.
+
 
 The TerraBot node transfers actuator data from your agent to the Arduino/simulator node:
 It subscribes to the topics to which your agent publishes and publishes to the topics to which the Arduino/simulator subscribes.
@@ -107,7 +105,7 @@ It subscribes to the topics to which the Arudino/simulator publishes and publish
 In the transfering process, the data received by the TerraBot node are passed though functions via an external interference file. In order to reliably simulate errors which may happen by chance if run in the real world, the interference file
 may be malicious and cause the relay to act incorrectly.
 
-### Command Line Arguments ###
+#### Command Line Arguments ####
 The following command line arguments are avaiable when running TerraBot.py:
     -h (--help): show help message and exit
     -v (--verbose): print more messages describing the workings of the system
@@ -120,7 +118,7 @@ The following command line arguments are avaiable when running TerraBot.py:
     -t (--tracefile) <text file>: Set of instructions that describe expected behavior (only in grade mode)
     -T (--tracedir) <directory name>: Directory containing trace files (only in grade mode)
 
-### Run Time Commands ###
+#### Run Time Commands ####
 Currently, the only run-time command is "q", which gracefully quits the system.  
 
 WARNING: If you ^C out, sometimes not all the processes are killed.  You would then need to kill them (the ros, arduino/simulator, and agent processes) individually.  Especially if extra ROS nodes are running, unexpected interactions may occur.
@@ -176,18 +174,19 @@ We are working to try to get the ranges of the sensors, the nominal values, and 
 
 #### TerraBot Simulator Installation ####
 
-The simulator and ROS require Ubuntu distributions. We suggest installing a VirtualBox VM on your computer so that you
-can implement your agent.
+The simulator and ROS require Ubuntu distributions. **We suggest installing a VirtualBox VM** on your computer so that you
+can implement your agent. **We will provide you with a virtual machine that already has Ubuntu, ROS, and the TerraBot code installed.**
 
 - VirtualBox: [Instructions here](https://www.wikihow.com/Install-VirtualBox) for installing
 VirtualBox.
-- Ubuntu: download ubuntu 32 bit [here](https://ubuntu-mate.org/download/) to most
+- Our distribution contains:
+-- Ubuntu: download ubuntu 32 bit [here](https://ubuntu-mate.org/download/) to most
 accurately mimic the software on the pi. (any ubuntu distro should be valid though this is the only one we have tested)
-- ROS: [Instructions here](https://wiki.ros.org/melodic/Installation/Ubuntu_) for installing ROS.
+-- ROS: [Instructions here](https://wiki.ros.org/melodic/Installation/Ubuntu_) for installing ROS.
 Keep in mind that only the Desktop install is neccesary. Depending on your internet connection
 this step may take a while.
-- TerraBot Simulator
-We will provide you with a virtual machine that already has Ubuntu, ROS, and the TerraBot code installed.  
+-- TerraBot Simulator
+
 
 #### Running the Simulator ####
 
