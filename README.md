@@ -107,7 +107,7 @@ It subscribes to the topics to which the Arudino/simulator publishes and publish
 In the transfering process, the data received by the TerraBot node are passed though functions via an external interference file. In order to reliably simulate errors which may happen by chance if run in the real world, the interference file
 may be malicious and cause the relay to act incorrectly.
 
-### command-line-arguments ###
+### Command Line Arguments ###
 The following command line arguments are avaiable when running TerraBot.py:
     -h (--help): show help message and exit
     -v (--verbose): print more messages describing the workings of the system
@@ -120,7 +120,7 @@ The following command line arguments are avaiable when running TerraBot.py:
     -t (--tracefile) <text file>: Set of instructions that describe expected behavior (only in grade mode)
     -T (--tracedir) <directory name>: Directory containing trace files (only in grade mode)
 
-### run-time-commands ###
+### Run Time Commands ###
 Currently, the only run-time command is "q", which gracefully quits the system.  
 
 WARNING: If you ^C out, sometimes not all the processes are killed.  You would then need to kill them (the ros, arduino/simulator, and agent processes) individually.  Especially if extra ROS nodes are running, unexpected interactions may occur.
