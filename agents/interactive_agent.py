@@ -120,8 +120,8 @@ while not rospy.core.is_shutdown():
             print("Turning pump %s" %("on" if (input.find("on") > 0) else "off"))
             wpump_pub.publish(input.find("on") > 0)
         elif input[0] == 'l':
-            level = (0 if input.find("off") else
-                     255 if input.find("on") else int(input[1:]))
+            level = (0 if (input.find("off") > 0) else
+                     255 if (input.find("on") > 0) else int(input[1:]))
             print("Adjust light level to %d" %level)
             led_pub.publish(level)
         elif input[0] == 'c':
