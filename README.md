@@ -233,7 +233,7 @@ Note: Currently, each sensor is polled at the same frequency; We may implement s
 The camera is different from the rest of the sensors, as it is controlled directly by the Pi, and not by the Arduino.
 We are still working on incorporating the camera into the TerraBot code -- it will be available (both for the Pi hardware and the simulator) during the course of the semester.
 
-# TODOCAN WE RENAME raspistill? It looks like rapist...
+<!-- TODOCAN WE RENAME raspistill? It looks like rapist... -->
 
 ## Grading ##
 Your programming assignments will be graded automatically.  Trace files (.trc) will indicate what behaviors are expected to occur, and the grader, running in conjunction with the simulator, will check to see that all the conditions are successfully met.  The trace files to use can be specified on the command line using either the -t (one trace file) or -T (directory containing multiple trace files), along with the mode set to "grade" (e.g., -m grade).
