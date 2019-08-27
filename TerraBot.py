@@ -323,6 +323,8 @@ while len(tracefiles) > 0 or not grade:
                       %(last_ping, now - last_ping))
             last_ping = now
             num_restarts += 1
+            # For safety, make sure the pump is off
+            publishers['wpump'].publish(False)
             if (num_restarts < max_restarts): # Send just once
                 terminate(agent_p, None)
             else:
