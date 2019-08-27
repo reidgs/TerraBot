@@ -18,8 +18,9 @@
   - [Getting Started](#getting-started)
     - [TerraBot Simulator Installation](#terrabot-simulator-installation)
     - [Running the Simulator](#running-the-simulator)
-    - [Speeding up Time](#speedup)
-  - [Additional Items](#extra-items)
+    - [Baseline File](#baseline-file)
+    - [Speeding up Time](#speeding-up-time)
+  - [Additional Items](#additional-items)
     + [Health Ping](#health-ping)
     + [Frequency](#frequency)
     + [Camera](#camera)
@@ -33,7 +34,6 @@
     
 
 ## Overview ##
-
 Welcome to the Autonomous Agents TerraBot project! For this project you and your partners
 will be given a greenhouse outfitted with multiple sensors and actuators and a grow mat
 with recently germinated seeds. The goal of the assignment is to provide the best environment
@@ -58,7 +58,6 @@ Each greenhouse contains two light, moisture, temperature, and humidity sensors,
 
 
 ### TerraBot Software Architecture ###
-
 An Arduino communicates directly with the sensors and actuators, converts the raw data into clean data, and then forwards that data to a Raspberry Pi.
 The Raspberry Pi, running ROS (Robot Operating System), receives the sensor data and makes it available
 for your AI agent in the formats above. Additionally, it receives your agent's actuator commands as defined above
@@ -72,7 +71,6 @@ Pay particular attention to the topics (rectangles) connected to the agent, as t
 regulate your greenhouse.
 
 ## ROS Communication ##
-
 In order to get your code working with the ROS messaging system,
 follow the tutorial on the ROS website [here](https://wiki.ros.org/ROS/Tutorials).
 Please look over the tutorials concerning ROS communication (Nodes, Topics, Publishers + Subscribers) to gain a general understanding of ROS.
@@ -94,8 +92,6 @@ your code to make sure that it is publishing and subscribing as you intend when 
 Running the TerraBot will start up a total of 4 nodes. Besides the TerraBot node, itself, it will start up the roscore node (which regulates communications), your agent, and either the Arduino code or the simulator.
 
 ### TerraBot Node ###
-
-
 The TerraBot node transfers actuator data from your agent to the Arduino/simulator node:
 It subscribes to the topics to which your agent publishes and publishes to the topics to which the Arduino/simulator subscribes.
 
@@ -173,7 +169,6 @@ We are working to try to get the ranges of the sensors, the nominal values, and 
 ### Getting Started ###
 
 #### TerraBot Simulator Installation ####
-
 The simulator and ROS require Ubuntu distributions. **We suggest installing a VirtualBox VM** on your computer so that you
 can implement your agent. **We will provide you with a virtual machine that already has Ubuntu, ROS, and the TerraBot code installed.**
 
@@ -187,16 +182,29 @@ Keep in mind that only the Desktop install is neccesary. Depending on your inter
 this step may take a while.
 -- TerraBot Simulator
 
-
 #### Running the Simulator ####
-
 In order to run the simulator, run the TerraBot with the simulator mode flag (-m sim), and optionally 1) the multiplier you wish for the speed (-s option); and 2) a file that copntains baseline (starting) values for the sensors, actuators, and the time which you would like the simulator to start at (seconds since midnight, day 0 of the simulated run).  
 
 For error checking it is recommended that you include the -l flag for logging, which will put a file for each topic into an automatically generated subdirectory of the Log directory.  
 >`./TerraBot.py -l -m sim`  
 
-##### Speeding up Time #####
+##### Baseline File ####
+The simulator starts up with default values for the sensors, actuators, and clock.  You can create a 'baseline' file to specify different initial values. Specifically, you need to define "init_internals", "init_actutators", and "clock_start".
 
+init_internals is a dictionary for the initial values of all the sensors.  For light, temperature (in Celcius), humidity, and smoist (soil moisture), the dictionary entries should be an array of two elements, one for each sensor.  For current, the entry is an array of two elements, one for the initial current reading and the second element is the cumulative energy usage.  The volume sensor (water level) is a single float (in milliliters).  Refer to the table at the beginning of this document for the range of allowable values.  For example:
+init_internals = {<br>
+   'light' : \[100, 100],<br>
+   'temperature' : \[20, 18],<br>
+   'humidity' : \[40, 50], # the two readings are not identical <br>
+   'current' : \[0, 0],
+   'volume' : 3300.0 # ~14 cups<br>
+   }
+   
+" dictionary for all the actuators
+
+" dictionary for all the actuators
+
+##### Speeding up Time ####
 Note that much of what happens in a greenhouse happens very slowly, thus a speedup of 100 or more is recommended for development and testing.  However, what happens when actuators are on can happen very quickly (e.g., watering takes just a few seconds).  To accommodate this, the simulator automatically sets the speed low when either the pump or fans are on and then sets the speed to the user-desired value whenever they are both are off.  Your agent can also publish a "speedup" message to change the default speedup during run time, but this is not standard practice.
 
 For example to run the simulator at 100x speed (i.e., 100 seconds of simulated time for every second of wall clock time), use:  
