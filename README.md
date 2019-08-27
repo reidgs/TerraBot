@@ -152,10 +152,12 @@ The interference file may take in a path to a file containing a schedule of time
 
 ## Running the System ##
 ### Connecting to the Raspberry Pi ###
-//TODO INCLUDE THE INSTRUCTIONS FOR GETTING STARTED WITH THE ACTUAL PI, WHERE IS CODE LOCATED, WHERE SHOULD THEY MOVE THEIR CODE, HOW DO THEY RUN IT, ETC
+We will provide instructions for how to run on the actual hardware in the near future
+#//TODO INCLUDE THE INSTRUCTIONS FOR GETTING STARTED WITH THE ACTUAL PI, WHERE IS CODE LOCATED, WHERE SHOULD THEY MOVE THEIR CODE, HOW DO THEY RUN IT, ETC
 
 ### Uploading Code ###
-//TODO
+#//TODO
+For all assignments, you will upload your code through Canvas.  We will then grade your assignment using the simulator (see "Grading") and, if it is the start of a grow cycle, upload your agent code and run it on the Raspberry Pi.
 
 ## Deployment and Testing ##
 
@@ -195,7 +197,7 @@ In order to run the simulator, run the TerraBot with the simulator mode flag (-m
 For error checking it is recommended that you include the -l flag for logging, which will put a file for each topic into an automatically generated subdirectory of the Log directory.  
 >`./TerraBot.py -l -m sim`  
 
-##### Speedup #####
+##### Speeding up Time #####
 
 Note that much of what happens in a greenhouse happens very slowly, thus a speedup of 100 or more is recommended for development and testing.  However, what happens when actuators are on can happen very quickly (e.g., watering takes just a few seconds).  To accommodate this, the simulator automatically sets the speed low when either the pump or fans are on and then sets the speed to the user-desired value whenever they are both are off.  Your agent can also publish a "speedup" message to change the default speedup during run time, but this is not standard practice.
 
@@ -204,7 +206,7 @@ For example to run the simulator at 100x speed (i.e., 100 seconds of simulated t
 
 *Note: to ensure consistency between your code in simulation and with the actual hardware, you should refrain from referring to outside functions (OS time.time()) and should instead refer to the ROS time topic via rospy.get_time().*
 
-### Extra Items ###
+### Additional Items ###
 There are some additional items that you need to know aobut in order to complete the assignments.  Specifically, they involve the health of your agent, the frequency of sensor readings, and access to the camera.
 
 ##### Health Ping #####
