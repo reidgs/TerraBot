@@ -46,16 +46,18 @@ Each greenhouse contains two light, moisture, temperature, and humidity sensors,
 | ---------------------------- | ----------------------------------------------------------- | ------------ | ---------- |
 | **_Sensors_**                |**_Use these to determine the system's state_**              |  **_—_**     |  **_—_** |
 | Current (cur)                | The current draw (index 0) and total energy usage (index 1) | Float32Array |            |
-| Light (light)                | Light intesnity in the system                               | Int32Array   |            |
-| Water level (level)          | Height of the water in the reservoir                        | Float32      |            |
-| Temperature (temp)           | Internal temperature of the system                          | Int32Array   |            |
-| Humidity (humid)             | Internal relative humidity                                  | Int32Array   |            |
+| Light (light)                | Light intesnity in the system                               | Int32Array   | 0-600      |
+| Water level (level)          | Height of the water in the reservoir (mm)                   | Float32      | 3300=15cm  |
+| Temperature (temp)           | Internal temperature of the system                          | Int32Array   | in Celcius |
+| Soil Moisture (smoist)       | The moisture of the pad  (higher is drier)                  | Int32Array   | 280-600    |
+| Humidity (humid)             | Internal relative humidity  (%)                             | Int32Array   |  0-100     |
 | Camera                       | Captures a photograph of stystem's state                    |   —          |   —        |
 | **_Actuators_**              |**_Use these to adjust the system's state_**                 | **_—_**      |  **_—_**   |
 | LED (led)                    | Adjust the power of the system's LED light fixture          | Int32        | 0-255      |
 | Water Pump (wpump)           | Toggle whether the water pump is on or off                  | Bool         | True-False |
 | Fan (fan)                    | Toggle whether the fan is on or off                         | Bool         | True-False |
 
+Note: The water pump pumps 1cm depth of water (~.93cups) per minute.
 
 ### TerraBot Software Architecture ###
 An Arduino communicates directly with the sensors and actuators, converts the raw data into clean data, and then forwards that data to a Raspberry Pi.
