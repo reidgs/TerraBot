@@ -47,7 +47,7 @@ Each greenhouse contains two light, moisture, temperature, and humidity sensors,
 | **_Sensors_**                |**_Use these to determine the system's state_**              |  **_—_**     |  **_—_** |
 | Current (cur)                | The current draw (index 0) and total energy usage (index 1) | Float32Array |            |
 | Light (light)                | Light intesnity in the system                               | Int32Array   | 0-600      |
-| Water level (level)          | Height of the water in the reservoir (mm)                   | Float32      | 3300=15cm  |
+| Water level (level)          | Height of the water in the reservoir (in mm)                | Float32      | 3300=15cm  |
 | Temperature (temp)           | Internal temperature of the system                          | Int32Array   | in Celcius |
 | Soil Moisture (smoist)       | The moisture of the pad  (higher is drier)                  | Int32Array   | 280-600    |
 | Humidity (humid)             | Internal relative humidity  (%)                             | Int32Array   |  0-100     |
