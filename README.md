@@ -248,8 +248,9 @@ This is useful, for instance, if you want to read the sensors infrequently until
 Note: Currently, each sensor is polled at the same frequency; We may implement separate frequencies for each sensor, at some point.
 
 ##### Camera #####
-The camera is different from the rest of the sensors, as it is controlled directly by the Pi, and not by the Arduino.
-We are still working on incorporating the camera into the TerraBot code -- it will be available (both for the Pi hardware and the simulator) during the course of the semester.
+The camera is different from the rest of the sensors, as it is controlled directly by the Pi, and not by the Arduino. You can take a picture using the 'camera' topic; the single argument is the name of the file to store the JPEG image.  Note that, if you are using relative path name, the path is relative to the directory where you ran TerraBot, not to the directory you ran your agent.
+
+We are still working on incorporating the camera into the simulator - it will be available during the course of the semester.
 
 <!-- TODOCAN WE RENAME raspistill? It looks like rapist... -->
 
