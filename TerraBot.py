@@ -219,7 +219,7 @@ def camera_cb(data):
     if simulate:
         print("Camera NYI for simulator")
     else:
-        print("Taking a picture, storing it in %s" %data.data)
+        print("Taking an image, storing it in %s" %data.data)
         sp.call("raspistill -n -md 2 -awb off -awbg 1,1 -ss 30000 -o %s"
                 % data.data, shell = True)
 

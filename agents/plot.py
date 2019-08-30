@@ -48,7 +48,8 @@ def init_plotting():
     add_sensor('light_level', fig, 6,2,1)
     add_state('lighting_fsm', fig, 6,2,2)
 
-    add_sensor('water_level', fig, 6,1,2)
+    add_sensor('water_level', fig, 6,2,3)
+    add_state('imaging_fsm', fig, 6,2,4)
     add_sensor('moisture', fig, 6,2,5)
     add_state('watering_fsm', fig, 6,2,6)
 
