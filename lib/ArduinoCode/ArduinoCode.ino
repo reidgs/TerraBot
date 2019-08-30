@@ -195,6 +195,9 @@ void loop(){
 
       // Get the level (complicated enough for own function)
       level_msg.data = get_level();
+      // Returns the distance to the water; we want the height of the water.
+      // Experimentally, a value of ~180 indicates an empty reservoir
+      level_msg.data = 180 - level_msg.data;
       level_pub.publish(&level_msg);
 
       // Get the soil moisture
@@ -202,6 +205,9 @@ void loop(){
       long int s_array[2];
       s_array[0] = analogRead(smoist_pin1);
       s_array[1] = analogRead(smoist_pin2);
+      // Invert the reading, so reading increases as moisture increases
+      s_array[0] = 1023 - s_array[0];
+      s_array[1] = 1023 - s_array[1];
       smoist_msg.data = s_array;
       smoist_pub.publish(&smoist_msg);
 
