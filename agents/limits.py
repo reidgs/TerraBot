@@ -2,8 +2,8 @@ scale = {}
 limits = {}
 names = {}
 
-scale['light_level'] = [0, 255]
-limits['light_level'] = [200, 240]
+scale['light_level'] = [0, 600]
+limits['light_level'] = [450, 550]
 names['light_level'] = 'lights'
 
 scale['water_level'] = [0, 200]
@@ -11,7 +11,7 @@ limits['water_level'] = [5, 20]
 names['water_level'] = 'w_level'
 
 scale['moisture'] = [0, 1000]
-limits['moisture'] = [300, 450]
+limits['moisture'] = [525, 650]
 names['moisture'] = 'moist'
 
 scale['humidity'] = [0, 100]

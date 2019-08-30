@@ -9,7 +9,7 @@ init_internals = {
     'humidity'    : [40,50],
     'current'     : [0.0,0.0],
     'smoist'      : [350,350],
-    'volume'      : 3300.0 # ~14 cups
+    'volume'      : 1000.0 # ml
 }
 
 init_actuators = {

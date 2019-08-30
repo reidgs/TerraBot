@@ -29,12 +29,14 @@ clock_pub = None
 
 ###CONSTANTS
 evap_rate = 10/3600.0 # moisture sensor decrease 10 units/hour
-soak_rate = 20 # moisture sensor increases 20 units/second
-flow_rate = 30.0 #ml/sec
-humidity_rate = 20/3600.0 # humidity sensor increases 20 units/hour
+soak_rate = 2 # moisture sensor increases 2 units/ml of water
+flow_rate = 3.5 # ml/sec
+volume_rate = 7 # ml/mm in the (small) reservoir
+humidity_rate = 10/3600.0 # humidity sensor increases 20 units/hour
 dehumidity_rate = 20/60.0 # fan decreases humidity by 20 units/minute
-warming_rate = 1/60.0 # temperature increases 1 degree Celcius/minute with lights on
-cooling_rate = 10/60.0 # fan decreases temperature by 10 units/minute
+warming_rate = 1/3600.0 # temperature increases 1 degree Celcius/hour with lights on
+cooling_rate = 1/60.0 # fan decreases temperature by 1 unit/minute
+led_rate = 600/255.0 # how much each led level increases the light level
 led_current = 3.2/255
 pump_current = .2
 fan_current = .06
@@ -91,7 +93,7 @@ daylight_end = num_days*one_day + evening
 if (clock_start < daylight_start): daylight_end -= one_day
 elif (clock_start > daylight_end): daylight_start += one_day
 
-light_level_day = 100 # Max ambient light in daytime
+light_level_day = 550 # Max ambient light in daytime
 light_level_night = 20 # Ambient light in nighttime
 
 def clock_time(time): return str(timedelta(seconds=time))
@@ -126,8 +128,8 @@ def amb_light(time):
 ### INTERNAL UPDATE FUNCTIONS ###
 def light_update(cur_interval):
     for i in range(2):
-        val = actuator_vars['led'] * 3 + amb_light(rospy.get_time())
-        internal_vars['light'][i] = min(255, max(0, val))
+        val = led_rate*actuator_vars['led'] + amb_light(rospy.get_time())
+        internal_vars['light'][i] = min(600, max(0, val))
 
 def volume_update(cur_interval):
     if actuator_vars['wpump']:
@@ -163,7 +165,7 @@ def smoist_update(cur_interval):
     for i in range(2):
         val = internal_vars['smoist'][i]
         if (actuator_vars['wpump'] and internal_vars['volume'] > 0):
-            val += cur_interval * soak_rate
+            val += cur_interval * soak_rate * flow_rate
         val -= cur_interval * evap_rate
         internal_vars['smoist'][i] = min(1000, max(0, val))
 
@@ -192,7 +194,8 @@ def get_light():
     return l_array
 
 def get_level():
-    return float(internal_vars['volume'] / 20)
+    # Level in mms
+    return float(internal_vars['volume'] / volume_rate)
 
 def get_temp():
     t_array = Int32MultiArray()
