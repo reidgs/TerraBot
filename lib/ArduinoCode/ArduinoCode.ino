@@ -53,8 +53,8 @@ long light_sum1 = 0;
 long light_sum2 = 0;
 long light_count = 0;
 
-int cur_sum = 0;
-int cur_count = 0;
+long cur_sum = 0;
+long cur_count = 0;
 
 
 //Frequency Adjustment
