@@ -46,8 +46,8 @@ sudo apt install the following packages
 
 ## Arduino ##
 First create the sketchbook folder which the arduino will reference.  
-`mkdir ~/Documents/sketchbook`  
-From the sketchbook folder run  
+`mkdir ~/Documents/Sketchbook`  
+From the Sketchbook folder run  
 `rosrun rosserial_arduino make_libraries.py .`  
 `git clone https://github.com/winlinvip/SimpleDHT.git`  
 Then to allow arduino to use the usb port run
@@ -60,9 +60,11 @@ Remember it is a restricted repository so you need to have permission.
 for consistency sake download it into the documents folder as well.
 
 Make sure that the code in the Make file for the ArduinoCode is correct.
-(check that USER\_LIB_PATH = /home/as-house-1/Documents/sketchbook)
-
-
+(check that USER\_LIB_PATH = /home/as-house-1/Documents/Sketchbook)
+To make the code, in lib/ArduinoCode:
+	make clean; make
+To upload the code to the Arduino
+	make upload
 
 
 
