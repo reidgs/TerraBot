@@ -220,7 +220,8 @@ def camera_cb(data):
         print("Camera NYI for simulator")
     else:
         print("Taking a picture, storing it in %s" %data.data)
-        sp.call("raspistill -n -md 2 -awb off -awbg 1,1 -ss 30000 -o %s"
+#        sp.call("raspistill -n -md 2 -awb off -awbg 1,1 -ss 30000 -o %s"
+        sp.call("raspistill -n -md 4 -awb auto -ss 30000 -rot 180 -o %s"
                 % data.data, shell = True)
 
 camera_sub = rospy.Subscriber('camera', String, camera_cb)
