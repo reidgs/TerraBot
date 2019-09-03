@@ -4,7 +4,7 @@ from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiA
 from topic_def import *
 from rosgraph_msgs.msg import Clock
 import time
-from datetime import timedelta
+from datetime import datetime
 from math import sqrt
 import argparse
 
@@ -29,6 +29,7 @@ clock_pub = None
 
 ###CONSTANTS
 evap_rate = 10/3600.0 # moisture sensor decrease 10 units/hour
+fan_evap_rate = 3*evap_rate # moisture decrease much faster when fans are on
 soak_rate = 2 # moisture sensor increases 2 units/ml of water
 flow_rate = 3.5 # ml/sec
 volume_rate = 7 # ml/mm in the (small) reservoir
@@ -83,47 +84,44 @@ def speedup_cb(data):
 ### clock_start=0 is defined to be midnight on the first day
 ### It is defined in baseline.txt, so can easily start at a different time of day
 # clock_start = 0
-morning = 7*3600  # 7am
-evening = 19*3600 # 7pm
-one_day = 24*3600
+### When days start and end (for simplicity, start and end on the hour)
+morning_hour = 7  # 7am
+evening_hour = 19 # 7pm
 
-num_days = int(clock_start/one_day)
-daylight_start = num_days*one_day + morning
-daylight_end = num_days*one_day + evening
-if (clock_start < daylight_start): daylight_end -= one_day
-elif (clock_start > daylight_end): daylight_start += one_day
+def time_since_midnight(dtime):
+    return (dtime.hour*3600 + dtime.minute*60 + dtime.second +
+            dtime.microsecond/1e6)
+
+# Assumes that daylight hours do not span midnight
+def is_daylight(time):
+    global morning_hour, evening_hour
+    dtime = datetime.fromtimestamp(time)
+    return morning_hour <= dtime.hour and dtime.hour < evening_hour
 
 light_level_day = 550 # Max ambient light in daytime
-light_level_night = 20 # Ambient light in nighttime
-
-def clock_time(time): return str(timedelta(seconds=time))
-if is_logging: print(" Clock start: %s" %clock_time(clock_start))
-
-def adjust_times(time):
-    global daylight_start, daylight_end
-    if ((daylight_start < daylight_end) and daylight_end <= time):
-        daylight_start += one_day
-        if is_logging: print(" Daylight ends: %s" %clock_time(time))
-    elif (daylight_end < daylight_start) and (daylight_start <= time):
-        daylight_end += one_day # A new day
-        if is_logging: print(" Daylight starts: %s" %clock_time(time))
+light_level_night = 5 # Ambient light in nighttime
 
 last_print = 0
 ### Light increases from morning to noon and then decreases (non-linearally)
 def amb_light(time):
-    global daylight_start, daylight_end
-    adjust_times(time)
+    global morning_hour, evening_hour, light_level_day, light_level_night
     dl = light_level_night
-    if (time >= daylight_start) and (daylight_start < daylight_end):
+    if (is_daylight(time)):
+        dtime = datetime.fromtimestamp(time)
+        dt = time_since_midnight(dtime)
         dl += ((light_level_day - light_level_night) *
-               sqrt(1 - abs(1 - ((time - daylight_start)/
-                                 ((daylight_end - daylight_start)/2)))))
+               sqrt(1 - abs(1 - ((dt - 3600*morning_hour)/
+                                 (3600*(evening_hour - morning_hour)/2)))))
     if is_logging:
         global last_print, clock_start
         if (time - last_print > 1800):
             last_print = time
             print(" Ambient: %.1f (%s)" %(dl, clock_time(time)))
     return dl
+
+def clock_time(time):
+    return datetime.fromtimestamp(time).strftime("%d %H:%M:%S")
+if is_logging: print(" Clock start: %s" %clock_time(clock_start))
 
 ### INTERNAL UPDATE FUNCTIONS ###
 def light_update(cur_interval):
@@ -166,7 +164,8 @@ def smoist_update(cur_interval):
         val = internal_vars['smoist'][i]
         if (actuator_vars['wpump'] and internal_vars['volume'] > 0):
             val += cur_interval * soak_rate * flow_rate
-        val -= cur_interval * evap_rate
+        val -= cur_interval * (fan_evap_rate if actuator_vars['fan']
+                               else evap_rate)
         internal_vars['smoist'][i] = min(1000, max(0, val))
 
 
@@ -229,7 +228,10 @@ rospy.init_node('Simulator', anonymous=True)
 
 generate_publishers()
 generate_subscribers()
-now = clock_start
+
+now = int(time.time())
+# Convert to midnight
+now += clock_start - time_since_midnight(datetime.fromtimestamp(now))
 clock_pub.publish(rospy.Time.from_sec(now))
 last_update = now
 
