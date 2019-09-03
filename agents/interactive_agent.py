@@ -4,6 +4,7 @@ import rospy, sys, select
 from std_msgs.msg import Float32, Int32, Int32MultiArray, Float32MultiArray, Bool, String
 import argparse
 import plot, limits
+from datetime import datetime
 
 class Sensors:
     time = 0
@@ -31,6 +32,9 @@ use_simulator = args.sim
 def init_sensors():
     global sensorsG
     sensorsG.time = rospy.get_time()
+
+def clock_time(time):
+    return datetime.fromtimestamp(time).strftime("%d %H:%M:%S")
 
 ### ROS-related stuff
 ### Set up publishers, subscribers, and message handlers
@@ -91,7 +95,7 @@ def cam_reaction(data):
 
 def ping():
     global last_ping
-    print("PING! %.1f" %sensorsG.time)
+    print("PING! %s" %clock_time(sensorsG.time))
     last_ping = sensorsG.time
     ping_pub.publish(True)
 
