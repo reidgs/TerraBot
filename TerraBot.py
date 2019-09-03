@@ -9,7 +9,7 @@ from lib import topic_def as tdef
 from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray, String
 import argparse
 import time, getpass
-from datetime import timedelta
+from datetime import datetime
 from lib import grader
 from lib import send_email
 
@@ -39,6 +39,9 @@ def gen_log_files():
     for name in tdef.sensor_names + tdef.actuator_names:
         file_name = "Log/Log_%s/%s_log.csv" % (prefix, name)
         log_files[name] = open(file_name, 'w+', 0)
+
+def clock_time_str(time):
+    return datetime.fromtimestamp(time).strftime("%d %H:%M:%S")
 
 def log_print(string):
     print("%s%s"%(time.strftime("[%Y%m%d %H:%M:%S]: "),string))
@@ -137,8 +140,7 @@ def notify_user():
         send_email.send("autoterrabot@gmail.com", password, args.email,
                         "Problem with your TerraBot agent",
                         ("Your autonomous agent has had to be restarted %d times.  The current Terrabot time is %s.\r\n\r\nYou should probably contact the instructors to upload a new version.\r\n\r\nSincerely,\r\nTerraBot\r\n"
-                         %(num_restarts,
-                           str(timedelta(seconds=int(rospy.get_time()))))))
+                         %(num_restarts, clock_time_str(rospy.get_time()))))
 
 if (args.email != None and password == None):
     password = getpass.getpass("Password please for autoterrabot@gmail.com: ")
