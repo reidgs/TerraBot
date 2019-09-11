@@ -1,4 +1,5 @@
 import rospy
+from datetime import datetime
 
 grader_vars = {}
 
@@ -19,9 +20,15 @@ def open_trace(path):
     cmds = [line.strip().split(",") for line in lines[2:]]
 
 
+last_cmd = None
 def run_command(time):
-    global cmds,cmd_ind,cmd_start,finished
+    global cmds,cmd_ind,cmd_start,finished,last_cmd
     curr_cmd = cmds[cmd_ind]
+    if (curr_cmd[0][0] == '#'):
+        cmd_ind += 1
+    if (curr_cmd != last_cmd):
+        print("  %s" %curr_cmd)
+        last_cmd = curr_cmd
     if curr_cmd[0] == 'START':
         cmd_ind += 1
         cmd_start = time
@@ -35,12 +42,12 @@ def run_command(time):
         timeout = float(curr_cmd[2])
 
         if res: #success!
-            print("success: %s"%str(curr_cmd))
+            print("SUCCESS: %s"%str(curr_cmd))
             cmd_start = time
             cmd_ind += 1
             return 1
-        elif (time - cmd_start).to_sec() > timeout:
-            print("fail: %s"%str(curr_cmd))
+        elif ((time - cmd_start) > timeout):
+            print("FAIL: %s"%str(curr_cmd))
             cmd_start = time
             cmd_ind += 1
             return -1
@@ -49,13 +56,13 @@ def run_command(time):
         res = eval(curr_cmd[1])
         timeout = float(curr_cmd[2])
 
-        if (time - cmd_start).to_sec() > timeout and res:
-            print("success: %s"%str(curr_cmd))
+        if ((time - cmd_start) > timeout and res):
+            print("SUCCESS: %s"%str(curr_cmd))
             cmd_start = time
             cmd_ind += 1
             return 1
         elif not res: #fail
-            print("fail: %s"%str(curr_cmd))
+            print("FAIL: %s"%str(curr_cmd))
             cmd_start = time
             cmd_ind += 1
             return -1
