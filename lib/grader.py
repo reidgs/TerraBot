@@ -46,7 +46,7 @@ def run_command(time):
             cmd_start = time
             cmd_ind += 1
             return 1
-        elif ((time - cmd_start) > timeout):
+        elif (time - cmd_start).to_sec() > timeout:
             print("FAIL: %s"%str(curr_cmd))
             cmd_start = time
             cmd_ind += 1
@@ -56,7 +56,7 @@ def run_command(time):
         res = eval(curr_cmd[1])
         timeout = float(curr_cmd[2])
 
-        if ((time - cmd_start) > timeout and res):
+        if (time - cmd_start).to_sec() > timeout and res:
             print("SUCCESS: %s"%str(curr_cmd))
             cmd_start = time
             cmd_ind += 1
