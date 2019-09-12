@@ -1,0 +1,11 @@
+#/bin/bash
+
+procs=`ps -auxw | awk '/ros|fard|Terra/ && !/awk/ {print $2}'`
+#echo $procs
+
+if [ -z "$procs" ]; then
+  echo "All good"
+else
+  kill -9 $procs
+  echo "Killed" $procs
+fi
