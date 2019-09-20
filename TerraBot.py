@@ -10,7 +10,7 @@ from lib import interference as interf_mod
 from lib import grader as grader_mod
 from lib import send_email
 from lib import sim_camera as cam
-from terrabot_utils import clock_time
+from lib.terrabot_utils import clock_time
 
 ### Default values for the optional variables
 verbose = False
@@ -23,6 +23,7 @@ run_agent = True
 tick_interval = 0.5
 #clock_time = rospy.Time(0)
 interference = None
+grader = None
 
 #lists which will be populated based on the topic_def.py
 log_files = {}
@@ -62,7 +63,7 @@ def cb_generic(name, data):
     original = data.data
     edited = data
     edited.data = (original if not interference else
-                   interf_mod.edit(name, original))
+                   interference.edit(name, original))
     #edited.data = data.data # Why is this here?
 
     if grade: grader.update(name, edited.data)
@@ -140,11 +141,11 @@ if (args.email != None and password == None):
 
 if grade and (args.tracefile == None and args.tracedir == None):
     print("no tracefile or tracedir given, run ./relay.py -h for usage")
-    quit()
+    sys.exit()
 
 if grade and not run_agent:
     print("grader must be ran with an agent")
-    quit()
+    sys.exit()
 
 def terminate (process, log_file):
     if (log_file != None): log_file.close()
@@ -180,11 +181,11 @@ def terminate_agent():
         agent_p = None; agent_log = None
 
 def terminate_gracefully():
-    terminate_core()
-    terminate_sim()
     terminate_agent()
+    terminate_sim()
     terminate_serial()
-    quit()
+    terminate_core()
+    sys.exit()
 
 #initialize trace file array
 tracefiles = []

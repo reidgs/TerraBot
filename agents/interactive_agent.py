@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-import rospy, sys, select
+import rospy, sys, select, os
 from std_msgs.msg import Float32, Int32, Int32MultiArray, Float32MultiArray, Bool, String
 import argparse
 import plot, limits
 from datetime import datetime
+sys.path.insert(0, os.getcwd()[:os.getcwd().find('TerraBot')]+'TerraBot/lib')
 from terrabot_utils import clock_time
 
 class Sensors:

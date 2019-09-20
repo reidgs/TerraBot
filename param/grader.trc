@@ -1,5 +1,6 @@
 BASELINE = baseline.txt # optional
-INTERFERENCE = interference.txt
+#INTERFERENCE = interf.txt # Interferes too much with the grader
+
 # Wait for 6 minutes
 WAIT smoist[0] < 450 FOR 360
 WAIT wpump FOR 60

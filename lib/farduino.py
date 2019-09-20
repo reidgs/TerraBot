@@ -29,7 +29,8 @@ internal_vars = { 'light'       : [10,100],
                   'humidity'    : [40,50],
                   'current'     : [0.0,0.0],
                   'smoist'      : [350,350],
-                  'volume'      : 1000.0 # ml
+#                  'volume'      : 1000.0 # ml (small reservoir)
+                  'volume'      : 3000.0 # ml (large reservoir)
                   }
 publishers = {}
 subscribers = {}
