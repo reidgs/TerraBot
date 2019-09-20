@@ -1,0 +1,12 @@
+BASELINE = baseline.txt # optional
+INTERFERENCE = interference.txt
+# Wait for 6 minutes
+WAIT smoist[0] < 450 FOR 360
+WAIT wpump FOR 60
+WAIT smoist[0] >= 450 and smoist[1] >= 450 FOR 360
+WAIT not wpump FOR 360
+ENSURE not wpump and smoist[0] < 550 FOR 3600 # stay below threshold
+
+WAIT UNTIL 1-22:00:00
+WAIT not led FOR 360
+ENSURE not led UNTIL 2-07:59:59

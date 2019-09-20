@@ -1,0 +1,19 @@
+AT 1-03:00:00
+humidity = [noise, normal] # one of the humidity sensors is noisy
+light = [normal, 0] # one of the light sensors is stuck off
+fan = off # fans are not working
+
+AT 1-04:30:0
+humidity = [normal, normal]
+light = [600, normal]
+fan = normal
+current = [12.2, normal]
+
+AT 1-09:00:00
+fan = on
+wpump = off
+
+AT 1-09:15:00
+fan = normal
+wpump = normal
+light = [normal, normal]
