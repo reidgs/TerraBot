@@ -7,22 +7,30 @@ import time
 from datetime import datetime
 from math import sqrt
 import argparse
+import baseline
+from terrabot_utils import clock_time, time_since_midnight
 
 parser = argparse.ArgumentParser(description = "simulator parser for Autonomous Systems")
-parser.add_argument('--baseline', type = str, default = "../param/baseline.txt", nargs = "?")
+parser.add_argument('--baseline', type = str, default = None, nargs = "?")
 parser.add_argument('--speedup', type = float, default = 1, nargs = "?")
 parser.add_argument('-l', '--log', action = 'store_true')
 args = parser.parse_args()
 is_logging = args.log
 
-try:
-    exec(open(args.baseline).read())
-except:
-    print('no baseline file found')
-    exit()
-
-actuator_vars = init_actuators
-internal_vars = init_internals
+### clock_start=0 is defined to be midnight on the first day
+clock_start = 0
+actuator_vars = { 'led'   : 0,
+                  'wpump' : False,
+                  'fan'   : False,
+                  'freq'  : 10.0
+                  }
+internal_vars = { 'light'       : [10,100],
+                  'temperature' : [20,20],
+                  'humidity'    : [40,50],
+                  'current'     : [0.0,0.0],
+                  'smoist'      : [350,350],
+                  'volume'      : 1000.0 # ml
+                  }
 publishers = {}
 subscribers = {}
 clock_pub = None
@@ -32,7 +40,8 @@ evap_rate = 10/3600.0 # moisture sensor decrease 10 units/hour
 fan_evap_rate = 3*evap_rate # moisture decrease much faster when fans are on
 soak_rate = 2 # moisture sensor increases 2 units/ml of water
 flow_rate = 3.5 # ml/sec
-volume_rate = 7 # ml/mm in the (small) reservoir
+#volume_rate = 6.25 # ml/mm in the (small) reservoir
+volume_rate = 18 # ml/mm in the (large) reservoir
 humidity_rate = 10/3600.0 # humidity sensor increases 20 units/hour
 dehumidity_rate = 20/60.0 # fan decreases humidity by 20 units/minute
 warming_rate = 1/3600.0 # temperature increases 1 degree Celcius/hour with lights on
@@ -81,16 +90,9 @@ def speedup_cb(data):
         print("speedup_pub %d" %speedup)
         default_speedup = speedup
 
-### clock_start=0 is defined to be midnight on the first day
-### It is defined in baseline.txt, so can easily start at a different time of day
-# clock_start = 0
 ### When days start and end (for simplicity, start and end on the hour)
 morning_hour = 7  # 7am
 evening_hour = 19 # 7pm
-
-def time_since_midnight(dtime):
-    return (dtime.hour*3600 + dtime.minute*60 + dtime.second +
-            dtime.microsecond/1e6)
 
 # Assumes that daylight hours do not span midnight
 def is_daylight(time):
@@ -107,8 +109,7 @@ def amb_light(time):
     global morning_hour, evening_hour, light_level_day, light_level_night
     dl = light_level_night
     if (is_daylight(time)):
-        dtime = datetime.fromtimestamp(time)
-        dt = time_since_midnight(dtime)
+        dt = time_since_midnight(time)
         dl += ((light_level_day - light_level_night) *
                sqrt(1 - abs(1 - ((dt - 3600*morning_hour)/
                                  (3600*(evening_hour - morning_hour)/2)))))
@@ -119,8 +120,6 @@ def amb_light(time):
             print(" Ambient: %.1f (%s)" %(dl, clock_time(time)))
     return dl
 
-def clock_time(time):
-    return datetime.fromtimestamp(time).strftime("%d %H:%M:%S")
 if is_logging: print(" Clock start: %s" %clock_time(clock_start))
 
 ### INTERNAL UPDATE FUNCTIONS ###
@@ -152,12 +151,12 @@ def temperature_update(cur_interval):
         internal_vars['temperature'][i] = min(40, max(15, val))
 
 def current_update(cur_interval):
-    val = (512 + led_current * actuator_vars['led'] +
+    val = (5.0 + led_current * actuator_vars['led'] +
            (pump_current if actuator_vars['wpump'] else 0) +
            (fan_current if actuator_vars['fan'] else 0))
     internal_vars['current'][0] = val
     # energy += power; power = current* voltage
-    internal_vars['current'][1] += cur_interval * (val*12)
+    internal_vars['current'][1] += cur_interval * (val*12)/1000.0
 
 def smoist_update(cur_interval):
     for i in range(2):
@@ -224,14 +223,23 @@ sensor_funcs = {
     'smoist' : get_smoist
 }
 
+now = int(time.time())
+# Convert to midnight
+now += clock_start - time_since_midnight(now)
+
+try:
+    baseline_schedule = baseline.Baseline(args.baseline, now)
+    now = baseline_schedule.time0
+except:
+    print('baseline file %s not found or parse error' %args.baseline)
+    exit()
+
 rospy.init_node('Simulator', anonymous=True)
 
 generate_publishers()
 generate_subscribers()
 
-now = int(time.time())
-# Convert to midnight
-now += clock_start - time_since_midnight(datetime.fromtimestamp(now))
+#print("Now: %f %s" %(now, clock_time(now)))
 clock_pub.publish(rospy.Time.from_sec(now))
 last_update = now
 
@@ -261,3 +269,9 @@ while not rospy.core.is_shutdown():
     if (is_logging and old_speedup != speedup): print("Speedup %d" %speedup)
     now += (tick_interval * speedup)
     clock_pub.publish(rospy.Time.from_sec(now))
+    if baseline_schedule.update(now, internal_vars):
+        # Need to do a funky thing converting wlevel to volume
+        if (internal_vars.get('wlevel')):
+            internal_vars['volume'] = internal_vars['wlevel']*volume_rate
+            internal_vars.pop('wlevel')
+        print(internal_vars)

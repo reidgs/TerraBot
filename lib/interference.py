@@ -1,35 +1,17 @@
 import rospy
 from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray
+from numpy.random import normal
+from datetime import datetime
+from terrabot_utils import clock_to_seconds, clock_time, time_since_midnight
+from terrabot_utils import Agenda
 from topic_def import *
 
-interf_funcs = {}
-schedules = {}
-next_update ={}
-ranges = { 'cur'    : { 'low'  : 512,
-                        'opt'  : 512,
-                        'high' : 550 },
-           'smoist' : { 'low'  : 40,
-                        'opt'  : 50,
-                        'high' : 80 },
-           'light'  : { 'low'  : 50,
-                        'opt'  : 100,
-                        'high' : 255 },
-           'level'  : { 'low'  : 50,
-                        'opt'  : 100,
-                        'high' : 255 },
-           'temp'   : { 'low'  : 50,
-                        'opt'  : 100,
-                        'high' : 255 },
-           'humid'  : { 'low'  : 50,
-                        'opt'  : 100,
-                        'high' : 255 },
-           'freq'   : { 'low'  : 50,
-                        'opt'  : 100,
-                        'high' : 255 },
-           'led'    : { 'low'  : 50,
-                        'opt'  : 100,
-                        'high' : 255 }
-}
+# If string is a number, return that number, o/w return the string
+def floatify (f, name):
+    try:
+        return types[name](float(f))
+    except ValueError:
+        return f
 
 types = {
     
@@ -47,8 +29,26 @@ types = {
     'humid'  : int,
 }
 
+std_dev = { 'led'   : 0,
+            'wpump' : 0,
+            'fan'   : 0,
+            'smoist' : 10,
+            'cur'    : 1,
+            'light'  : 5,
+            'level'  : 2,
+            'temp'   : 1,
+            'humid'  : 2,
+            }
 
-
+name_translations = { 'led' : 'led',
+                      'wpump' : 'wpump',
+                      'fan' : 'fan',
+                      'smoist' : 'smoist',
+                      'current' : 'cur',
+                      'light' : 'light',
+                      'wlevel' : 'level',
+                      'temperature' : 'temp',
+                      'humidity' : 'humid'}
 
 ###interference functions###
 
@@ -58,88 +58,120 @@ def identity(name, x):
 def off(name, x):
     return types[name](0)
 
+def on(name, x):
+    return types[name](1)
+
 def noise(name, x):
-    return types[name](x+types[name](10))
-
-def optimal(name, x):
-    return ranges[name]['opt']
-
-def low(name, x):
-    return ranges[name]['low']
-
-def high(name, x):
-    return ranges[name]['high']
-
-### default ###
-for n in sensor_names:
-    schedules[n] = {}
-    next_update[n] = -1
-    if n == 'level':
-        interf_funcs[n] = identity
-    else:
-        interf_funcs[n] = [identity, identity]
-
-for n in actuator_names:
-    interf_funcs[n] = identity
-    schedules[n] = {}
-    next_update[n] = -1
-
-
-def parse_interf(path=None):
-    if path == None:
-        return
-    with open(path) as f:
-        lines = [l.strip().split(",") for l in f.readlines()]
-    lst = lines
-    for l in lst:
-        #redundant sensors
-        if l[1] != 'level' and l[1] in sensor_names:
-            schedules[l[1]][l[0]] = [l[2],l[3]]
-        else:
-            schedules[l[1]][l[0]] = l[2]
-    for s in schedules:
-        if len(schedules[s]) > 0:
-            next_update[s] = min(schedules[s], key=int)
+    return types[name](normal(x, std_dev[name]))
 
 states_funcs = {
     'normal' : identity,
     'noise'  : noise,
     'off'    : off,
-    'opt'    : optimal,
-    'low'    : low,
-    'high'   : high
+    'on'     : on
 }
 
-### interf passthrough ###
-def get_inter(name, time):
-    if next_update[name] != -1 and \
-            time.to_sec() >= int(next_update[name]):
+def get_interf_funcs(value):
+    if (type(value) is str):
+        return states_funcs[value]
+    else:
+        return lambda name, x: value
 
-        state = schedules[name].pop(next_update[name])
-        next_update[name] = min(schedules[name], key=int) \
-                if len(schedules[name]) > 0 else -1
-        
-        #redundant sensors
-        if type(state) == list:
-            temp = []
-            for x in state:
-                temp.append(states_funcs[x])
-            interf_funcs[name] = temp
+class Interference(Agenda):
+    interf_funcs = {}
+    def __init__(self, filename, time0):
+        for n in sensor_names:
+            self.interf_funcs[n] = (identity if n == 'level' else
+                                    [identity, identity])
+        for n in actuator_names:
+            self.interf_funcs[n] = identity
 
+        if (not filename): return # Just use the defaults/identities
+        self.time0 = time0
+        last_time = time0
+        with open(filename) as f:
+            for line in f.readlines():
+                l = line.split('#')[0].strip(' \n')
+                if (l.find('AT') == 0):
+                    dtime = datetime.strptime(l, "AT %d-%H:%M:%S")
+                    time = time0 + clock_to_seconds(dtime)
+                    if (time < last_time):
+                        print("Time must run forward: %s" %l)
+                        quit()
+                    last_time = time
+                    interfs = []
+                    self.add_to_schedule([time, interfs])
+                elif (len(l) > 0):
+                    interf = l.split("=")
+                    if (len(interf) != 2):
+                        print("Illegal syntax: %s" %l); quit()
+
+                    interf_name = interf[0].strip()
+                    topic_name = name_translations.get(interf_name)
+                    if (not topic_name):
+                        print("%s not a legal interference sensor name"
+                              %interf_name)
+                        quit()
+                    interf_val = interf[1]
+                    if (interf_val.find('[') >= 0):
+                        interf_val = [floatify(iv.strip(' []'), topic_name)
+                                      for iv in interf_val.split(',')]
+                    else: 
+                        interf_val = floatify(interf_val.strip(), topic_name)
+                    interfs.append([topic_name, interf_val])
+
+    def update(self, time):
+        if (not self.finished() and (time >= self.schedule[self.index][0])):
+            print("Updating interferences at %s" %clock_time(time))
+            for ifs in self.schedule[self.index][1]:
+                if (type(ifs[1]) == list):
+                    funcs = [get_interf_funcs(i) for i in ifs[1]]
+                else:
+                    funcs = get_interf_funcs(ifs[1])
+                self.interf_funcs[ifs[0]] = funcs
+            self.index += 1
+            return True
+        else: return False
+
+    # Get the interference functions
+    def edit(self, name, value):
+        if (type(value) is list or type(value) is tuple):
+            return (self.interf_funcs[name][0](name, value[0]),
+                    self.interf_funcs[name][1](name, value[1]))
         else:
-            interf_funcs[name] = states_funcs[state]
+            return self.interf_funcs[name](name, value)
 
-    return interf_funcs[name]
+    def display(self):
+        for interf in self.schedule:
+            print("AT %s" %clock_time(interf[0]))
+            for iv in interf[1]:
+                print("  %s = %s" %(iv[0], iv[1]))
 
+if __name__ == '__main__':
+    def p(n,v,t):
+        print("%s: %s" %(n, interference.edit(n,v)))
 
-
-
-###conversion functions###
-
-#def light_inter(x):
- #   return int(x*3.41+13.531)  #converted to lux
-
-#def cur_inter(x):
- #   return (x-512)*.0491 #converted to amps
-
-
+    import sys, time
+    if (len(sys.argv) == 2):
+        now = time.time()
+        time0 = now - time_since_midnight(now)
+        interference = Interference(sys.argv[1], time0)
+        interference.display()
+        #"""
+        # Testing how interference works
+        t = interference.time0; sensor_values = {}
+        while not interference.finished():
+            if (interference.update(t)):
+                p('humid', [60, 60], t)
+                p('temp', [30, 30], t)
+                p('smoist', [450, 450], t)
+                p('light', [350, 350], t)
+                p('level', 125.3, t)
+                p('cur', [52.0, 1000], t)
+                p('fan', True, t)
+                p('wpump', True, t)
+                p('led', 200, t)
+            t += 1
+        #"""
+    else:
+        print("Need to provide interference file to parse")

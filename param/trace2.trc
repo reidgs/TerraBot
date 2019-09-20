@@ -1,8 +1,6 @@
-water_high.txt
-
-START
-WAIT,not grader_vars['wpump'],10
-ENSURE,not grader_vars['wpump'],10
-WAIT,grader_vars['led']==255,20
-ENSURE,grader_vars['led']==255,20
-QUIT
+BASELINE = smoist_up.bsl
+# Soil moisture starts out below 450; make sure it gets about 450, but not above 550
+WAIT smoist[0] < 450 FOR 300
+WAIT wpump FOR 300
+WAIT smoist[0] > 450 FOR 1000
+ENSURE smoist[0] <= 550 UNTIL 1-09:30:00

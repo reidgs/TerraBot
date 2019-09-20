@@ -1,17 +1,16 @@
 #!/usr/bin/env python
-import os, sys, glob
-import select
+import os, sys, glob, select, signal
 import subprocess as sp
-import signal
-import rospy, rosgraph
-from lib import interference as interf
-from lib import topic_def as tdef
 from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray, String
-import argparse
-import time, getpass
-from datetime import datetime
-from lib import grader
+import argparse, time, getpass
+from shutil import copyfile
+import rospy, rosgraph
+from lib import topic_def as tdef
+from lib import interference as interf_mod
+from lib import grader as grader_mod
 from lib import send_email
+from lib import sim_camera as cam
+from terrabot_utils import clock_time
 
 ### Default values for the optional variables
 verbose = False
@@ -22,13 +21,13 @@ still_running = True
 run_agent = True
 #tick_interval = 0.01
 tick_interval = 0.5
-clock_time = rospy.Time(0)
+#clock_time = rospy.Time(0)
+interference = None
 
 #lists which will be populated based on the topic_def.py
 log_files = {}
 publishers = {}
 subscribers = {}
-grader_vars = {}
 
 def gen_log_files():
     global log_files
@@ -39,9 +38,6 @@ def gen_log_files():
     for name in tdef.sensor_names + tdef.actuator_names:
         file_name = "Log/Log_%s/%s_log.csv" % (prefix, name)
         log_files[name] = open(file_name, 'w+', 0)
-
-def clock_time_str(time):
-    return datetime.fromtimestamp(time).strftime("%d %H:%M:%S")
 
 def log_print(string):
     print("%s%s"%(time.strftime("[%Y%m%d %H:%M:%S]: "),string))
@@ -62,23 +58,20 @@ def generate_publishers():
                             latch = True, queue_size = 1)
 
 def cb_generic(name, data):
-    global clock_time, grader_vars
-    interf_func = interf.get_inter(name, clock_time)
+    global now, grader, interference
     original = data.data
     edited = data
-    #redundant sensors
-    if (name in tdef.sensor_names) and (name != 'level'):
-        edited.data = [interf_func[0](name, data.data[0]), \
-                       interf_func[1](name, data.data[1])]
-    else:
-        edited.data = interf_func(name, data.data)
-    edited.data = data.data
-    if grade:
-        grader_vars[name] = edited.data
+    edited.data = (original if not interference else
+                   interf_mod.edit(name, original))
+    #edited.data = data.data # Why is this here?
+
+    if grade: grader.update(name, edited.data)
+
     publishers[name].publish(edited)
     if (log):
         log_file = log_files[name]
-        log_file.write(str(clock_time.to_sec()) + ", internal: " + str(original) + ", edited: " + str(edited.data) + "\n")
+        log_file.write(clock_time(now) + ", internal: " +
+                       str(original) + ", edited: " + str(edited.data) + "\n")
         log_file.flush()
         if (verbose):
             log_print ("Logging %s data" % name)
@@ -106,7 +99,7 @@ parser.add_argument('-m', '--mode', default = "serial",
         choices = ['serial', 'sim', 'grade'],
         help = "if no mode given, serial is used")
 parser.add_argument('-s', '--speedup', default = 1, type = float)
-parser.add_argument('-b', '--baseline', default = "param/baseline.txt")
+parser.add_argument('-b', '--baseline', default = None)
 parser.add_argument('-i', '--interference', default = None)
 parser.add_argument('-t','--tracefile', default = None,
         help = "if --tracedir is also set, this argument is ignored")
@@ -140,7 +133,7 @@ def notify_user():
         send_email.send("autoterrabot@gmail.com", password, args.email,
                         "Problem with your TerraBot agent",
                         ("Your autonomous agent has had to be restarted %d times.  The current Terrabot time is %s.\r\n\r\nYou should probably contact the instructors to upload a new version.\r\n\r\nSincerely,\r\nTerraBot\r\n"
-                         %(num_restarts, clock_time_str(rospy.get_time()))))
+                         %(num_restarts, clock_time(rospy.get_time()))))
 
 if (args.email != None and password == None):
     password = getpass.getpass("Password please for autoterrabot@gmail.com: ")
@@ -158,21 +151,39 @@ def terminate (process, log_file):
     process.terminate()
     process.wait()
 
-def terminate_gracefully():
-    global core_p, serial_p, sim_p, agent_p
-    global core_log, serial_log, sim_log, agent_log
-    if core_p != None:
+def terminate_core():
+    global core_p, core_log
+    if (core_p != None):
         print("Terminating roscore")
         terminate(core_p, core_log)
-    if sim_p != None:
+        core_p = None; core_log = None
+
+def terminate_sim():
+    global sim_p, sim_log
+    if (sim_p != None):
         print("Terminating sim")
         terminate(sim_p, sim_log)
-    if agent_p != None:
-        print("Terminating agent")
-        terminate(agent_p, agent_log)
-    if serial_p != None:
+        sim_p = None; sim_log = None
+
+def terminate_serial():
+    global serial_p, serial_log
+    if (serial_p != None):
         print("Terminating serial")
         terminate(serial_p, serial_log)
+        serial_p = None; serial_log = None
+
+def terminate_agent():
+    global agent_p, agent_log
+    if (agent_p != None):
+        print("Terminating agent")
+        terminate(agent_p, agent_log)
+        agent_p = None; agent_log = None
+
+def terminate_gracefully():
+    terminate_core()
+    terminate_sim()
+    terminate_agent()
+    terminate_serial()
     quit()
 
 #initialize trace file array
@@ -184,9 +195,6 @@ else:
 
 if log:
     gen_log_files()
-
-
-interf.parse_interf(args.interference)
 
 ### Open log file for roscore
 core_log = open("Log/roscore.log", "a+", 0)
@@ -212,14 +220,23 @@ generate_subscribers()
 def ping_cb(data):
     global last_ping
     last_ping = rospy.get_time()
+    print("  PING! %s" %clock_time(last_ping))
 
 ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
 
+images = None
+image_start_time = 1735000 # Should be in baseline
 ### Camera callback - take a picture and store in the given location
 def camera_cb(data):
-    global simulate
-    if simulate:
-        print("Camera NYI for simulator")
+    global simulate, images
+    if simulate or grade:
+        if (images == None): images = cam.get_images_from_directory("images")
+        image = cam.find_image(rospy.get_time() + image_start_time, images)
+        if (image == None):
+            print("ERROR: No stored images found")
+        else:
+            print("Retrieving image %s, storing it in %s" %(image, data.data))
+            copyfile(image, data.data)
     else:
         print("Taking an image, storing it in %s" %data.data)
 #        sp.call("raspistill -n -md 2 -awb off -awbg 1,1 -ss 30000 -o %s"
@@ -241,7 +258,8 @@ serial_log = None
 def start_simulator():
     global sim_p, sim_log, args
     if (sim_log == None): sim_log = open("Log/simulator.log", "a+", 0)
-    fard_args = ["--baseline", args.baseline, "--speedup", str(args.speedup)]
+    fard_args = ["--speedup", str(args.speedup)]
+    if args.baseline: fard_args += ["--baseline", args.baseline]
     if log: fard_args = fard_args + ["-l"]
     sim_p = sp.Popen(["python", "lib/farduino.py"] + fard_args,
                      stdout = sim_log, stderr = sim_log)
@@ -287,28 +305,27 @@ while len(tracefiles) > 0 or not grade:
     ### TODO add grading functionality
 
     if grade:
-        reload(grader)
-        reload(interf)
+        reload(grader_mod)
+        reload(interf_mod)
 
         tfile = tracefiles.pop(0)
         dirname = os.path.dirname(tfile) + "/"
 
-        grader.open_trace(tfile)
-        if (grader.interf_file == ""):
-            interf.parse_interf()
-        else:
-            interf.parse_interf(dirname + grader.interf_file)
-
-        args.baseline = dirname + grader.bfile
+        grader = grader_mod.Grader(tfile)
+        args.baseline = (None if not grader.baseline_file else
+                         dirname + grader.baseline_file)
+        args.interference = (None if not grader.interf_file else
+                             dirname + grader.interf_file)
         start_simulator()
         start_agent()
         print("running %s"%tfile)
-        exec(open(dirname + grader.bfile).read())
-        grader_vars = init_actuators
 
     ### We must begin health ping
     now= rospy.get_time()
     last_ping = now
+
+    if (args.interference):
+        interference = interf_mod.Interference(args.interference, now)
 
     ### Loop for a single iteration of a grading scheme(infinite if not grading)
     while not rospy.core.is_shutdown():
@@ -320,17 +337,15 @@ while len(tracefiles) > 0 or not grade:
             else:
                 print("Usage: q (quit)")
 
-        ### If not simulating get real time
-        #print("spin")
         now = rospy.get_time()
-        ### TODO add grading functionality
+        if (interference): interference.update(now)
         if grade:
-            grader.grader_vars = grader_vars
-            cur_cmd = grader.run_command(rospy.Time.from_sec(now))
-            if grader.finished:
+            cur_cmd = grader.run_command(now)
+            if grader.finished():
                 print("done")
+                terminate_sim()
+                terminate_agent()
                 break
-
 
         # Ping at least once every 6 minutes, but need to adjust if speedup
         if  run_agent and ((now - last_ping) > max(360, 2*args.speedup)):
@@ -341,7 +356,7 @@ while len(tracefiles) > 0 or not grade:
             # For safety, make sure the pump is off
             publishers['wpump'].publish(False)
             if (num_restarts < max_restarts): # Send just once
-                terminate(agent_p, None)
+                terminate(agent_p, None); agent_p = None
             else:
                 notify_user()
                 terminate_gracefully()
@@ -352,11 +367,11 @@ while len(tracefiles) > 0 or not grade:
 
         rospy.sleep(tick_interval)
     if grade:
-        terminate(sim_p, sim_log)
+        terminate_sim()
         if run_agent:
-            terminate(agent_p, agent_log)
+            terminate_agent()
     else:
         break
 
-terminate(core_p, core_log)
+terminate_core()
 

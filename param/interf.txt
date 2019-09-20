@@ -1,6 +1,12 @@
-0,wpump,off
-20,wpump,normal
-10,wpump,off
-2,light,normal,noise
-9,light,opt,low
-8,humid,noise,low
+# A simple interference file
+AT 1-00:00:00 
+humidity = [noise, normal] # Left humidity sensor is acting noisy
+light = [100, noise]       # The right light sensor is noisy
+wpump = off     # Pump starts out broken
+AT 1-00:05:00
+wpump = normal  # A few minutes later it gets fixed
+led = 255       # LED stuck high
+AT 1-00:10:00
+wpump = off     # And, then it breaks again...
+light = [normal, 10]  # The right light sensor gets stuck low 
+humidity = [noise, 0] # Right humidity sensor breaks

@@ -5,6 +5,7 @@ from std_msgs.msg import Float32, Int32, Int32MultiArray, Float32MultiArray, Boo
 import argparse
 import plot, limits
 from datetime import datetime
+from terrabot_utils import clock_time
 
 class Sensors:
     time = 0
@@ -32,9 +33,6 @@ use_simulator = args.sim
 def init_sensors():
     global sensorsG
     sensorsG.time = rospy.get_time()
-
-def clock_time(time):
-    return datetime.fromtimestamp(time).strftime("%d %H:%M:%S")
 
 ### ROS-related stuff
 ### Set up publishers, subscribers, and message handlers

@@ -3,7 +3,7 @@ limits = {}
 names = {}
 
 scale['light_level'] = [0, 600]
-limits['light_level'] = [450, 550]
+limits['light_level'] = [500, 600]
 names['light_level'] = 'lights'
 
 scale['water_level'] = [0, 200]
@@ -11,15 +11,15 @@ limits['water_level'] = [5, 20]
 names['water_level'] = 'w_level'
 
 scale['moisture'] = [0, 1000]
-limits['moisture'] = [525, 650]
+limits['moisture'] = [450, 550]
 names['moisture'] = 'moist'
 
 scale['humidity'] = [0, 100]
-limits['humidity'] = [50, 70]
+limits['humidity'] = [55, 75]
 names['humidity'] = 'humid'
 
 scale['temperature'] = [10, 40] # Celcius
-limits['temperature'] = [18, 27]
+limits['temperature'] = [24, 30]
 names['temperature'] = 'temp'
 
 scale['current'] = [0, 1000]

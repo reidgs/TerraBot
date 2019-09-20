@@ -1,23 +1,8 @@
-#!/usr/bin/env python
-
-
-#initial values
-
-init_internals = {
-    'light'       : [10,100],
-    'temperature' : [20,20],
-    'humidity'    : [40,50],
-    'current'     : [0.0,0.0],
-    'smoist'      : [350,350],
-    'volume'      : 1000.0 # ml
-}
-
-init_actuators = {
-    'led'   : 0,
-    'wpump' : False,
-    'fan'   : False,
-    'freq'  : 10.0
-}
-
-clock_start = 0 # Integer seconds since midnight of the first day
-
+# Simple baseline file
+START AT 1-00:00:00 # Midnight, the first day
+light = [10, 100]
+temperature = [20, 20]
+humidity = [40, 50]
+current  = [0.0, 0.0]
+smoist   = [350, 350]
+wlevel   = 160 # Corresponds to full reservoir

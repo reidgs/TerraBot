@@ -1,8 +1,9 @@
-baseline.txt
-interf.txt
-START
-WAIT,grader_vars['wpump'],4
-ENSURE,grader_vars['wpump'],4
-WAIT,grader_vars['led']==250,20
-ENSURE,grader_vars['led']==255,20
-QUIT
+# Simple trace file
+BASELINE = baseline.txt
+
+WAIT smoist[0] < 500 FOR 60
+WAIT wpump FOR 60
+ENSURE wpump FOR 60
+WAIT led>=80 FOR 360
+ENSURE led>=50 FOR 360
+
