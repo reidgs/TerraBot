@@ -1,8 +1,7 @@
 ARDUINO_DIR = /usr/share/arduino
 ARDUINO_PORT = /dev/ttyACM*
 
-#USER_LIB_PATH = /home/osboxes/arduino-1.8.9/libraries
-USER_LIB_PATH = /home/robotanist/Sketchbook/libraries
+USER_LIB_PATH = ${HOME}/Sketchbook/libraries
 
 ARDUINO_LIBS = ros_lib SimpleDHT
 
