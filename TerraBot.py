@@ -63,7 +63,7 @@ def cb_generic(name, data):
     original = data.data
     edited = data
     edited.data = (original if not interference else
-                   interference.edit(name, original))
+                   interf_mod.edit(name, original))
     #edited.data = data.data # Why is this here?
 
     if grade: grader.update(name, edited.data)
