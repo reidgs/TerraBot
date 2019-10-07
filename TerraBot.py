@@ -149,8 +149,9 @@ if grade and not run_agent:
 
 def terminate (process, log_file):
     if (log_file != None): log_file.close()
-    process.terminate()
-    process.wait()
+    if (process.poll() == None):
+        process.terminate()
+        process.wait()
 
 def terminate_core():
     global core_p, core_log
@@ -362,7 +363,16 @@ while len(tracefiles) > 0 or not grade:
                 notify_user()
                 terminate_gracefully()
 
-        if (run_agent and (agent_p.poll() != None)):
+        if (run_agent and agent_p != None and agent_p.poll() != None):
+            log_print("agent died")
+            num_restarts += 1
+            # For safety, make sure the pump is off
+            publishers['wpump'].publish(False)
+            if (num_restarts >= max_restarts): # Send just once
+                notify_user()
+                terminate_gracefully()
+
+        if (run_agent and (agent_p == None or agent_p.poll() != None)):
             log_print("agent restarting...")
             start_agent()
 
