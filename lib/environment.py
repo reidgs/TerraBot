@@ -1,0 +1,224 @@
+from math import sqrt
+
+
+### ENVIRONMENT ###
+
+#Probably a plant class to store a plants' height, color, location, etc.
+#{leaf, root health}
+#{health -> affect growth function, tilt, color}
+#func to forward time. health is 0<h<1, when time passes the plant will change according to h
+#  like if h is close to 1, it will get greener, taller, maybe tilt up? (all depending on temp, light, smoist,... also)
+# class Plant {height, color, tilt, health, position}
+#update health based on temp, smoist, light,...
+             
+#Interactions:::: Important to get this digraph worked out
+# plants <-- smoist, humidity, light, temperature
+# plants --> smoist, humidity
+# smoist <-- plants, temperature, wpump
+# smoist --> plants, humidity, tankwater
+# humidity <-- plants, smoist, tankwater, fan
+# humidity --> plants
+# temperature <-- light?, fan
+# temperature --> plants, smoist, humidity, tankwater
+# light <-- led, time
+# light --> plants , temp?
+# current <-- led, wpump, fan
+# volume <-- wpump
+# volume --> wpump
+# tankwater <-- smoist
+# tankwater --> humidity
+# led --> light
+# wpump <-- volume
+# wpump --> smoist, volume
+# fan --> humidity, temperature
+
+# Natural Constants #TODO tweak these
+
+max_soilwater = 1000        #ml The level at which the soil is fully saturated and will begin to overflow
+flow_rate = 3.5             #ml/sec The rate at which the pump will pump water
+drip_rate = .1              #ml/sec The rate at which water drips from the pipe when the pump is off
+volume_rate = 18.0          #ml/mm in the reservoir (used for sensing level)
+light_diffuse = .7          #The percentage of sunlight that reaches the other side
+max_daylight = 588          #The sunlight right at the window at midday
+tank_width = .4             #m the width of the terrarium
+led_power = 2.35            #units of light per LED level
+room_temp = 20              #degrees C the room temperature out of the greenhouse
+room_airwater = 25          #water content of air outside greenhouse
+fan_cool_rate = .05 / 60    #deg C /min The rate at which temp decreases due to the fan
+pipe_capacity = 30          #ml The capacity of the pipe
+
+led_current = 3.2/255       #
+pump_current = .2           # The current needed to support each device when it's on
+fan_current = .06           #
+
+#Environment Parameters
+params = { 'time' : 0,
+
+             'plants' : [],
+             'soilwater' : 350,
+             'airwater' : room_airwater,
+             'temperature' : room_temp,
+             
+             'volume' : 3000.0,
+             'tankwater' : 0.0,
+             'pipewater' : 0.0,
+             'energy' : 0,
+             
+             'led' : 0,
+             'wpump' : False,
+             'fan' : False}
+
+
+# Natural Helper Functions 
+
+seconds_in_day = 3600 * 24
+sunrise = 3600 * 7
+sunset = 3600 * 19
+midday = (sunrise + sunset) / 2
+coeff1 = (-4.0 / ((sunrise - sunset)**2)) #This is for saving computation
+def day_fraction(time):
+    #Gives 0 if night, or 0<x<1 if day, where midday is 1 and dawn/dusk is 0, quadratically
+    relative_time = time % seconds_in_day #The relative time in the day
+    if relative_time <= sunrise or relative_time >= sunset: return 0
+    return 1 + coeff1 * ((relative_time - midday)**2)
+    
+coeff2 = (light_diffuse - 1) / tank_width
+def light_level(distance): 
+    #Gives light level at a distance from the lit side of the tank TODO change to tanh? or maybe not
+    sunlight = max_daylight * (1 + distance * coeff2) * day_fraction(params['time'])
+    ledlight = led_power * params['led']
+    return min(1.1 * max_daylight, sqrt(sunlight**2 + ledlight**2)) #This is done pythagorically, there may be a better way
+                                                #I think its ok? for the light to be too high at the extreme
+                                                #This is NOT Ok if temp is based on light 
+    
+def light_average():
+    #A quick estimate of the average light level
+    samples = 5
+    return sum([light_level(tank_width * i / samples) for i in range(samples)]) / samples
+    
+def light_heat_rate():
+    #The rate at which the temperature increases (deg C /sec) due to light
+    return light_average() * .5 / (3600 * 180)
+    
+def temp_equil_rate():
+    #The rate at which the temperature changes to equilibriate with outside the greenhouse
+    #Newton's law of cooling
+    return (room_temp - params['temperature']) * (.6 / 10000) #This constant is a guess atm
+    
+def temp_evap_multiplier():
+    #most evaporative movements are multiplied by this to account for temperature
+    return 1 + params['temperature'] / 200
+    
+def evapotranspiration_rate():
+    #The rate at which water moves soil->air due to plants
+    #TODO This should be based on plants. i.e. more for healthier/bigger plants,...
+    #Also should be more with fan on?
+    return 4.0 / 1000 #* temp_evap_multiplier()? # approx 4ml/hr...?
+    
+def soil_evaporation_rate():
+    #The rate at which water moves soil->air due to direct evaporation
+    #average about 1 ml/hr, based on soil water content
+    base = (.5 + (params['soilwater'] / max_soilwater)) / 3600
+    if params['fan']:
+        base *= 3 #Fan increases evaporation speed
+    return base * temp_evap_multiplier()
+        
+def tank_evaporation_rate():
+    #The rate at which water moves tank->air due to direct evaporation
+    return 5.0 / 3600 * temp_evap_multiplier() #This need to be better
+    
+def exit_rate():
+    #The rate at which water leaves the greenhouse via air
+    #This should increase with airwater, and be _much_ larger with fan
+    base = (10 + .001 * (params['airwater'] - room_airwater)) / 400 if params['fan'] else (params['airwater'] - room_airwater) / 13000
+    if params['temperature'] > room_temp:
+        base *= (1 + (params['temperature'] - room_temp) / 80)
+    return base
+        
+def get_cur():
+    return (5.0 + led_current * params['led'] +
+           (pump_current if params['wpump'] else 0) +
+           (fan_current if params['fan'] else 0))
+     
+# Environment Runtime Functions
+ 
+def forward_water_cycle(duration):
+    #Pump water if in reservoir and pump on, accounting for pipe lag
+    if params['wpump']:
+        vol = min(duration * flow_rate, params['volume'])
+        params['volume'] -= vol
+        params['pipewater'] += vol
+        if params['pipewater'] > pipe_capacity:
+            params['soilwater'] += params['pipewater'] - pipe_capacity
+            params['pipewater'] = pipe_capacity
+            
+    elif params['pipewater'] > 0: #Could be if. should dripping be ok when the pump is on?
+        vol = min(duration * drip_rate, params['pipewater'])
+        params['pipewater'] -= vol
+        params['soilwater'] += vol
+    
+        
+    #Do water movement:
+    #from soil to tankwater by overflow if soil fully saturated
+    if params['soilwater'] > max_soilwater:
+       params['tankwater'] += params['soilwater'] - max_soilwater
+       params['soilwater'] = max_soilwater
+    #from soil to air because of plants
+    vol = min(duration * evapotranspiration_rate(), params['soilwater'])
+    params['soilwater'] -= vol
+    params['airwater'] += vol
+    #from soil to air by evaporation
+    vol = min(duration * soil_evaporation_rate(), params['soilwater'])
+    params['soilwater'] -= vol
+    params['airwater'] += vol
+    #from tankwater to air by evaporation
+    vol = min(duration * tank_evaporation_rate(), params['tankwater'])
+    params['tankwater'] -= vol
+    params['airwater'] += vol
+    #from air to outside the greenhouse
+    params['airwater'] = max(0.0, params['airwater'] - exit_rate() * duration)
+    
+def forward_temperature(duration):
+    
+    #Cooling due to the fan
+    if params['fan']:
+        params['temperature'] -= duration * fan_cool_rate
+    #Heating due to light
+    params['temperature'] += duration * light_heat_rate()
+    #Change to equilibriate with outside env TODO if duration is big, newtons law of cooling may get out of hand
+    params['temperature'] += duration * temp_equil_rate()
+
+
+def forward_time(duration): #Here is where most of the env mutation takes place
+    
+    #actually move time
+    params['time'] += duration #TODO I think weather will be handled here
+    #to change volume, smoist, humidity, tankwater
+    forward_water_cycle(duration)
+    #update plant health
+    
+    #Then also a growplants function (which probably just calls grow on each plant in params[plants])
+    
+    #Change temp based on fan, light, ..? (+ for high light, - for fan on)
+    forward_temperature(duration)
+    #add to used energy
+    params['energy'] += get_cur() * 12 / 1000 * duration
+    
+    #ordering here is interesting
+
+def init(bl):
+    #print("initializing with " + str(initialparams))
+    if bl is not None:
+        for k,v in bl.params.items():
+            if k in params:
+                params[k] = v
+            elif k == 'humidity':
+                params['airwater'] = v
+            elif k == 'smoist':
+                params['soilwater'] = v / 2
+            elif k == 'wlevel':
+                params['volume'] = v * volume_rate
+    
+
+
+

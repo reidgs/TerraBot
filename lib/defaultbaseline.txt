@@ -1,0 +1,10 @@
+#These are default values
+time = 0
+temperature = 20
+humidity = 50
+smoist = 350
+wlevel = 10
+tankwater = 0
+pump = off
+fan = off
+led = 0
