@@ -1,14 +1,14 @@
 from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray
 
 sensor_names = ['smoist', 'cur', 'light', 'level', 'temp', 'humid']
-actuator_names = ['led', 'wpump', 'fan', 'freq'] # Add 'cam'
+actuator_names = ['led', 'wpump', 'fan', 'freq', 'cam']
 
 actuator_types = {
     'led'   : Int32,
     'wpump' : Bool,
     'fan'   : Bool,
-    'freq'  : String #CHANGE TO STRING (?) Format: 'sensorname:frequency' For example, 'light:5.5
-} # Add 'cam' : String
+    'freq'  : String,
+    'cam'   : String }
 
 sensor_types = {
     'smoist' : Int32MultiArray,

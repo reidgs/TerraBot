@@ -1,8 +1,0 @@
-# Simple baseline file
-START AT 1-00:00:00 # Midnight, the first day
-light = [10, 100]
-temperature = [20, 20]
-humidity = [40, 50]
-current  = [0.0, 0.0]
-smoist   = [350, 350]
-wlevel   = 160 # Corresponds to full reservoir

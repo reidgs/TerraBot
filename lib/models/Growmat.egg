@@ -1,8 +1,8 @@
 <CoordinateSystem> { Z-up } 
 <Material> GrowmatMaterial {
-  <Scalar> baser { 1.0 }
-  <Scalar> baseg { 0.87 }
-  <Scalar> baseb { 0.6784 }
+  <Scalar> baser { .75 }
+  <Scalar> baseg { 0.66 }
+  <Scalar> baseb { 0.54 }
   <Scalar> basea { 1.0 }
   <Scalar> emitr { 0.0 }
   <Scalar> emitg { 0.0 }
