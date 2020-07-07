@@ -17,6 +17,8 @@ from sys import exit
 # Importing math constants and functions
 from math import pi, sin, cos
 
+import atexit
+
 class Terrarium(ShowBase):
 
     def __init__(self):
@@ -29,7 +31,8 @@ class Terrarium(ShowBase):
         #.setAspectRatio for clearer images?
         camera.setPosHpr(-20, 0, 7, -90, -12, 0) # Normal
         #camera.setPosHpr(0, 0, 30, 0, -90, 0) #TOP
-
+            
+        atexit.register(self.userExit)
         self.BASE_TEXT = '''
         Pump: OFF
         Fans: OFF
@@ -40,11 +43,12 @@ class Terrarium(ShowBase):
         Temperature : 20 degrees
         Soil water : 0 ml 
         Humidity : 50 ml
+        Volume : 3000 ml
         Current Speedup : 1x
         '''
 
 
-        self.accept('escape', self.userExit)
+        #self.accept('escape', self.userExit)
         self.accept('r', self.resetCam)
 
         self.loadModels()  # Load and position our models
@@ -64,6 +68,8 @@ class Terrarium(ShowBase):
 
         self.fanonSound = loader.loadSfx('sounds/fanon.mp3')
         self.pumponSound = loader.loadSfx('sounds/pumpon.mp3')
+        self.fanonSound.setLoop(True)
+        self.pumponSound.setLoop(True)
 
         #SetupCamera
         self.heading = -90.0
@@ -296,13 +302,14 @@ class Terrarium(ShowBase):
 
         self.textpanel2.text = \
         '''
-        Time : {} seconds
-        Temperature : {} degrees
-        Soil water : {} ml 
-        Humidity : {} ml
+        Time : {:04.2f} seconds
+        Temperature : {:04.2f} degrees
+        Soil water : {:04.2f} ml 
+        Humidity : {:04.2f} ml
+        Volume : {:04.2f} ml
         Current Speedup : {}x
         '''.format(params['time'], params['temperature'], params['soilwater'] * 2, \
-            params['airwater'], speedup)
+            params['airwater'], params['volume'], speedup)
 
         self.fansound(params['fan'])
         self.pumpsound(params['wpump'])

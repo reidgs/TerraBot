@@ -187,7 +187,8 @@ generate_subscribers()
 
 ### Sim loop (Put here for threading purposes)
 
-def sim_loop():      
+def sim_loop():   
+    global doloop   
     tick_time = .2  # This is how long between runs of the below loop in seconds
     speedup = default_speedup                
     now = 0.0 #TODO change to baseline initial time? (Also: this is in seconds)
@@ -199,7 +200,7 @@ def sim_loop():
      
     ## Loop TODO should wait for an agent before running?
 
-    while not rospy.core.is_shutdown():
+    while not rospy.core.is_shutdown() and doloop:
         
         time.sleep(tick_time) # Wait for next tick
         
@@ -221,6 +222,8 @@ def sim_loop():
     renderer.userExit()
     
 
+
+
 #Init graphics
    
 renderer = Terrarium()
@@ -233,6 +236,18 @@ subscribers['cam'] = rospy.Subscriber('cam_raw',
 
 
 #Start sim loop THEN panda
+doloop = True
+
+import signal
+def handler(signum, frame):
+    global thread, doloop
+    #print("HERE")
+    doloop = False
+    thread.join()
+    sys.exit()
+    
+signal.signal(signal.SIGTERM, handler)
+
 thread = threading.Thread(target=sim_loop)
 thread.start()
 renderer.run()
