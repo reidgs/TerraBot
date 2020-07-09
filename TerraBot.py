@@ -231,7 +231,10 @@ image_start_time = 1735000 # Should be in baseline
 ### Camera callback - take a picture and store in the given location
 def camera_cb(data):
     global simulate, images
-    if simulate or grade:
+    
+    if simulate:
+        publishers['cam'].publish(data.data)
+    elif grade:
         if (images == None): images = cam.get_images_from_directory("images")
         image = cam.find_image(rospy.get_time() + image_start_time, images)
         if (image == None):

@@ -229,10 +229,15 @@ def sim_loop():
 renderer = Terrarium()
 renderer.update_env_params(env.params, default_speedup)
 
+def cam_cb(data):
+    global renderer
+    #print(data.data)
+    renderer.takeAndStorePic(data.data)
+
 #Steup cam subscriber
 subscribers['cam'] = rospy.Subscriber('cam_raw', 
                                              actuator_types['cam'],  
-                                             (lambda data : renderer.takeAndStorePic(data.data)))
+                                             cam_cb)
 
 
 #Start sim loop THEN panda

@@ -31,6 +31,9 @@ class Terrarium(ShowBase):
         #.setAspectRatio for clearer images?
         camera.setPosHpr(-20, 0, 7, -90, -12, 0) # Normal
         #camera.setPosHpr(0, 0, 30, 0, -90, 0) #TOP
+        
+        self.pic = False
+        self.loc = None
             
         atexit.register(self.userExit)
         self.BASE_TEXT = '''
@@ -57,6 +60,7 @@ class Terrarium(ShowBase):
         self.setupText2()
         self.setupSensorCam()
         self.setTankWater(0)
+        self.setBackgroundColor(.8, .8, .8, 1)
 
         self.keys = {}
         for key in ['arrow_left', 'arrow_right', 'arrow_up', 'arrow_down',
@@ -101,9 +105,12 @@ class Terrarium(ShowBase):
         self.sensorCam.setHpr(180, -14.74, 0)
 
     def takeAndStorePic(self, location):
-        self.t_table.hide()
-        self.camBuffer.saveScreenshot(Filename(location))
-        self.t_table.show()
+        #self.t_table.hide()
+        #print(Filename(location))
+        self.pic = True
+        self.loc = location
+        #self.camBuffer.saveScreenshot(Filename(location))
+        #self.t_table.show()
 
     def setupText(self):
         self.textpanel = OnscreenText(
@@ -330,6 +337,14 @@ class Terrarium(ShowBase):
         self.pitch += (delta * 30 * self.keys['arrow_up'] +
                        delta * 30 * -self.keys['arrow_down'])
         self.camera.setHpr(self.heading, self.pitch, 0)
+        
+        if(self.pic):
+            if self.loc == None:
+                print("No location specified")
+            else:
+                self.camBuffer.saveScreenshot(Filename(self.loc))
+            self.pic = False
+        
         #print(self.camera.getPos())
         #print(self.camera.getHpr())
         return task.cont

@@ -3,7 +3,7 @@
   <Scalar> baser { 0.6 }
   <Scalar> baseg { 0.6 }
   <Scalar> baseb { 0.6 }
-  <Scalar> basea { 0.6 }
+  <Scalar> basea { 0.67 }
   <Scalar> diffr {1.}
   <Scalar> diffg {1.}
   <Scalar> diffb {1.}
