@@ -1,7 +1,0 @@
-BASELINE = baseline.txt
-INTERFERENCE = interf.txt
-
-WAIT wpump FOR 20
-ENSURE wpump FOR 4
-WAIT led==255 FOR 20
-ENSURE led==255 FOR 20
