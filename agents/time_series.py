@@ -8,10 +8,13 @@ from matplotlib.ticker import FormatStrFormatter
 import limits
 
 class Subplots:
+    name = None
     ax = None
     fig = None
     color = 'r'
-    def __init__(self, the_axis, the_color, the_width, the_force_update):
+    def __init__(self, the_name, the_axis, the_color, the_width,
+                 the_force_update):
+        self.name = the_name
         self.current = -100
         self.x = []
         self.y = []
@@ -57,48 +60,42 @@ def init_ros (use_simulator):
     rospy.init_node("time_series_grapher", anonymous = True)
 
     rospy.Subscriber("smoist_output", Int32MultiArray,
-                     moisture_reaction, subplotsG['Soil Moisture'])
-    rospy.Subscriber("light_output", Int32MultiArray, light_reaction,
-                     subplotsG['Light Level'])
-    rospy.Subscriber("level_output", Float32, level_reaction,
-                     subplotsG['Water Level'])
-    rospy.Subscriber("temp_output", Int32MultiArray, temp_reaction,
-                     subplotsG['Temperature'])
-    rospy.Subscriber("humid_output", Int32MultiArray, humid_reaction,
-                     subplotsG['Humidity'])
-    rospy.Subscriber("led_input", Int32, led_reaction, subplotsG['LEDs'])
-    rospy.Subscriber("fan_input", Bool, fan_reaction, subplotsG['Fan'])
-    rospy.Subscriber("wpump_input", Bool, pump_reaction, subplotsG['Pump'])
+                     update_sensor_multi_data, subplotsG['Soil Moisture'])
+    rospy.Subscriber("light_output", Int32MultiArray,
+                     update_sensor_multi_data, subplotsG['Light Level'])
+    rospy.Subscriber("level_output", Float32,
+                     update_sensor_data, subplotsG['Water Level'])
+    rospy.Subscriber("temp_output", Int32MultiArray,
+                     update_sensor_multi_data, subplotsG['Temperature'])
+    rospy.Subscriber("humid_output", Int32MultiArray,
+                     update_sensor_multi_data, subplotsG['Humidity'])
+    rospy.Subscriber("led_input", Int32,
+                     update_actuator_data, subplotsG['LEDs'])
+    rospy.Subscriber("fan_input", Bool, update_actuator_data, subplotsG['Fan'])
+    rospy.Subscriber("wpump_input", Bool,
+                     update_actuator_data, subplotsG['Pump'])
 
-def moisture_reaction(data, subplot):
+def update_sensor_multi_data(data, subplot):
     subplot.current = (data.data[0] + data.data[1])/2
+    if (log_file) :
+        log_file.write("%f '%s' %.1f %.1f\n" %(rospy.get_time(), subplot.name,
+                                               data.data[0], data.data[1]))
 
-def humid_reaction(data, subplot):
-    subplot.current = (data.data[0] + data.data[1])/2
-
-def temp_reaction(data, subplot):
-    subplot.current = (data.data[0] + data.data[1])/2
-
-def light_reaction(data, subplot):
-    subplot.current = (data.data[0] + data.data[1])/2
-
-def level_reaction(data, subplot):
+def update_sensor_data(data, subplot):
     subplot.current = data.data
+    if (log_file) : log_file.write("%f '%s' %.1f\n" %(rospy.get_time(),
+                                                      subplot.name, data.data))
 
-def led_reaction(data, subplot):
+def update_actuator_data(data, subplot):
     subplot.current = data.data
-
-def fan_reaction(data, subplot):
-    subplot.current = data.data
-
-def pump_reaction(data, subplot):
-    subplot.current = data.data
+    if (log_file) : log_file.write("%f '%s' %d\n" %(rospy.get_time(),
+                                                    subplot.name, data.data))
 
 def add_time_series(fig, name, limits, force_update, color, nrow, plot_width):
     global subplotsG, nrowsG, ncolsG
     ax = fig.add_subplot(nrowsG, ncolsG, nrow)
     plt.title(name)
-    subplotsG[name] = Subplots(ax, color, plot_width, force_update)
+    subplotsG[name] = Subplots(name, ax, color, plot_width, force_update)
     ax.set_xlim(0, plot_width) # hours
     ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
     offset = limits[1]*0.1 # extend limits slightly
@@ -132,10 +129,17 @@ def print_sensor_values():
 parser = argparse.ArgumentParser(description = "Interactive Agent")
 parser.add_argument('-w', '--width', default = 24,
                     help="width of the plot, in hours")
+parser.add_argument('-l', '--log', help="log the sensor data to file")
+parser.add_argument('-r', '--replay', help="replay the sensor data from file")
 parser.add_argument('-s', '--sim', action = 'store_true', help="use simulator")
 args = parser.parse_args()
 plot_widthG = float(args.width) # in hours
 
+replay_file = (None if not args.replay else open(args.replay, 'r', 0))
+if (args.log):
+    if (replay_file): print("WARNING: Cannot log while replaying")
+    else: log_file = open(args.log, 'w+', 0)
+else: log_file = None
 
 plotsG = [('Light Level', limits.scale['light_level'], False, 'g', 1),
           ('Humidity', limits.scale['humidity'], False, 'g', 3),
@@ -147,21 +151,18 @@ plotsG = [('Light Level', limits.scale['light_level'], False, 'g', 1),
           ('Pump', [0, 1], True, 'b', 6)]
 fig = init_plotting(plotsG, plot_widthG)
 
-init_ros(args.sim)
-rospy.sleep(2) # Need to do this even if running simulator to handle messages
-start_time = rospy.get_time()
-last_update = start_time
+def update_plots (hours_since_start):
+    global plotsG, subplotsG, fig
 
-# Update graph every 10 minutes
-while not rospy.core.is_shutdown():
-    hours_since_start = (rospy.get_time() - start_time)/3600.0
     updated = False
     for plot in plotsG:
         if (subplotsG[plot[0]].update(hours_since_start)): updated = True
     if (updated):
         fig.canvas.draw()
         plt.show()
+    return updated
 
+def handle_stdin ():
     if sys.stdin in select.select([sys.stdin],[],[],0)[0]:
         input = sys.stdin.readline()
         if input[0] == 'q':
@@ -171,4 +172,36 @@ while not rospy.core.is_shutdown():
         else:
             print("Usage: q (quit)\n\ts (sensor values)")
 
-    rospy.sleep(0.1)
+def process_replay_data(line):
+    sline = line.split("'")
+    data = sline[2].strip(' \n').split(' ')
+    data = (float(data[0]) if (len(data) == 1) else
+            (float(data[0]) + float(data[1]))/2)
+    return (float(sline[0]), sline[1], data)
+
+if (replay_file):
+    start_time = None
+    for line in replay_file:
+        cur_time, name, data = process_replay_data(line)
+        subplotsG[name].current = data
+        if (not start_time): start_time = cur_time
+        hours_since_start = (cur_time - start_time)/3600.0
+        if (update_plots(hours_since_start)): time.sleep(0.1)
+        handle_stdin()
+
+    print("Done replaying")
+    time.sleep(5)
+    replay_file.close()
+
+else:
+    init_ros(args.sim)
+    rospy.sleep(2) # Do this even if running simulator to handle messages
+    start_time = rospy.get_time()
+    last_update = start_time
+
+    # Update graph every so often, depending on plot width
+    while not rospy.core.is_shutdown():
+        hours_since_start = (rospy.get_time() - start_time)/3600.0
+        update_plots(hours_since_start)
+        handle_stdin()
+        rospy.sleep(0.1)
