@@ -203,7 +203,7 @@ def forward_time(duration): #Here is where most of the env mutation takes place
     forward_temperature(duration)
     #add to used energy
     params['energy'] += get_cur() * 12 / 1000 * duration
-    
+    #print(light_average())
     #ordering here is interesting
 
 def init(bl):

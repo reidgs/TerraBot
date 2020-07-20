@@ -34,6 +34,7 @@ import sys
 parser = argparse.ArgumentParser(description='simulation parser for Autonomous Systems')
 parser.add_argument('--baseline', type = str, default = None, nargs = "?") #Use type=file instead?
 parser.add_argument('--speedup', type = float, default = 1, nargs = "?")
+parser.add_argument('--graphics', default = False, action = 'store_true')
 parser.add_argument('-l', '--log', action = 'store_true')
 args = parser.parse_args()
 
@@ -186,6 +187,7 @@ generate_subscribers()
 
 
 ### Sim loop (Put here for threading purposes)
+doloop = True
 
 def sim_loop():   
     global doloop   
@@ -217,44 +219,50 @@ def sim_loop():
         #move env forward (all at once, or speed times, tick interval each?)
         env.forward_time(tick_time * speedup)
         #rerender to the viewing window. Or, just have it done automatically by panda, and set framerate to 1 / tick_time.
-        renderer.update_env_params(env.params, speedup)
+        if args.graphics:
+            renderer.update_env_params(env.params, speedup)
     #Stop panda window?
-    renderer.userExit()
+    if args.graphics:
+        renderer.userExit()
     
+if not args.graphics:
+    sim_loop()
+else:
 
 
+    ##This will need to change to accomodate no graphics
+    #Init graphics
+       
+    renderer = Terrarium()
+    renderer.update_env_params(env.params, default_speedup)
 
-#Init graphics
-   
-renderer = Terrarium()
-renderer.update_env_params(env.params, default_speedup)
+    def cam_cb(data):
+        global renderer
+        #print(data.data)
+        renderer.takeAndStorePic(data.data)
 
-def cam_cb(data):
-    global renderer
-    #print(data.data)
-    renderer.takeAndStorePic(data.data)
-
-#Steup cam subscriber
-subscribers['cam'] = rospy.Subscriber('cam_raw', 
-                                             actuator_types['cam'],  
-                                             cam_cb)
+    #Steup cam subscriber
+    subscribers['cam'] = rospy.Subscriber('cam_raw', 
+                                                 actuator_types['cam'],  
+                                                 cam_cb)
 
 
-#Start sim loop THEN panda
-doloop = True
+    #Start sim loop THEN panda
 
-import signal
-def handler(signum, frame):
-    global thread, doloop
-    #print("HERE")
-    doloop = False
-    thread.join()
-    sys.exit()
-    
-signal.signal(signal.SIGTERM, handler)
+    import signal
+    def handler(signum, frame):
+        global thread, doloop
+        #print("HERE")
+        doloop = False
+        thread.join()
+        sys.exit()
+        
+    signal.signal(signal.SIGTERM, handler)
 
-thread = threading.Thread(target=sim_loop)
-thread.start()
-renderer.run()
+    thread = threading.Thread(target=sim_loop)
+    thread.start()
+
+    if True:
+        renderer.run()
     
     

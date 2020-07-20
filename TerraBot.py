@@ -99,6 +99,7 @@ parser.add_argument('-l', '--log', action = 'store_true')
 parser.add_argument('-m', '--mode', default = "serial",
         choices = ['serial', 'sim', 'grade'],
         help = "if no mode given, serial is used")
+parser.add_argument('-g', '--graphics', default = False, action='store_true')
 parser.add_argument('-s', '--speedup', default = 1, type = float)
 parser.add_argument('-b', '--baseline', default = None)
 parser.add_argument('-i', '--interference', default = None)
@@ -264,6 +265,7 @@ def start_simulator():
     global sim_p, sim_log, args
     if (sim_log == None): sim_log = open("Log/simulator.log", "a+", 0)
     fard_args = ["--speedup", str(args.speedup)]
+    if args.graphics: fard_args += ["--graphics"]
     if args.baseline: fard_args += ["--baseline", args.baseline]
     if log: fard_args = fard_args + ["-l"]
     sim_p = sp.Popen(["python", "lib/farduino.py"] + fard_args,
