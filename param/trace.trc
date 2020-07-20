@@ -1,9 +1,0 @@
-# Simple trace file
-BASELINE = baseline.txt
-
-WAIT smoist[0] < 500 FOR 60
-WAIT wpump FOR 60
-ENSURE wpump FOR 60
-WAIT led>=80 FOR 360
-ENSURE led>=50 FOR 360
-

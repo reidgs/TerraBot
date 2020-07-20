@@ -8,10 +8,13 @@ from topic_def import *
 
 # If string is a number, return that number, o/w return the string
 def floatify (f, name):
-    try:
-        return types[name](float(f))
-    except ValueError:
-        return f
+    if (f.find('prop') > 0):
+        return ('prop', float(f.strip('()').split(' ')[1]))
+    else:
+        try:
+            return types[name](float(f))
+        except ValueError:
+            return f
 
 types = {
     
@@ -40,6 +43,17 @@ std_dev = { 'led'   : 0,
             'humid'  : 2,
             }
 
+proportionality = { 'led'   : 1.0,
+            'wpump' : 1.0,
+            'fan'   : 1.0,
+            'smoist' : 1.0,
+            'cur'    : 1.0,
+            'light'  : 1.0,
+            'level'  : 1.0,
+            'temp'   : 1.0,
+            'humid'  : 1.0,
+            }
+
 name_translations = { 'led' : 'led',
                       'wpump' : 'wpump',
                       'fan' : 'fan',
@@ -64,16 +78,22 @@ def on(name, x):
 def noise(name, x):
     return types[name](normal(x, std_dev[name]))
 
+def proportional(name, x):
+    return types[name](x * proportionality[name])
+
 states_funcs = {
     'normal' : identity,
     'noise'  : noise,
     'off'    : off,
-    'on'     : on
+    'on'     : on,
+    'prop'   : proportional
 }
 
 def get_interf_funcs(value):
     if (type(value) is str):
         return states_funcs[value]
+    elif (type(value) is tuple and value[0] == 'prop'):
+        return lambda name, x: types[name_translations.get(name)](x*value[1])
     else:
         return lambda name, x: value
 

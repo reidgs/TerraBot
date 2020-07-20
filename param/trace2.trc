@@ -1,6 +1,0 @@
-BASELINE = smoist_up.bsl
-# Soil moisture starts out below 450; make sure it gets about 450, but not above 550
-WAIT smoist[0] < 450 FOR 300
-WAIT wpump FOR 300
-WAIT smoist[0] > 450 FOR 1000
-ENSURE smoist[0] <= 550 UNTIL 1-09:30:00
