@@ -4,7 +4,6 @@
   <Scalar> baseg { 0.1 }
   <Scalar> baseb { 0.1 }
   <Scalar> basea { 1.0 }
-  <Scalar> metallic { 0.5 } 
 }
 
   <Group> Rings {

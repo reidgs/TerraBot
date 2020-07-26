@@ -3,7 +3,7 @@
   <Scalar> baser { 0.9 }
   <Scalar> baseg { 0.9 }
   <Scalar> baseb { 0.9 }
-  <Scalar> basea { 0.1 }
+  <Scalar> basea { 0.18 }
 }
 
   <Group> Glass {

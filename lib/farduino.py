@@ -122,8 +122,7 @@ sensor_timing = { 'smoist' : [0.0, 1.0],
 def sense_smoist():
     #should be ~2 * soil water content?
     s_array = Int32MultiArray()
-    s_array.data = [int(env.params['soilwater'] * 2), \
-                    int(env.params['soilwater'] * 2)]
+    s_array.data = [int(env.params['soilwater'] * 2)] * 2
     publishers['smoist'].publish(s_array)
     
 def sense_cur():
@@ -133,8 +132,7 @@ def sense_cur():
 
 def sense_light():
     l_array = Int32MultiArray()
-    l_array.data = [int(env.light_level(env.tank_width / 2)), \
-                    int(env.light_level(env.tank_width / 2))]
+    l_array.data = [int(env.light_level(env.tank_width / 2))] * 2
     publishers['light'].publish(l_array)
     
 def sense_level():
@@ -142,15 +140,13 @@ def sense_level():
     
 def sense_temp():
     t_array = Int32MultiArray()
-    t_array.data = [int(env.params['temperature']), \
-                    int(env.params['temperature'])]
+    t_array.data = [int(env.params['temperature'])] * 2
     publishers['temp'].publish(t_array)
 
 def sense_humid():
     #Should be ~? * air water content ??
     h_array = Int32MultiArray()
-    h_array.data = [int(env.params['airwater'] ), \
-                    int(env.params['airwater'] )]
+    h_array.data = [int(env.params['airwater'] )] * 2
     publishers['humid'].publish(h_array)
               
 def sensor_forward_time(duration):
@@ -177,6 +173,9 @@ if args.baseline:
 
 env.init(bl)
 
+max_speedup_pump = 2
+max_speedup_fan = 15
+
 ## handle ROS init stuff
 
 rospy.set_param("use_sim_time", True)
@@ -195,8 +194,6 @@ def sim_loop():
     speedup = default_speedup                
     now = 0.0 #TODO change to baseline initial time? (Also: this is in seconds)
     clock_pub.publish(rospy.Time.from_sec(now)) #Publish initial time (I think this is unnecessary)
-    max_speedup_pump = 1
-    max_speedup_fan = 5
 
     time.sleep(1) #give a sec
      
@@ -219,50 +216,44 @@ def sim_loop():
         #move env forward (all at once, or speed times, tick interval each?)
         env.forward_time(tick_time * speedup)
         #rerender to the viewing window. Or, just have it done automatically by panda, and set framerate to 1 / tick_time.
-        if args.graphics:
-            renderer.update_env_params(env.params, speedup)
+        renderer.update_env_params(env.params, speedup, env.light_average())
     #Stop panda window?
     if args.graphics:
         renderer.userExit()
     
-if not args.graphics:
-    sim_loop()
-else:
-
-
     ##This will need to change to accomodate no graphics
     #Init graphics
        
-    renderer = Terrarium()
-    renderer.update_env_params(env.params, default_speedup)
+renderer = Terrarium(args.graphics) ## change to Terrarium(args.graphics) i think
+renderer.update_env_params(env.params, default_speedup, env.light_average())
 
-    def cam_cb(data):
-        global renderer
-        #print(data.data)
-        renderer.takeAndStorePic(data.data)
+def cam_cb(data):
+    global renderer
+    #print(data.data)
+    renderer.takeAndStorePic(data.data)
 
-    #Steup cam subscriber
-    subscribers['cam'] = rospy.Subscriber('cam_raw', 
-                                                 actuator_types['cam'],  
-                                                 cam_cb)
+#Steup cam subscriber
+subscribers['cam'] = rospy.Subscriber('cam_raw', 
+                                             actuator_types['cam'],  
+                                             cam_cb)
 
 
-    #Start sim loop THEN panda
+#Start sim loop THEN panda
 
-    import signal
-    def handler(signum, frame):
-        global thread, doloop
-        #print("HERE")
-        doloop = False
-        thread.join()
-        sys.exit()
-        
-    signal.signal(signal.SIGTERM, handler)
+import signal
+def handler(signum, frame):
+    global thread, doloop
+    #print("HERE")
+    doloop = False
+    thread.join()
+    sys.exit()
+    
+signal.signal(signal.SIGTERM, handler)
 
-    thread = threading.Thread(target=sim_loop)
-    thread.start()
+thread = threading.Thread(target=sim_loop)
+thread.start()
 
-    if True:
-        renderer.run()
+if True:
+    renderer.run()
     
     

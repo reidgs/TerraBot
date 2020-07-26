@@ -12,6 +12,10 @@ from panda3d.core import ClockObject
 from panda3d.core import AudioSound
 from panda3d.core import GraphicsEngine, Filename
 from sys import exit
+import random
+import plant
+import math
+from time import sleep
 
 
 # Importing math constants and functions
@@ -21,10 +25,16 @@ import atexit
 
 class Terrarium(ShowBase):
 
-    def __init__(self):
+    def __init__(self, shown):
         loadPrcFileData('', 'win-size 1024 768')
+        loadPrcFileData("", "window-type none")
+        
         ShowBase.__init__(self)
 
+        if shown:
+            self.openMainWindow(type = "onscreen")
+        else:
+            self.openMainWindow(type = "offscreen")
 
         base.disableMouse()  # Allow manual positioning of the camera
         #camera.setPosHpr(-20, 0, -3, -90, 12, 0) # Under
@@ -34,6 +44,7 @@ class Terrarium(ShowBase):
         
         self.pic = False
         self.loc = None
+        self.shown = shown
             
         atexit.register(self.userExit)
         self.BASE_TEXT = '''
@@ -61,7 +72,7 @@ class Terrarium(ShowBase):
         self.setupSensorCam()
         self.setTankWater(0)
         self.setBackgroundColor(.8, .8, .8, 1)
-
+        
         self.keys = {}
         for key in ['arrow_left', 'arrow_right', 'arrow_up', 'arrow_down',
                     'a', 'd', 'w', 's']:
@@ -70,8 +81,8 @@ class Terrarium(ShowBase):
             self.accept('shift-%s' % key, self.push_key, [key, 1])
             self.accept('%s-up' % key, self.push_key, [key, 0])
 
-        self.fanonSound = loader.loadSfx('sounds/fanon.mp3')
-        self.pumponSound = loader.loadSfx('sounds/pumpon.mp3')
+        self.fanonSound = loader.loadSfx('sounds/fanon.wav')
+        self.pumponSound = loader.loadSfx('sounds/pumpon.wav')
         self.fanonSound.setLoop(True)
         self.pumponSound.setLoop(True)
 
@@ -79,8 +90,11 @@ class Terrarium(ShowBase):
         self.heading = -90.0
         self.pitch = -12.0
         self.camera.setPos(-20, 0, 7)
+        
+        self.picNextFrame = False
 
         self.taskMgr.add(self.update, 'main loop')
+        self.lastTime = 0
         #self.taskMgr.add(self.spinCameraTask, "SpinCameraTask")
         #self.setWater(1200)
         #self.setLights(200)
@@ -103,6 +117,8 @@ class Terrarium(ShowBase):
         self.sensorCam.reparentTo(render)
         self.sensorCam.setPos(0, 5.56, 4.17)
         self.sensorCam.setHpr(180, -14.74, 0)
+        self.camBuffer.setClearColorActive(True)
+        self.camBuffer.setClearColor((.8, .8, .8, 1))
 
     def takeAndStorePic(self, location):
         #self.t_table.hide()
@@ -200,6 +216,40 @@ class Terrarium(ShowBase):
 
         self.t_camera = loader.loadModel('models/Camera')
         self.t_camera.reparentTo(self.terrarium)
+        
+        self.t_colorsBase = loader.loadModel('models/ColorsBase.egg')
+        self.t_colorsBase.reparentTo(self.terrarium)
+        self.t_colorsBase.setColor(.93, .93, .93, 1)
+        
+        self.t_colorsRed = loader.loadModel('models/ColorsRed.egg')
+        self.t_colorsRed.reparentTo(self.terrarium)
+        self.t_colorsRed.setColor(1, 0, 0, 1)
+        
+        self.t_colorsGreen = loader.loadModel('models/ColorsGreen.egg')
+        self.t_colorsGreen.reparentTo(self.terrarium)
+        self.t_colorsGreen.setColor(0, 1, 0, 1)
+        
+        self.t_colorsBlue = loader.loadModel('models/ColorsBlue.egg')
+        self.t_colorsBlue.reparentTo(self.terrarium)
+        self.t_colorsBlue.setColor(0, 0, 1, 1)
+        
+        self.t_colorsWhite = loader.loadModel('models/ColorsWhite.egg')
+        self.t_colorsWhite.reparentTo(self.terrarium)
+        self.t_colorsWhite.setColor(.88, .88, .88, 1)
+        
+        self.plants = [] # a list of (Plant)
+        self.plantsNode = render.attachNewNode('plants')
+        self.plantsNode.reparentTo(self.terrarium)
+        
+        for i, x in enumerate((-.56, -.185, .185, .56)):
+            for j, y in enumerate((-1.03, -.7, -.355, -.01, .34, .683, 1.03)):
+                node = render.attachNewNode('plant' + str(i) + str(j))
+                node.reparentTo(self.plantsNode)
+                node.setPos(x, y, 1.14)
+                node.setScale(.2)
+                self.plants += [plant.Plant(node)]
+                
+        self.reRenderPlants()
 
         
         '''self.marker = loader.loadModel('models/marker.egg')
@@ -278,24 +328,87 @@ class Terrarium(ShowBase):
         self.t_growmat.setColorScale(.7 + mult / 3, .7 + mult / 3, .7 + mult / 3, 1)
 
     def fansound(self, fan):
+        if not self.shown:
+            self.fanonSound.stop()
+            return
         if fan and self.fanonSound.status() == AudioSound.READY:
             self.fanonSound.play()
         if not fan and self.fanonSound.status() == AudioSound.PLAYING:
             self.fanonSound.stop()
 
     def pumpsound(self, pump):
+        if not self.shown:
+            self.pumponSound.stop()
+            return
         if pump and self.pumponSound.status() == AudioSound.READY:
             self.pumponSound.play()
         if not pump and self.pumponSound.status() == AudioSound.PLAYING:
             self.pumponSound.stop()
+            
+    def reRenderPlants(self):
+        for testPlant in self.plants:
+
+            #Clean the node
+            for child in testPlant.node.getChildren():
+                child.removeNode()
+            #Then remodel
+            baseStem = loader.loadModel("plantmodels/ThickStem.egg")
+            baseStem.reparentTo(testPlant.node)
+            stemFrac = testPlant.stem_height #/ plant.max_stem_length
+            baseStem.setScale(.5 + .5 * stemFrac, .5 + .5 * stemFrac, stemFrac )
+            testPlant.node.setHpr(testPlant.rotation)
+            sr, sg, sb = testPlant.stemColor
+            lr, lg, lb = testPlant.leafColor
+            #print("({}, {}, {})".format(r, g, b))
+            baseStem.setColor(sr, sg, sb, 1) 
+            #to model Leaf leafToModel on plant testPlant
+            for leafToModel in testPlant.leaves:
+                leaf = loader.loadModel("plantmodels/BabyLeaf.egg" if leafToModel.baby else "plantmodels/Leaf.egg")
+                leaf.reparentTo(testPlant.node)
+                leaf.setScale(leafToModel.size)
+                rotation = None
+                if leafToModel.start_position.x == 0:
+                    rotation = 90 if leafToModel.start_position.y > 0 else 270
+                else:
+                    rotation = 180 / math.pi * math.atan(leafToModel.start_position.y / leafToModel.start_position.x)
+                if(leafToModel.start_position.x < 0):
+                    rotation += 180
+                leaf.setHpr(rotation, 0, -leafToModel.angle)
+                leaf.setPos(leafToModel.start_position + LVector3(0, 0, stemFrac))
+                stem = loader.loadModel("plantmodels/ThinStem.egg")
+                stem.reparentTo(testPlant.node)
+                stem.setPos(0, 0, stemFrac)
+                leafStemLength= leafToModel.start_position.length() 
+                leafStemFrac = leafStemLength / plant.max_leafstem_length
+                stem.setScale(.8 * leafStemFrac, .8 * leafStemFrac, leafStemLength)
+                
+                #Annoying to have to get this, but here we go
+                bottom = math.sqrt(leafToModel.start_position.x ** 2 + leafToModel.start_position.y ** 2)
+                angle = 90 if bottom == 0 else 180 / math.pi * math.atan(leafToModel.start_position.z / bottom)
+                
+                stem.setHpr(rotation, 0, 90 - angle)
+
+                #testPlant.node.setColor(r, g, b, 1)
+                #stem.setColor(.8 * sr + .2 * lr, .8 * sg + .2 * lg / 2, .8 * sb + .2 * lb / 2, 1)
+                stem.setColor(lr, lg, lb, 1)
+                leaf.setColor(lr, lg, lb, 1)
 
 
-    def update_env_params(self, params, speedup):
+    def update_env_params(self, params, speedup, light):
         self.setWater(params['volume']) #Reservoir update
         self.setLights(params['led']) #LED update
         self.setFans(params['fan']) #Fan Update
         self.setTankWater(params['tankwater']) #Tankwater update
         self.setSoilColor(params['soilwater'])
+        
+        for plant in self.plants:
+            plant.grow(params, params['time'] - self.lastTime, light)
+        self.lastTime = params['time']
+        
+        if not self.shown: return
+        
+        self.reRenderPlants()
+        
         #Stats panel :
 
         self.textpanel.text = \
@@ -327,23 +440,30 @@ class Terrarium(ShowBase):
         self.keys[key] = value
 
     def update(self, task):
-        """Updates the camera based on the keyboard input."""
-        delta = globalClock.getDt() * 1.4
-        move_x = delta * 7 * -self.keys['a'] + delta * 3 * self.keys['d']
-        move_z = delta * 7 * self.keys['s'] + delta * 3 * -self.keys['w']
-        self.camera.setPos(self.camera, move_x, -move_z, 0)
-        self.heading += (delta * 30 * self.keys['arrow_left'] +
-                         delta * 30 * -self.keys['arrow_right'])
-        self.pitch += (delta * 30 * self.keys['arrow_up'] +
-                       delta * 30 * -self.keys['arrow_down'])
-        self.camera.setHpr(self.heading, self.pitch, 0)
-        
-        if(self.pic):
+        if self.shown:
+            """Updates the camera based on the keyboard input."""
+            delta = globalClock.getDt() * 1.4
+            move_x = delta * 7 * -self.keys['a'] + delta * 3 * self.keys['d']
+            move_z = delta * 7 * self.keys['s'] + delta * 3 * -self.keys['w']
+            self.camera.setPos(self.camera, move_x, -move_z, 0)
+            self.heading += (delta * 30 * self.keys['arrow_left'] +
+                             delta * 30 * -self.keys['arrow_right'])
+            self.pitch += (delta * 30 * self.keys['arrow_up'] +
+                           delta * 30 * -self.keys['arrow_down'])
+            self.camera.setHpr(self.heading, self.pitch, 0)
+            
+        if(self.picNextFrame):
             if self.loc == None:
                 print("No location specified")
             else:
                 self.camBuffer.saveScreenshot(Filename(self.loc))
+            self.picNextFrame = False
+        
+        if self.pic:
+            if not self.shown:
+                self.reRenderPlants()
             self.pic = False
+            self.picNextFrame = True
         
         #print(self.camera.getPos())
         #print(self.camera.getHpr())

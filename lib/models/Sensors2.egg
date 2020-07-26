@@ -1,18 +1,9 @@
 <CoordinateSystem> { Z-up } 
 <Material> Material.001 {
-  <Scalar> baser { 0.0 }
-  <Scalar> baseg { 0.0 }
-  <Scalar> baseb { 0.0 }
+  <Scalar> baser { 0.1 }
+  <Scalar> baseg { 0.1 }
+  <Scalar> baseb { 0.1 }
   <Scalar> basea { 1.0 }
-  <Scalar> emitr { 0.0 }
-  <Scalar> emitg { 0.0 }
-  <Scalar> emitb { 0.0 }
-  <Scalar> emita { 1.0 }
-  <Scalar> shininess { 0.5 }
-  <Scalar> roughness { 0.5 }
-  <Scalar> metallic { 0.7 }
-  <Scalar> ior { 1.4500000476837158 }
-  <Scalar> local { 0 }
 }
 
   <Group> Cube {
