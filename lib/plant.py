@@ -93,14 +93,14 @@ probably done now
 stem_rate = 2 / (.7 * 20 * day)     #cm/sec*health  takes 20 days to grow 2 cm in full light
 leaf_stem_rate = stem_rate * 8      #cm/sec*health  leaf stems grow ~8x faster than main (?)
 
-optimal_temperature = [0, 10000000] #[18, 25]      #degrees celcius the temps out of which health will decline
+optimal_temperature = [18, 25]      #degrees celcius the temps out of which health will decline
 temp_health_rate = .01 / 3600       #health/degree*second the rate at which health declines if outside of this range
                                     #or increases if inside it.
 
-optimal_soilwater = [0, 10000000] #[450 / 2, 700 / 2]      #ml " "
+optimal_soilwater = [450 / 2, 700 / 2]      #ml " "
 sw_health_rate = .1 / (100 * 3600)  #health/ml*second
 
-optimal_airwater = [0, 10000000] #[22, 45]         #ml " "
+optimal_airwater = [22, 45]         #ml " "
 aw_health_rate = .01 / (5 * day)  #health/ml*sec
 
 minimum_light = 250                 #Again, very ballpark. less light will be detrimental.
