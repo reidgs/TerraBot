@@ -390,7 +390,7 @@ class Terrarium(ShowBase):
 
                 #testPlant.node.setColor(r, g, b, 1)
                 #stem.setColor(.8 * sr + .2 * lr, .8 * sg + .2 * lg / 2, .8 * sb + .2 * lb / 2, 1)
-                stem.setColor(lr, lg, lb, 1)
+                stem.setColor(.5 * sr + .5 * lr, .5 * sg + .5 * lg, .5 * sb + .5 * lb, 1)
                 leaf.setColor(lr, lg, lb, 1)
 
 

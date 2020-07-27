@@ -123,7 +123,7 @@ def leaf_pair(baby, direction):
 
 healthyLeafGreen= [0, .35, .02]
 sicklyLeafGreen = [0, .6, 0]
-healthyStemGreen= [.705, .235, .313]
+healthyStemGreen= [102/255, 28/255, 64/255]
 sicklyStemGreen = [0, .6, 0]
 green_rate = .1 / (3 * day)
 deadColor = [97 / 255, 55 / 255, 10 / 255]
