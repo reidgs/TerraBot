@@ -2,6 +2,7 @@
 from random import random
 from math import sqrt, sin, cos, pi
 from panda3d.core import LVector3
+#from direct.showbase.ShowBase import 
 
 
 day = 3600 * 24
@@ -18,7 +19,7 @@ stem_growth_max = .8 * leaf_growth_max
 droop_rate = 20 / (100 * day) #20 degrees per day per 100ml below optimal
 class Leaf:
 
-    def __init__(self, baby):
+    def __init__(self, baby, showBase):
 
         
         self.baby = baby  #Is it a baby leaf?
@@ -34,6 +35,9 @@ class Leaf:
 
         self.current_leaf_growth = 0
         self.current_stem_growth = 0
+        
+        self.stemModel = showBase.loader.loadModel("plantmodels/ThinStem.egg")
+        self.leafModel = showBase.loader.loadModel("plantmodels/" + ("Baby" if baby else "") + "Leaf.egg")
 
     def grow_leaf(self, growth, soilwater, duration):
         self.current_leaf_growth += growth
@@ -100,7 +104,7 @@ temp_health_rate = .01 / 3600       #health/degree*second the rate at which heal
 optimal_soilwater = [450 / 2, 700 / 2]      #ml " "
 sw_health_rate = .1 / (100 * 3600)  #health/ml*second
 
-optimal_airwater = [22, 45]         #ml " "
+optimal_airwater = [0, 70]         #ml " "
 aw_health_rate = .01 / (5 * day)  #health/ml*sec
 
 minimum_light = 250                 #Again, very ballpark. less light will be detrimental.
@@ -112,11 +116,11 @@ light_health_down_rate = .005 / (100 * 3600)
                     #Split among the leaves. then each leaf dedicates more to the stem if low light
                     #Bigger leaves will get less growth than the newer/smaller ones, since they are good already
 
-def leaf_pair(baby, direction):
+def leaf_pair(baby, direction, showBase):
     x, y = direction
-    leaf1 = Leaf(baby)
+    leaf1 = Leaf(baby, showBase)
     leaf1.start_position = LVector3(x, y, random() * 3 + 2) * .001
-    leaf2 = Leaf(baby)
+    leaf2 = Leaf(baby, showBase)
     leaf2.start_position = LVector3(-x, -y, random() * 3 + 2) * .001
     return [leaf1, leaf2]
 
@@ -132,7 +136,7 @@ deathTime = 5 * day
 
 class Plant:
     #TODO when to die? maybe if go < .24 for too long or smth
-    def __init__(self, node):
+    def __init__(self, node, showBase):
         
         #Plant life parameters
         self.health = .65 + random() * .1  #a value [0, 1] where 1 is perfect health, .5 is ok, 0 is terrible.
@@ -148,6 +152,8 @@ class Plant:
         self.stemColor = [.6, .5, .2]
         self.leafColor = [0, .3, 0]
         self.colorScale = .6
+        self.showBase = showBase
+        self.stemModel = showBase.loader.loadModel("plantmodels/ThickStem.egg")
 
         self.stemColorWhenDied = None
         self.leafColorWhenDied = None
@@ -231,13 +237,13 @@ class Plant:
             self.leafColor[i] = healthyLeafGreen[i] * (self.colorScale) + (1 - self.colorScale) * sicklyLeafGreen[i]
 
         if self.cumulative_health > .7 * 1 * day and len(self.leaves) < 2:
-            self.leaves += leaf_pair(True, (1, 0))
+            self.leaves += leaf_pair(True, (1, 0), self.showBase)
         if self.cumulative_health > .7 * 6 * day and len(self.leaves) < 4 and light > minimum_light:
             angle = (68 + random() * 5) * pi / 180
-            self.leaves += leaf_pair(False, (cos(angle), sin(angle)))
+            self.leaves += leaf_pair(False, (cos(angle), sin(angle)), self.showBase)
         if self.cumulative_health > .7 * 17 * day and len(self.leaves) < 6 and light > minimum_light:
             angle = (124 + random() * 5) * pi / 180
-            self.leaves += leaf_pair(False, (cos(angle), sin(angle)))
+            self.leaves += leaf_pair(False, (cos(angle), sin(angle)), self.showBase)
 
         growth_per = growth_amount / (1 + sqrt(len(self.leaves)))
         #Grow the stem

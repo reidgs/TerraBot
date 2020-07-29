@@ -76,7 +76,7 @@ def generate_subscribers():
     rospy.Subscriber('speedup', Int32, speedup_cb)
     for name in actuator_names: 
         if name != 'cam':    
-            subscribers[name] = rospy.Subscriber(name + '_raw', 
+            subscribers[name] = rospy.Subscriber(name + '_input', 
                                              actuator_types[name],  
                                              actuator_cbs[name])
 
@@ -173,8 +173,8 @@ if args.baseline:
 
 env.init(bl)
 
-max_speedup_pump = 2
-max_speedup_fan = 15
+max_speedup_pump = 1
+max_speedup_fan = 100
 
 ## handle ROS init stuff
 

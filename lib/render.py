@@ -247,7 +247,7 @@ class Terrarium(ShowBase):
                 node.reparentTo(self.plantsNode)
                 node.setPos(x, y, 1.14)
                 node.setScale(.2)
-                self.plants += [plant.Plant(node)]
+                self.plants += [plant.Plant(node, self)]
                 
         self.reRenderPlants()
 
@@ -348,11 +348,13 @@ class Terrarium(ShowBase):
     def reRenderPlants(self):
         for testPlant in self.plants:
 
-            #Clean the node
-            for child in testPlant.node.getChildren():
-                child.removeNode()
+                #THIS IS THE OLD PARADIGM. no longer in use.
+            #Clean the node 
+            #for child in testPlant.node.getChildren():
+             #   child.removeNode()
+             
             #Then remodel
-            baseStem = loader.loadModel("plantmodels/ThickStem.egg")
+            baseStem = testPlant.stemModel
             baseStem.reparentTo(testPlant.node)
             stemFrac = testPlant.stem_height #/ plant.max_stem_length
             baseStem.setScale(.5 + .5 * stemFrac, .5 + .5 * stemFrac, stemFrac )
@@ -363,7 +365,7 @@ class Terrarium(ShowBase):
             baseStem.setColor(sr, sg, sb, 1) 
             #to model Leaf leafToModel on plant testPlant
             for leafToModel in testPlant.leaves:
-                leaf = loader.loadModel("plantmodels/BabyLeaf.egg" if leafToModel.baby else "plantmodels/Leaf.egg")
+                leaf = leafToModel.leafModel
                 leaf.reparentTo(testPlant.node)
                 leaf.setScale(leafToModel.size)
                 rotation = None
@@ -375,7 +377,7 @@ class Terrarium(ShowBase):
                     rotation += 180
                 leaf.setHpr(rotation, 0, -leafToModel.angle)
                 leaf.setPos(leafToModel.start_position + LVector3(0, 0, stemFrac))
-                stem = loader.loadModel("plantmodels/ThinStem.egg")
+                stem = leafToModel.stemModel
                 stem.reparentTo(testPlant.node)
                 stem.setPos(0, 0, stemFrac)
                 leafStemLength= leafToModel.start_position.length() 
