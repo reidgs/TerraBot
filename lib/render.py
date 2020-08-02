@@ -131,13 +131,13 @@ class Terrarium(ShowBase):
     def setupText(self):
         self.textpanel = OnscreenText(
             text=self.BASE_TEXT, parent=base.a2dTopLeft,
-            style=1, fg=(1, 1, 1, 1), pos=(0.06, -0.06),
+            style=1, font = loader.loadFont('courier.ttf'), fg=(1, 1, 1, 1), pos=(0.06, -0.06),
             align=TextNode.ALeft, scale=.05)
     
     def setupText2(self):
         self.textpanel2 = OnscreenText(
             text=self.BASE_TEXT2, parent=base.a2dTopRight,
-            style=1, fg=(1, 1, 1, 1), pos=(-0.06, -0.06),
+            style=1, font = loader.loadFont('courier.ttf'), fg=(1, 1, 1, 1), pos=(-0.06, -0.06),
             align=TextNode.ARight, scale=.05)
 
     def loadModels(self):
@@ -241,13 +241,21 @@ class Terrarium(ShowBase):
         self.plantsNode = render.attachNewNode('plants')
         self.plantsNode.reparentTo(self.terrarium)
         
-        for i, x in enumerate((-.56, -.185, .185, .56)):
+        for i, x in enumerate((-.56, .56)):
             for j, y in enumerate((-1.03, -.7, -.355, -.01, .34, .683, 1.03)):
-                node = render.attachNewNode('plant' + str(i) + str(j))
+                node = render.attachNewNode('lettuce' + str(i) + str(j))
+                node.reparentTo(self.plantsNode)
+                node.setPos(x, y, 1.14)
+                node.setScale(.3)
+                self.plants += [plant.Lettuce(node, self)]
+                
+        for i, x in enumerate((-.185, .185)):
+            for j, y in enumerate((-1.03, -.7, -.355, -.01, .34, .683, 1.03)):
+                node = render.attachNewNode('radish' + str(i) + str(j))
                 node.reparentTo(self.plantsNode)
                 node.setPos(x, y, 1.14)
                 node.setScale(.2)
-                self.plants += [plant.Plant(node, self)]
+                self.plants += [plant.Radish(node, self)]
                 
         self.reRenderPlants()
 
@@ -391,9 +399,11 @@ class Terrarium(ShowBase):
                 stem.setHpr(rotation, 0, 90 - angle)
 
                 #testPlant.node.setColor(r, g, b, 1)
+                rm, gm, bm = leafToModel.colorRands
                 #stem.setColor(.8 * sr + .2 * lr, .8 * sg + .2 * lg / 2, .8 * sb + .2 * lb / 2, 1)
-                stem.setColor(.5 * sr + .5 * lr, .5 * sg + .5 * lg, .5 * sb + .5 * lb, 1)
-                leaf.setColor(lr, lg, lb, 1)
+                stem.setColor(.5 * sr + .5 * lr + rm, .5 * sg + .5 * lg + gm, .5 * sb + .5 * lb, 1 + bm)
+                
+                leaf.setColor(lr + rm, lg + gm, lb + bm, 1)
 
 
     def update_env_params(self, params, speedup, light):
@@ -412,15 +422,20 @@ class Terrarium(ShowBase):
         self.reRenderPlants()
         
         #Stats panel :
+        healths = [p.health for p in self.plants]
+        avgH = sum(healths)/len(healths)
+        avgH = int(avgH * 100)
 
         self.textpanel.text = \
         '''
         Pump: {}
         Fans: {}
         LEDs: {}
+        
+        Plant Health: {}%
         '''.format('ON' if params['wpump'] else 'off', \
             'ON' if params['fan'] else 'off', \
-            params['led'])
+            params['led'], avgH)
 
         self.textpanel2.text = \
         '''

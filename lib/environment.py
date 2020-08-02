@@ -130,7 +130,7 @@ def tank_evaporation_rate():
 def exit_rate():
     #The rate at which water leaves the greenhouse via air
     #This should increase with airwater, and be _much_ larger with fan
-    base = (10 + .001 * (params['airwater'] - room_airwater)) / 400 if params['fan'] else (params['airwater'] - room_airwater) / 13000
+    base = (6 + .001 * (params['airwater'] - room_airwater)) / 400 if params['fan'] else (params['airwater'] - room_airwater) / 13000
     if params['temperature'] > room_temp:
         base *= (1 + (params['temperature'] - room_temp) / 80)
     return base
@@ -143,6 +143,10 @@ def get_cur():
 # Environment Runtime Functions
  
 def forward_water_cycle(duration):
+
+    if duration > 1 and params['wpump']:
+        duration = .5
+
     #Pump water if in reservoir and pump on, accounting for pipe lag
     if params['wpump']:
         vol = min(duration * flow_rate, params['volume'])
@@ -176,7 +180,9 @@ def forward_water_cycle(duration):
     params['tankwater'] -= vol
     params['airwater'] += vol
     #from air to outside the greenhouse
-    params['airwater'] = max(0.0, params['airwater'] - exit_rate() * duration)
+    params['airwater'] = min(max(0.0, params['airwater'] - exit_rate() * duration), 100)
+    
+    return duration
     
 def forward_temperature(duration):
     
@@ -190,12 +196,10 @@ def forward_temperature(duration):
 
 
 def forward_time(duration): #Here is where most of the env mutation takes place
-    
+    #to change volume, smoist, humidity, tankwater
+    duration = forward_water_cycle(duration)
     #actually move time
     params['time'] += duration #TODO I think weather will be handled here
-    #to change volume, smoist, humidity, tankwater
-    forward_water_cycle(duration)
-    #update plant health
     
     #Then also a growplants function (which probably just calls grow on each plant in params[plants])
     
@@ -205,6 +209,7 @@ def forward_time(duration): #Here is where most of the env mutation takes place
     params['energy'] += get_cur() * 12 / 1000 * duration
     #print(light_average())
     #ordering here is interesting
+    return duration
 
 def init(bl):
     #print("initializing with " + str(initialparams))

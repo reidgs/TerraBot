@@ -211,11 +211,12 @@ def sim_loop():
         clock_pub.publish(rospy.Time.from_sec(now + (tick_time * speedup)))
         
         #DO STUFF 
-        #move sensor time forward (speed times would be better but maybe too computational)
-        sensor_forward_time(tick_time * speedup)
         #move env forward (all at once, or speed times, tick interval each?)
-        env.forward_time(tick_time * speedup)
-        #rerender to the viewing window. Or, just have it done automatically by panda, and set framerate to 1 / tick_time.
+        duration = env.forward_time(tick_time * speedup)
+        #move sensor time forward (speed times would be better but maybe too computational)
+        sensor_forward_time(duration)
+        
+        #rerender to the viewing window. 
         renderer.update_env_params(env.params, speedup, env.light_average())
     #Stop panda window?
     if args.graphics:
