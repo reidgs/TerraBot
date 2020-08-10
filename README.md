@@ -186,10 +186,13 @@ this step may take a while.
 * TerraBot Simulator
 
 #### Running the Simulator ####
-In order to run the simulator, run the TerraBot with the simulator mode flag (-m sim), and optionally 1) the multiplier you wish for the speed (-s option); and 2) a file that copntains baseline (starting) values for the sensors, actuators, and the time which you would like the simulator to start at (seconds since midnight, day 0 of the simulated run).  
+In order to run the simulator, run the TerraBot with the simulator mode flag (-m sim), and optionally 1) if you wish to see a graphical representation of the terrarium (-g); 2) the multiplier you wish for the speed (-s <speedup>); and 3) a file that copntains baseline (starting) values for the sensors, actuators, and the time which you would like the simulator to start at (seconds since midnight, day 0 of the simulated run) (-b <baselinefile>).  
 
 For error checking it is recommended that you include the -l flag for logging, which will put a file for each topic into an automatically generated subdirectory of the Log directory.  
 >`./TerraBot.py -l -m sim`  
+
+##### Graphics #####
+The -g flag will prompt the showing of a graphical representation of the simulator. The graphics window contains a 3D model of the terrarium and the plants within, along with a text panel containing information about the current environment, i.e. whether the pump is on or off, humidity, etc. Sounds are played to represent the pump and fan. The arrow keys and WASD can be used to navigate the scene, and the viewport can be reset by pressing 'r'. The camera will take pictures directly from this scene, from the perspective of the blue camera model, as in the real terrarium. Note, however, that the camera <i>can</i> still be used even when the -g flag is not included, and the images produced will be equivalent to those taken with the graphics on.
 
 ##### Baseline File ####
 The simulator starts up with default values for the sensors, actuators, and clock.  You can create a 'baseline' file to specify different initial values. Specifically, you need to define "init_internals", "init_actutators", and "clock_start".
@@ -249,8 +252,6 @@ Note: Currently, each sensor is polled at the same frequency; We may implement s
 
 ##### Camera #####
 The camera is different from the rest of the sensors, as it is controlled directly by the Pi, and not by the Arduino. You can take a picture using the 'camera' topic; the single argument is the name of the file to store the JPEG image.  Note that, if you are using relative path name, the path is relative to the directory where you ran TerraBot, not to the directory you ran your agent.
-
-We are still working on incorporating the camera into the simulator - it will be available during the course of the semester.
 
 <!-- TODOCAN WE RENAME raspistill? It looks like rapist... -->
 
