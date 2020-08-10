@@ -4,7 +4,7 @@ from topic_def import sensor_names
 def tomsg(name, freq):
     if name not in sensor_names:
         print("invalid sensor name %s" % name)
-        exit()
+        return None
     return name + '|' + str(freq)
     
 #Takes a message, and gives the (name, freq) that made it

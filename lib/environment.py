@@ -37,7 +37,7 @@ from math import sqrt
 max_soilwater = 1000        #ml The level at which the soil is fully saturated and will begin to overflow
 flow_rate = 3.5             #ml/sec The rate at which the pump will pump water
 drip_rate = .1              #ml/sec The rate at which water drips from the pipe when the pump is off
-volume_rate = 18.0          #ml/mm in the reservoir (used for sensing level)
+volume_rate = 1000 / 45          #ml/mm in the reservoir (used for sensing level)
 light_diffuse = .7          #The percentage of sunlight that reaches the other side
 max_daylight = 588          #The sunlight right at the window at midday
 tank_width = .4             #m the width of the terrarium

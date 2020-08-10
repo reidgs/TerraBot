@@ -132,6 +132,7 @@ parser.add_argument('-w', '--width', default = 24,
 parser.add_argument('-l', '--log', help="log the sensor data to file")
 parser.add_argument('-r', '--replay', help="replay the sensor data from file")
 parser.add_argument('-s', '--sim', action = 'store_true', help="use simulator")
+parser.add_argument('-p', '--speedup', default = 1, help = 'replay playback speedup')
 args = parser.parse_args()
 plot_widthG = float(args.width) # in hours
 
@@ -186,7 +187,7 @@ if (replay_file):
         subplotsG[name].current = data
         if (not start_time): start_time = cur_time
         hours_since_start = (cur_time - start_time)/3600.0
-        if (update_plots(hours_since_start)): time.sleep(0.1)
+        if (update_plots(hours_since_start)): time.sleep(1 / float(args.speedup))
         handle_stdin()
 
     print("Done replaying")

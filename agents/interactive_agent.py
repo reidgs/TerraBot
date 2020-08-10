@@ -7,6 +7,7 @@ import limits
 from datetime import datetime
 sys.path.insert(0, os.getcwd()[:os.getcwd().find('TerraBot')]+'TerraBot/lib')
 from terrabot_utils import clock_time
+from freqmsg import tomsg
 
 class Sensors:
     time = 0
@@ -40,7 +41,7 @@ def init_sensors():
 ### Set up publishers, subscribers, and message handlers
 
 def init_ros ():
-    global led_pub, wpump_pub, fan_pub, ping_pub, camera_pub, speedup_pub, sensorsG
+    global led_pub, wpump_pub, fan_pub, ping_pub, camera_pub, speedup_pub, freq_pub, sensorsG
 
     if use_simulator: rospy.set_param("use_sim_time", True)
     rospy.init_node("interactive_agent", anonymous = True)
@@ -53,6 +54,7 @@ def init_ros ():
     ping_pub = rospy.Publisher("ping", Bool, latch = True, queue_size = 1)
     camera_pub = rospy.Publisher("camera", String, latch = True, queue_size = 1)
     speedup_pub = rospy.Publisher("speedup", Int32, latch = True, queue_size = 1)
+    freq_pub = rospy.Publisher("freq_input", String, latch=True, queue_size=1)
 
     rospy.Subscriber("smoist_output", Int32MultiArray,
                      moisture_reaction, sensorsG)
@@ -126,11 +128,17 @@ while not rospy.core.is_shutdown():
         elif input[0] == 'l':
             level = (0 if (input.find("off") > 0) else
                      255 if (input.find("on") > 0) else int(input[1:]))
-            print("Adjust light level to %d" %level)
+            print("Adjusting light level to %d" %level)
             led_pub.publish(level)
         elif input[0] == 'c':
             print("Taking a picture, storing in %s" %input[2:-1])
             camera_pub.publish(input[2:-1])
+        elif input[0] == 'r':
+            sensor, freq = input[2:-1].split(" ")
+            msg = tomsg(sensor, float(freq))
+            if msg is not None:
+                print("Updating {} to frequency {}".format(sensor, freq))
+                freq_pub.publish(msg)
         elif input[0] == 's':
             speedup_pub.publish(int(input[1:]))
         elif input[0] == 'v':
@@ -149,6 +157,6 @@ while not rospy.core.is_shutdown():
                     sensorsG.moisture_raw[1]))
             print("  Reservoir level: %.1f" %sensorsG.water_level)
         else:
-            print("Usage: q (quit)\n\tf [on|off] (fan on/off)\n\tp [on|off] (pump on/off)\n\tl [<level>|on|off] (led set to level ('on'=255; 'off'=0)\n\tc <file> (take a picture, store in 'file')\n\ts [<speedup>] (change current speedup)\n\tv (print sensor values)")
+            print("Usage: q (quit)\n\tf [on|off] (fan on/off)\n\tp [on|off] (pump on/off)\n\tl [<level>|on|off] (led set to level ('on'=255; 'off'=0)\n\tr <sensor> <frequency> (update sensor to frequency)\n\tc <file> (take a picture, store in 'file')\n\ts [<speedup>] (change current speedup)\n\tv (print sensor values)")
 
     rospy.sleep(1)
