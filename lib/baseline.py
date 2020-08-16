@@ -44,8 +44,10 @@ class Baseline:
                 elif key not in self.params.keys():
                     print("invalid parameter name: {}".format(key))
                     return
+                elif key == 'led':
+                    self.params[key] = int(float(val))
                 else:
-                    self.params[key] = int(val)
+                    self.params[key] = float(val)
     
     def __str__(self):
         return str(self.params)
