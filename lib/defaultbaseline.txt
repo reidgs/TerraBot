@@ -1,10 +1,19 @@
-#These are default values
-time = 0
-temperature = 20
+#These are the default values if not specified
+
+time = 0                    # [0, inf) seconds 
+#time = _-__:__:__          # day-hour:min:sec also works
+
+temperature = 20        
 humidity = 50
-smoist = 350
-wlevel = 10
+smoist = 400
+wlevel = 140
 tankwater = 0
-pump = off
+
+wpump = off
 fan = off
 led = 0
+
+
+leaf_droop = 0          # [0, 1]
+lankiness = 0           # [0, 1] (determines the lankiness of the plant) (only really matters if time is large enough) 
+plant_health = 1        # [0, 1] (does not affect growth prior to simulation start)

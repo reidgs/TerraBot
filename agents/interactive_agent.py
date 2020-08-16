@@ -102,6 +102,16 @@ def ping():
     print("PING! %s" %clock_time(sensorsG.time))
     last_ping = sensorsG.time
     ping_pub.publish(True)
+    
+def timeAt(sec):
+    day = 1 + sec / (3600 * 24)
+    sec %= (3600 * 24)
+    hr = sec / 3600
+    sec %= 3600
+    minute = sec / 60
+    sec %= 60
+    return "{}-{:0>2d}:{:0>2d}:{:0>2d}".format(int(day), int(hr), int(minute), int(sec))
+
 
 init_ros()
 init_sensors()
@@ -119,44 +129,49 @@ while not rospy.core.is_shutdown():
         input = sys.stdin.readline()
         if input[0] == 'q':
             quit()
-        elif input[0] == 'f':
-            print("Turning fans %s" %("on" if (input.find("on") > 0) else "off"))
-            fan_pub.publish(input.find("on") > 0)
-        elif input[0] == 'p':
-            print("Turning pump %s" %("on" if (input.find("on") > 0) else "off"))
-            wpump_pub.publish(input.find("on") > 0)
-        elif input[0] == 'l':
-            level = (0 if (input.find("off") > 0) else
-                     255 if (input.find("on") > 0) else int(input[1:]))
-            print("Adjusting light level to %d" %level)
-            led_pub.publish(level)
-        elif input[0] == 'c':
-            print("Taking a picture, storing in %s" %input[2:-1])
-            camera_pub.publish(input[2:-1])
-        elif input[0] == 'r':
-            sensor, freq = input[2:-1].split(" ")
-            msg = tomsg(sensor, float(freq))
-            if msg is not None:
-                print("Updating {} to frequency {}".format(sensor, freq))
-                freq_pub.publish(msg)
-        elif input[0] == 's':
-            speedup_pub.publish(int(input[1:]))
-        elif input[0] == 'v':
-            print("Sensor values at %s:" %clock_time(sensorsG.time))
-            print("  Light level: %.1f (%.1f, %.1f)"
-                  %(sensorsG.light_level, sensorsG.light_level_raw[0],
-                    sensorsG.light_level_raw[1]))
-            print("  Temperature: %.1f (%.1f, %.1f)"
-                  %(sensorsG.temperature, sensorsG.temperature_raw[0],
-                    sensorsG.temperature_raw[1]))
-            print("  Humidity: %.1f (%.1f, %.1f)"
-                  %(sensorsG.humidity, sensorsG.humidity_raw[0],
-                    sensorsG.humidity_raw[1]))
-            print("  Soil moisture: %.1f (%.1f, %.1f)"
-                  %(sensorsG.moisture, sensorsG.moisture_raw[0],
-                    sensorsG.moisture_raw[1]))
-            print("  Reservoir level: %.1f" %sensorsG.water_level)
         else:
-            print("Usage: q (quit)\n\tf [on|off] (fan on/off)\n\tp [on|off] (pump on/off)\n\tl [<level>|on|off] (led set to level ('on'=255; 'off'=0)\n\tr <sensor> <frequency> (update sensor to frequency)\n\tc <file> (take a picture, store in 'file')\n\ts [<speedup>] (change current speedup)\n\tv (print sensor values)")
+            try:
+                if input[0] == 'f':
+                    print("Turning fans %s" %("on" if (input.find("on") > 0) else "off"))
+                    fan_pub.publish(input.find("on") > 0)
+                elif input[0] == 'p':
+                    print("Turning pump %s" %("on" if (input.find("on") > 0) else "off"))
+                    wpump_pub.publish(input.find("on") > 0)
+                elif input[0] == 'l':
+                    level = (0 if (input.find("off") > 0) else
+                             255 if (input.find("on") > 0) else int(input[1:]))
+                    print("Adjusting light level to %d" %level)
+                    led_pub.publish(level)
+                elif input[0] == 'c':
+                    print("Taking a picture, storing in %s" %input[2:-1])
+                    camera_pub.publish(input[2:-1])
+                elif input[0] == 'r':
+                    sensor, freq = input[2:-1].split(" ")
+                    msg = tomsg(sensor, float(freq))
+                    if msg is not None:
+                        print("Updating {} to frequency {}".format(sensor, freq))
+                        freq_pub.publish(msg)
+                elif input[0] == 's':
+                    speedup_pub.publish(int(input[1:]))
+                elif input[0] == 'v':
+                    print("Sensor values at %s" % timeAt(int(sensorsG.time)))
+                    print("  Light level: %.1f (%.1f, %.1f)"
+                          %(sensorsG.light_level, sensorsG.light_level_raw[0],
+                            sensorsG.light_level_raw[1]))
+                    print("  Temperature: %.1f (%.1f, %.1f)"
+                          %(sensorsG.temperature, sensorsG.temperature_raw[0],
+                            sensorsG.temperature_raw[1]))
+                    print("  Humidity: %.1f (%.1f, %.1f)"
+                          %(sensorsG.humidity, sensorsG.humidity_raw[0],
+                            sensorsG.humidity_raw[1]))
+                    print("  Soil moisture: %.1f (%.1f, %.1f)"
+                          %(sensorsG.moisture, sensorsG.moisture_raw[0],
+                            sensorsG.moisture_raw[1]))
+                    print("  Reservoir level: %.1f" %sensorsG.water_level)
+                else:
+                    print("Usage: q (quit)\n\tf [on|off] (fan on/off)\n\tp [on|off] (pump on/off)\n\tl [<level>|on|off] (led set to level ('on'=255; 'off'=0)\n\tr [smoist|cur|light|level|temp|humid] [<frequency>] (update sensor to frequency)\n\tc <file> (take a picture, store in 'file')\n\ts [<speedup>] (change current speedup)\n\tv (print sensor values)")
+            except:
+                print("An error occurred and the action could not be executed")
+            
 
     rospy.sleep(1)

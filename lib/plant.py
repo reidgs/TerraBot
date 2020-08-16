@@ -2,13 +2,12 @@
 from random import random
 from math import sqrt, sin, cos, pi
 from panda3d.core import LVector3
-#from direct.showbase.ShowBase import 
 
 
 day = 3600 * 24
 
 #Constants
-max_leafstem_length = .9 #Not sure the units. this is linear though
+max_leafstem_length = .9 
 max_stem_length = 4 #cm
 max_leaf_size = .6 #unitless
 
@@ -24,12 +23,11 @@ class Leaf:
         
         self.baby = baby  #Is it a baby leaf?
         self.color = [0, .4, 0]  #All leaves have alpha = 1. this is [r, g, b]
-        self.start_position = LVector3(0, 0, 0)  #This is relative to the plant stem top
+        self.start_position = LVector3(0, 0, .01)  #This is relative to the plant stem top
         self.angleBase = 81 #This is the angle from the horizontal
         self.angleDelta = 0 #This goes from 0 to 60, and gets subtracted from the leaf angle to represent drooping
         self.angle = 81
         self.size = .05  #This is the size of the leaf. Unitless--it is the scale in panda. goes 0 -> 1
-        #self.tilt = this could be harder than I thought
         self.multiplier1 = .8 + random() * .4
         self.multiplier2 = .8 + random() * .4
 
@@ -57,20 +55,19 @@ class Leaf:
         
 
         self.angle = self.angleBase - self.angleDelta
+     
+    def setDroopFrac(self, frac):
+        self.angleDelta = 60 * frac
 
     def grow_stem(self, growth, lightfrac):
         growth *= self.multiplier2
         self.current_stem_growth += growth if self.current_stem_growth / stem_growth_max < lightfrac else 0
         frac = self.current_stem_growth / stem_growth_max
         if(frac > 1): frac = 1
-        self.start_position *= (max_leafstem_length * self.multiplier2 * frac / self.start_position.length())
+        self.start_position *= max(1, (max_leafstem_length * self.multiplier2 * frac / self.start_position.length()))
         
 
     def grow(self, health, growth_amount, lightfrac, soilwater, duration):
-        #if lf = 0 unlit, stem it up
-        #if lf = 1 lit and small leaf, leaf it up
-        #if lit and big leaf, give it up (do nothing)
-
         leaf_amount = .5 * growth_amount
         stem_amount = .5 * growth_amount
         '''
@@ -87,7 +84,7 @@ class LettuceLeaf:
         
         self.baby = baby  #Is it a baby leaf?
         self.color = [0, .4, 0]  #All leaves have alpha = 1. this is [r, g, b]
-        self.start_position = LVector3(0, 0, 0)  #This is relative to the plant stem top
+        self.start_position = LVector3(0, 0, .001)  #This is relative to the plant stem top
         self.angleBase = 81 #This is the angle from the horizontal
         self.angleDelta = 0 #This goes from 0 to 60, and gets subtracted from the leaf angle to represent drooping
         self.angle = 81
@@ -120,18 +117,16 @@ class LettuceLeaf:
         
 
         self.angle = self.angleBase - self.angleDelta - self.rotationRand
+    
+    def setDroopFrac(self, frac):
+        self.angleDelta = frac * 30
         
 
     def grow(self, health, growth_amount, lightfrac, soilwater, duration):
-        #if lf = 0 unlit, stem it up
-        #if lf = 1 lit and small leaf, leaf it up
-        #if lit and big leaf, give it up (do nothing)
 
         self.grow_leaf(growth_amount / 1.7, soilwater, duration) #The / 1.7 is probably to account for not needing to grow stem
 
 
-
-#Constants TODO these are VERY ballpark, TODO maybe tax brackets
 
 stem_rate = 2 / (.7 * 20 * day)     #cm/sec*health  takes 20 days to grow 2 cm in full light
 leaf_stem_rate = stem_rate * 8      #cm/sec*health  leaf stems grow ~8x faster than main (?)
@@ -180,13 +175,12 @@ def lettuce_leaf_pair(baby, direction, showBase):
 sicklyLeafGreen = [0, .6, 0]
 sicklyStemGreen = [0, .6, 0]
 green_rate = .1 / (3 * day)
-deadColor = [97 / 255, 55 / 255, 10 / 255]
+deadColor = [97.0 / 255, 55.0 / 255, 10.0 / 255]
 howLongBelow2 = 6 * day
-deathTime = 5 * day
+deathTime = 3.5 * day
 
 class Plant(object):
-    #TODO when to die? maybe if go < .24 for too long or smth
-    def __init__(self, node, showBase):
+    def __init__(self, node, age, droop, lankiness, plant_health, showBase):
         
         #Plant life parameters
         self.health = .65 + random() * .1  #a value [0, 1] where 1 is perfect health, .5 is ok, 0 is terrible.
@@ -209,9 +203,37 @@ class Plant(object):
 
         self.stemColorWhenDied = None
         self.leafColorWhenDied = None
+        
+        
+        
+        iterations = 500
+        gro = age / iterations
+        temp = { 'time' : 0,
+
+             'soilwater' : 350,
+             'airwater' : 25,
+             'temperature' : 20,
+             
+             'volume' : 3000.0,
+             'tankwater' : 0.0,
+             'pipewater' : 0.0,
+             'energy' : 0,
+             
+             'led' : 0,
+             'wpump' : False,
+             'fan' : False}
+        for i in range(iterations):
+            
+            self.grow(temp, gro, minimum_light + 100)
+            
+        for leaf in self.leaves:
+            leaf.setDroopFrac(droop)
+            
+            
+        
+        self.health = min(1, plant_health + .005)
+        
     def change_health(self, amount):
-        #change health sort of sigmoidally (towards 1, at least. to 0, probably just put to 0.)
-        #ORR for now, hehe
         self.health += amount
         if self.health > 1: self.health = 1
         if self.health < .1: self.health = .1
@@ -222,7 +244,7 @@ class Plant(object):
         if self.cumulative_health > .7 * 6 * day and len(self.leaves) < 4 and light > minimum_light:
             angle = (68 + random() * 5) * pi / 180
             self.leaves += leaf_pair(False, (cos(angle), sin(angle)), self.showBase)
-        if self.cumulative_health > .7 * 17 * day and len(self.leaves) < 6 and light > minimum_light:
+        if self.cumulative_health > .7 * 17 * day and len(self.leaves) < 6 and light > minimum_light * .5:
             angle = (124 + random() * 5) * pi / 180
             self.leaves += leaf_pair(False, (cos(angle), sin(angle)), self.showBase)
 
@@ -303,7 +325,6 @@ class Plant(object):
         if lightfrac < 1:
             self.colorScale = max(0, self.colorScale - green_rate * duration)
         else:
-            #print(self.colorScale, self.colorScale + green_rate * duration)
             self.colorScale = min(1, self.colorScale + green_rate * duration)
         #color scale goes up if enough light, down if not
         for i in [0, 1, 2]:
@@ -317,16 +338,26 @@ class Plant(object):
         
     
 class Radish(Plant):
-    def __init__(self, node, showbase):
-        super(Radish, self).__init__(node, showbase)
+    def __init__(self, node, age, droop, lank, h, showbase):
+        super(Radish, self).__init__(node, age, droop, lank, h, showbase)
         self.healthyLeafGreen = [0, .35, .02]
         self.healthyStemGreen = [102/255, 28/255, 64/255]
+        #6 lank > 0, 4 if lank > .3, 2 if lank > .6
+        self.leaves = self.leaves[:6 - 2 * min(2, int(lank / .3))]
+        self.colorScale = 1 - lank
+        self.stem_height *= (1 + 4 * lank)
+        for leaf in self.leaves:
+            leaf.start_position *= (1 + 1 * lank)
 
 class Lettuce(Plant):
-    def __init__(self, node, showbase):
-        super(Lettuce, self).__init__(node, showbase)
+    def __init__(self, node, age, droop, lank, h, showbase):
+        super(Lettuce, self).__init__(node, age, droop, lank, h, showbase)
         self.healthyLeafGreen = [0, .35, .02]
         self.healthyStemGreen = [0, .35, .02]
+        #6 lank > 0, 5 if lank > .15, 4 if lank > .3, ... 2
+        self.leaves = self.leaves[:6 - min(4, int(lank / .15))]
+        self.colorScale = 1 - lank
+        self.stem_height *= (1 + 5 * lank)
 
     def growAmount(self, growth_amount, light, lightfrac, env_params, duration):
         growth_per = growth_amount / (1 + sqrt(len(self.leaves)))
@@ -343,15 +374,15 @@ class Lettuce(Plant):
     def newLeafCheck(self, light):
         if self.cumulative_health > .7 * 1 * day and len(self.leaves) < 2:
             self.leaves += lettuce_leaf_pair(True, (1, 0), self.showBase)
-        if self.cumulative_health > .7 * 3 * day and len(self.leaves) < 3 and light > minimum_light:
+        if self.cumulative_health > .7 * 3 * day and len(self.leaves) < 3 and light > minimum_light * .1:
             angle = (68 + random() * 5) * pi / 180
             self.leaves += lettuce_leaf_single(False, (cos(angle), sin(angle)), self.showBase)
-        if self.cumulative_health > .7 * 6 * day and len(self.leaves) < 4 and light > minimum_light:
+        if self.cumulative_health > .7 * 6 * day and len(self.leaves) < 4 and light > minimum_light * .3:
             angle = (68 + random() * 5) * pi / 180
             self.leaves += lettuce_leaf_single(False, (-cos(angle), -sin(angle)), self.showBase)
-        if self.cumulative_health > .7 * 10 * day and len(self.leaves) < 5 and light > minimum_light:
+        if self.cumulative_health > .7 * 10 * day and len(self.leaves) < 5 and light > minimum_light * .5:
             angle = (124 + random() * 5) * pi / 180
             self.leaves += lettuce_leaf_single(False, (cos(angle), sin(angle)), self.showBase)
-        if self.cumulative_health > .7 * 13 * day and len(self.leaves) < 6 and light > minimum_light:
+        if self.cumulative_health > .7 * 13 * day and len(self.leaves) < 6 and light > minimum_light * .7:
             angle = (124 + random() * 5) * pi / 180
             self.leaves += lettuce_leaf_single(False, (-cos(angle), -sin(angle)), self.showBase)

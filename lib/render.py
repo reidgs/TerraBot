@@ -25,7 +25,7 @@ import atexit
 
 class Terrarium(ShowBase):
 
-    def __init__(self, shown):
+    def __init__(self, shown, initTime, leafDroop, lankiness, plant_health):
         loadPrcFileData('', 'win-size 1024 768')
         loadPrcFileData("", "window-type none")
         
@@ -38,7 +38,6 @@ class Terrarium(ShowBase):
 
         base.disableMouse()  # Allow manual positioning of the camera
         #camera.setPosHpr(-20, 0, -3, -90, 12, 0) # Under
-        #.setAspectRatio for clearer images?
         camera.setPosHpr(-20, 0, 7, -90, -12, 0) # Normal
         #camera.setPosHpr(0, 0, 30, 0, -90, 0) #TOP
         
@@ -60,13 +59,18 @@ class Terrarium(ShowBase):
         Volume : 3000 ml
         Current Speedup : 1x
         '''
+        
+        self.lastTime = initTime
+        self.droop = leafDroop
+        self.lankiness = lankiness
+        self.plant_health = plant_health
 
 
         #self.accept('escape', self.userExit)
         self.accept('r', self.resetCam)
 
-        self.loadModels()  # Load and position our models
-        self.setupLights()  # Add some basic lighting
+        self.loadModels()  
+        self.setupLights() 
         self.setupText() 
         self.setupText2()
         self.setupSensorCam()
@@ -94,10 +98,7 @@ class Terrarium(ShowBase):
         self.picNextFrame = False
 
         self.taskMgr.add(self.update, 'main loop')
-        self.lastTime = 0
-        #self.taskMgr.add(self.spinCameraTask, "SpinCameraTask")
-        #self.setWater(1200)
-        #self.setLights(200)
+
 
     def resetCam(self):
         camera.setPosHpr(-20, 0, 7, -90, -12, 0)
@@ -105,15 +106,16 @@ class Terrarium(ShowBase):
         self.pitch = -12.0
 
     def setupSensorCam(self):
-        #for now, just use the same size as the main window
+        #use the same size as the main window
         xsize, ysize = self.getSize()
         #TESTING purposes
         #self.accept("space", self.takeAndStorePic, ["test.png"])
+        
         #Create the camera's buffer : GraphicsOutput
         self.camBuffer = GraphicsEngine.makeParasite(self.graphicsEngine, host=self.win, name="camera", sort=0, x_size = xsize, y_size = ysize)
-        #Create the camera
+
         self.sensorCam = self.makeCamera(self.camBuffer, camName="sensorCam")
-        #Put the camera in position (Screw around with this till it's right)
+        
         self.sensorCam.reparentTo(render)
         self.sensorCam.setPos(0, 5.56, 4.17)
         self.sensorCam.setHpr(180, -14.74, 0)
@@ -121,12 +123,8 @@ class Terrarium(ShowBase):
         self.camBuffer.setClearColor((.8, .8, .8, 1))
 
     def takeAndStorePic(self, location):
-        #self.t_table.hide()
-        #print(Filename(location))
         self.pic = True
         self.loc = location
-        #self.camBuffer.saveScreenshot(Filename(location))
-        #self.t_table.show()
 
     def setupText(self):
         self.textpanel = OnscreenText(
@@ -155,7 +153,6 @@ class Terrarium(ShowBase):
         self.t_table = loader.loadModel('models/Table.egg')
         self.t_table.reparentTo(self.terrarium)
         self.t_table.setTransparency(True)
-        #self.t_table.setTwoSided(True)
 
         self.t_glass = loader.loadModel('models/Glass.egg')
         self.t_glass.reparentTo(self.terrarium)
@@ -237,7 +234,7 @@ class Terrarium(ShowBase):
         self.t_colorsWhite.reparentTo(self.terrarium)
         self.t_colorsWhite.setColor(.88, .88, .88, 1)
         
-        self.plants = [] # a list of (Plant)
+        self.plants = []
         self.plantsNode = render.attachNewNode('plants')
         self.plantsNode.reparentTo(self.terrarium)
         
@@ -247,7 +244,7 @@ class Terrarium(ShowBase):
                 node.reparentTo(self.plantsNode)
                 node.setPos(x, y, 1.14)
                 node.setScale(.3)
-                self.plants += [plant.Lettuce(node, self)]
+                self.plants += [plant.Lettuce(node, self.lastTime, self.droop, self.lankiness, self.plant_health, self)]
                 
         for i, x in enumerate((-.185, .185)):
             for j, y in enumerate((-1.03, -.7, -.355, -.01, .34, .683, 1.03)):
@@ -255,16 +252,10 @@ class Terrarium(ShowBase):
                 node.reparentTo(self.plantsNode)
                 node.setPos(x, y, 1.14)
                 node.setScale(.2)
-                self.plants += [plant.Radish(node, self)]
+                self.plants += [plant.Radish(node, self.lastTime, self.droop, self.lankiness, self.plant_health, self)]
                 
         self.reRenderPlants()
 
-        
-        '''self.marker = loader.loadModel('models/marker.egg')
-        self.marker.reparentTo(self.terrarium)
-        self.marker.setScale(.05)
-        self.marker.setPos(.5, 1, 1.9)'''
-        
 
     # Panda Lighting
     def setupLights(self):
@@ -273,15 +264,11 @@ class Terrarium(ShowBase):
         ambientLight.setColor((.8, .8, .8, 1))
         render.setLight(render.attachNewNode(ambientLight))
 
-        # Explicitly set the environment to not be lit
-        #self.env.setLightOff()
-
         lightPositions = [(.5, 1, 1.8), (-.5, 1, 1.8), (.5, 0, 1.8), \
                           (-.5, 0, 1.8), (.5, -1, 1.8), (-.5, -1, 1.8)]
         self.lights = [PointLight('Light{}'.format(i)) for i in range(6)]
         for i, l in enumerate(self.lights):
-            #Initial light values TODO Attenuation?
-            l.setColor((0, 0, 0, 1)) # Start off
+            l.setColor((0, 0, 0, 1))
             pln = render.attachNewNode(l)
             pln.reparentTo(self.terrarium)
             pln.setPos(lightPositions[i])
@@ -305,7 +292,7 @@ class Terrarium(ShowBase):
         if(volume < .5):
             self.t_reservoirWater.hide()
             return
-        self.t_reservoirWater.setScale(1, 1, volume / (170 * 18)) # This is (max_waterlevel * volume_rate)
+        self.t_reservoirWater.setScale(1, 1, float(volume) / (170 * 18)) # This is (max_waterlevel * volume_rate)
 
     def setTankWater(self, volume):
         if(volume < .5):
@@ -356,20 +343,14 @@ class Terrarium(ShowBase):
     def reRenderPlants(self):
         for testPlant in self.plants:
 
-                #THIS IS THE OLD PARADIGM. no longer in use.
-            #Clean the node 
-            #for child in testPlant.node.getChildren():
-             #   child.removeNode()
-             
-            #Then remodel
+    
             baseStem = testPlant.stemModel
             baseStem.reparentTo(testPlant.node)
-            stemFrac = testPlant.stem_height #/ plant.max_stem_length
+            stemFrac = testPlant.stem_height 
             baseStem.setScale(.5 + .5 * stemFrac, .5 + .5 * stemFrac, stemFrac )
             testPlant.node.setHpr(testPlant.rotation)
             sr, sg, sb = testPlant.stemColor
             lr, lg, lb = testPlant.leafColor
-            #print("({}, {}, {})".format(r, g, b))
             baseStem.setColor(sr, sg, sb, 1) 
             #to model Leaf leafToModel on plant testPlant
             for leafToModel in testPlant.leaves:
@@ -481,8 +462,5 @@ class Terrarium(ShowBase):
                 self.reRenderPlants()
             self.pic = False
             self.picNextFrame = True
-        
-        #print(self.camera.getPos())
-        #print(self.camera.getHpr())
         return task.cont
     

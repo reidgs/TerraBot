@@ -54,7 +54,6 @@ fan_current = .06           #
 #Environment Parameters
 params = { 'time' : 0,
 
-             'plants' : [],
              'soilwater' : 350,
              'airwater' : room_airwater,
              'temperature' : room_temp,

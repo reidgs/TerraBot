@@ -1,16 +1,8 @@
 #!/usr/bin/env python
 
-### Unplaced TODO list:
-#implement max speedup
-#everything Baseline: {plant options: HEALTHY, DEAD, SOSO; time}: 
-#Add logging support
-#Consider other command line args
-
-
-
+#David Buffkin
 
 ### Import used files
-#TODO: figure out which of these I actually need, these are copied from the other one
 import rospy
 from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray
 from topic_def import *
@@ -32,7 +24,7 @@ import sys
 ### Parse arguments
 
 parser = argparse.ArgumentParser(description='simulation parser for Autonomous Systems')
-parser.add_argument('--baseline', type = str, default = None, nargs = "?") #Use type=file instead?
+parser.add_argument('--baseline', type = str, default = None, nargs = "?")
 parser.add_argument('--speedup', type = float, default = 1, nargs = "?")
 parser.add_argument('--graphics', default = False, action = 'store_true')
 parser.add_argument('-l', '--log', action = 'store_true')
@@ -56,7 +48,10 @@ clock_pub = None
 def freq_cb(data):
     #Parse and update sensor frequency
     name, freq = frommsg(data.data)
-    sensor_timing[name][1] = freq
+    if freq == 0:
+        sensor_timing[name][1] = 99999999
+    else:
+        sensor_timing[name][1] = 1 / freq
     
     
 def speedup_cb(data):
@@ -76,7 +71,7 @@ def generate_subscribers():
     rospy.Subscriber('speedup', Int32, speedup_cb)
     for name in actuator_names: 
         if name != 'cam':    
-            subscribers[name] = rospy.Subscriber(name + '_input', 
+            subscribers[name] = rospy.Subscriber(name + '_raw', 
                                              actuator_types[name],  
                                              actuator_cbs[name])
 
@@ -90,25 +85,9 @@ def generate_publishers():
                                            latch = True, queue_size = 100)
     
 
-
-### GRAPHICS ###
-
-#create the app(ShowBase)
-
-#task to rerender every frame, limit framerate to 1/tick_time or whatever
-
-#Things to take into account when rendering:  
-# light, tankwater, soil should be darker the more moist,
-# Led should show as on/off, same for wpump, fan
-# volume in reservoir
-#Plants will be necessary later
-
-
-
 ### SENSORS ###
 
 # The first element is the current time till resensing, and the second is the chosen frequency
-#TODO: Use better default values
 sensor_timing = { 'smoist' : [0.0, 1.0],
                   'cur' : [0.0, 1.0],
                   'light' : [0.0, 1.0],
@@ -144,7 +123,6 @@ def sense_temp():
     publishers['temp'].publish(t_array)
 
 def sense_humid():
-    #Should be ~? * air water content ??
     h_array = Int32MultiArray()
     h_array.data = [int(env.params['airwater'] )] * 2
     publishers['humid'].publish(h_array)
@@ -190,14 +168,15 @@ doloop = True
 
 def sim_loop():   
     global doloop   
-    tick_time = .2  # This is how long between runs of the below loop in seconds
+    tick_time = .25  # This is how long between runs of the below loop in seconds
     speedup = default_speedup                
-    now = 0.0 #TODO change to baseline initial time? (Also: this is in seconds)
+    now = 0
+    if bl is not None:
+        now = bl.params['time']
     clock_pub.publish(rospy.Time.from_sec(now)) #Publish initial time (I think this is unnecessary)
 
     time.sleep(1) #give a sec
      
-    ## Loop TODO should wait for an agent before running?
 
     while not rospy.core.is_shutdown() and doloop:
         
@@ -211,26 +190,35 @@ def sim_loop():
         clock_pub.publish(rospy.Time.from_sec(now + (tick_time * speedup)))
         
         #DO STUFF 
-        #move env forward (all at once, or speed times, tick interval each?)
+        #move env forward
         duration = env.forward_time(tick_time * speedup)
-        #move sensor time forward (speed times would be better but maybe too computational)
+        #move sensor time forward
         sensor_forward_time(duration)
         
-        #rerender to the viewing window. 
+        #rerender to the viewing window
         renderer.update_env_params(env.params, speedup, env.light_average())
-    #Stop panda window?
+    #Stop panda window
     if args.graphics:
         renderer.userExit()
     
-    ##This will need to change to accomodate no graphics
-    #Init graphics
-       
-renderer = Terrarium(args.graphics) ## change to Terrarium(args.graphics) i think
+    
+#Init graphics
+    
+droop = 0
+lankiness = 0
+plant_health = 0
+age = 0
+if bl is not None:
+    age = bl.params['time'] 
+    droop = bl.params['leaf_droop']
+    lankiness = bl.params['lankiness']
+    plant_health = bl.params['plant_health']
+    
+renderer = Terrarium(args.graphics, age, droop, lankiness, plant_health)
 renderer.update_env_params(env.params, default_speedup, env.light_average())
 
 def cam_cb(data):
     global renderer
-    #print(data.data)
     renderer.takeAndStorePic(data.data)
 
 #Steup cam subscriber
@@ -244,7 +232,6 @@ subscribers['cam'] = rospy.Subscriber('cam_raw',
 import signal
 def handler(signum, frame):
     global thread, doloop
-    #print("HERE")
     doloop = False
     thread.join()
     sys.exit()
@@ -254,7 +241,7 @@ signal.signal(signal.SIGTERM, handler)
 thread = threading.Thread(target=sim_loop)
 thread.start()
 
-if True:
-    renderer.run()
+renderer.run()
     
+# :)
     
