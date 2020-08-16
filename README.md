@@ -42,20 +42,21 @@ be prepared!
 
 Each greenhouse contains two light, moisture, temperature, and humidity sensors, one water-level sensor, one current sensor, and one camera. For the redundant sensors, data values are contained in arrays, where index 0 contains the sensor reading of the first sensor and index 1 contains the sensor reading of the second sensor.  For the current sensor, the first index is the current, the second is the energy usage, to date.
 
-| Name (topic name)            | Description                                                 | Message Type | Range      |
-| ---------------------------- | ----------------------------------------------------------- | ------------ | ---------- |
-| **_Sensors_**                |**_Use these to determine the system's state_**              |  **_—_**     |  **_—_** |
-| Current (cur)                | The current draw (index 0) and total energy usage (index 1) | Float32Array |            |
-| Light (light)                | Light intesnity in the system                               | Int32Array   | 0-600      |
-| Water level (level)          | Height of the water in the reservoir (in mm)                | Float32      | 3300=15cm  |
-| Temperature (temp)           | Internal temperature of the system                          | Int32Array   | in Celcius |
-| Soil Moisture (smoist)       | The moisture of the pad  (higher is drier)                  | Int32Array   | 280-600    |
-| Humidity (humid)             | Internal relative humidity  (%)                             | Int32Array   |  0-100     |
-| Camera                       | Captures a photograph of stystem's state                    |   —          |   —        |
-| **_Actuators_**              |**_Use these to adjust the system's state_**                 | **_—_**      |  **_—_**   |
-| LED (led)                    | Adjust the power of the system's LED light fixture          | Int32        | 0-255      |
-| Water Pump (wpump)           | Toggle whether the water pump is on or off                  | Bool         | True-False |
-| Fan (fan)                    | Toggle whether the fan is on or off                         | Bool         | True-False |
+| Name (topic name)            | Description                                                 | Message Type      | Range      |
+| ---------------------------- | ----------------------------------------------------------- | ----------------- | ---------- |
+| **_Sensors_**                |**_Use these to determine the system's state_**              |  **_—_**          |  **_—_**   |
+| Current (cur)                | The current draw (index 0) and total energy usage (index 1) | Float32Array      |            |
+| Light (light)                | Light intesnity in the system                               | Int32Array        | 0-600      |
+| Water level (level)          | Height of the water in the reservoir (in mm)                | Float32           | 3300=15cm  |
+| Temperature (temp)           | Internal temperature of the system                          | Int32Array        | in Celcius |
+| Soil Moisture (smoist)       | The moisture of the pad  (higher is drier)                  | Int32Array        | 280-600    |
+| Humidity (humid)             | Internal relative humidity  (%)                             | Int32Array        |  0-100     |
+| Camera                       | Captures a photograph of stystem's state                    |   —               |   —        |
+| **_Actuators_**              |**_Use these to adjust the system's state_**                 | **_—_**           |  **_—_**   |
+| LED (led)                    | Adjust the power of the system's LED light fixture          | Int32             | 0-255      |
+| Water Pump (wpump)           | Toggle whether the water pump is on or off                  | Bool              | True-False |
+| Fan (fan)                    | Toggle whether the fan is on or off                         | Bool              | True-False |
+| Frequency (freq)             | Adjust the sensing frequency of a specific sensor           | See lib/frqmsg.py |  —         |
 
 Note: The water pump pumps 1cm depth of water (~.93cups) per minute.
 
@@ -111,8 +112,9 @@ The following command line arguments are avaiable when running TerraBot.py:
     -m (--mode) serial | sim | grade: mode to run in (default is serial)
     -a (--agent) <python file>: Your agent file (if "none" - the default  - the agent node must be run externally)
     -i (--interference) <text file>: Set of instructions for when to manipulate sensor and actuator values
-    -s (--speedup) <value>: increase simulated time (only in sim mode; automatically decreases speedup when actuators are on)
+    -s (--speedup) <value>: Increase simulated time (only in sim mode; automatically decreases speedup when actuators are on)
     -b (--baseline) <text file>: Initial clock time, sensor, and actuator values (only in sim mode)
+    -g (--graphics): Show graphical representation of simulation (only in sim mode)
     -t (--tracefile) <text file>: Set of instructions that describe expected behavior (only in grade mode)
     -T (--tracedir) <directory name>: Directory containing trace files (only in grade mode)
 
@@ -192,31 +194,25 @@ For error checking it is recommended that you include the -l flag for logging, w
 >`./TerraBot.py -l -m sim`  
 
 ##### Graphics #####
-The -g flag will prompt the showing of a graphical representation of the simulator. The graphics window contains a 3D model of the terrarium and the plants within, along with a text panel containing information about the current environment, i.e. whether the pump is on or off, humidity, etc. Sounds are played to represent the pump and fan. The arrow keys and WASD can be used to navigate the scene, and the viewport can be reset by pressing 'r'. The camera will take pictures directly from this scene, from the perspective of the blue camera model, as in the real terrarium. Note, however, that the camera <i>can</i> still be used even when the -g flag is not included, and the images produced will be equivalent to those taken with the graphics on.
+The -g flag will prompt the showing of a graphical representation of the simulation. The graphics window contains a 3D model of the terrarium and the plants within, along with a text panel containing information about the current environment, i.e. whether the pump is on or off, humidity, etc. Sounds are played to represent the pump and fan. The arrow keys and WASD can be used to navigate the scene, and the viewport can be reset by pressing 'r'. The camera will take pictures directly from this scene, from the perspective of the blue camera model, as in the real terrarium. Note, however, that the camera <i>can still be used</i> even when the -g flag is not included, and the images produced will be equivalent to those taken with the graphics on.
 
 ##### Baseline File ####
-The simulator starts up with default values for the sensors, actuators, and clock.  You can create a 'baseline' file to specify different initial values. Specifically, you need to define "init_internals", "init_actutators", and "clock_start".
+The simulator starts up with default values for the sensors, actuators, and clock.  You can create a 'baseline' text file to specify different initial values. To see the format in action, look in lib/default_baseline.txt. To specify a value, add a line in the format "name = value", optionally appending a comment (any characters after a "#" are ignored).
 
-init_internals is a dictionary for the initial values of all the sensors.  For light, temperature (in Celcius), humidity, and smoist (soil moisture), the dictionary entries should be an array of two elements, one for each sensor.  For current, the entry is an array of two elements, one for the initial current reading and the second element is the cumulative energy usage.  The volume sensor (water level) is a single float (in milliliters).  Refer to the table at the beginning of this document for the range of allowable values.  For example:
-> init_internals = {<br>
->     'light' : \[100, 100],<br>
->     'temperature' : \[20, 18],<br>
->     'humidity' : \[40, 50], # the two readings are not identical<br>
->     'current' : \[0, 0],<br>
->     'volume' : 3300.0 # ~14 cups<br>
->}
-   
-"init_actuators" is dictionary for the initial values of all the actuators.  led is an integer, wpump and fan are Booleans, and freq (sensor frequency) is a float.  For example:
-> init_actuators = {<br>
->     'led' : 0,<br>
->     'wpump' : False,
->     'fan' : True, # the fans start on<br>
->     'freq' : 10.0 # 10 times/second<br>
->}
+The possible values you can change are : 
+> time, wpump, fan, led, temperature, humidity, smoist, wlevel, tankwater, plant_health, leaf_droop, lankiness
 
-"clock_start" is the number of seconds since midnight of day zero of the simulation run (default is zero, i.e., midnight).
-For example:
-> clock_start = 7*3600 # Start the simulation at 7am
+The "time" value can be used to specify a starting time for the simulation. The plants will be grown automatically up to this date, according to the "leaf_droop", "lankiness", and "plant_health" values (see ahead). The format is either an int (the time in seconds) OR in the form day-hour-min-sec.
+
+The "plant_health" (float in [0, 1]) value will set the health of the plants from 0% healthy (0) to 100% healthy (1).
+
+The "leaf_droop" (float in [0, 1]) value will cause the leaves of the plants to droop. This normally happens when there is not enough water for the plant, but you can set it artifically here.
+
+The "lankiness" (float in [0, 1]) value determines how lanky the plants are. A lanky plant is usually indicative of a lack of sunlight and vice versa, but you can set it artificially here.
+
+The rest are pretty self-explanatory. If a value not specified, the value in lib/default_baseline.txt is what will be used. All numbers can be floats, though "led" will be cast to an int.
+
+
 
 ##### Speeding up Time ####
 Note that much of what happens in a greenhouse happens very slowly, thus a speedup of 100 or more is recommended for development and testing.  However, what happens when actuators are on can happen very quickly (e.g., watering takes just a few seconds).  To accommodate this, the simulator automatically sets the speed low when either the pump or fans are on and then sets the speed to the user-desired value whenever they are both are off.  Your agent can also publish a "speedup" message to change the default speedup during run time, but this is not standard practice.
