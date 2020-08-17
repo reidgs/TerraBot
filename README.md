@@ -66,7 +66,7 @@ The Raspberry Pi, running ROS (Robot Operating System), receives the sensor data
 for your AI agent in the formats above. Additionally, it receives your agent's actuator commands as defined above
 and relays them back to the arduino.
 
-![system_diagram](https://user-images.githubusercontent.com/37941547/62972610-6cf89600-bde2-11e9-8581-da5c528ad8c6.jpg)
+![System Diagram](https://github.com/reidgs/TerraBot/blob/master/system_diagram.jpg)
 
 
 The above image shows an overview of the connections between the different nodes (ovals) in the system.
@@ -195,9 +195,12 @@ For error checking it is recommended that you include the -l flag for logging, w
 
 ##### Graphics #####
 The -g flag will prompt the showing of a graphical representation of the simulation. The graphics window contains a 3D model of the terrarium and the plants within, along with a text panel containing information about the current environment, i.e. whether the pump is on or off, humidity, etc. Sounds are played to represent the pump and fan. The arrow keys and WASD can be used to navigate the scene, and the viewport can be reset by pressing 'r'. The camera will take pictures directly from this scene, from the perspective of the blue camera model, as in the real terrarium. Note, however, that the camera <i>can still be used</i> even when the -g flag is not included, and the images produced will be equivalent to those taken with the graphics on.
+>`./TerraBot.py -m sim -g`
 
 ##### Baseline File ####
-The simulator starts up with default values for the sensors, actuators, and clock.  You can create a 'baseline' text file to specify different initial values. To see the format in action, look in lib/default_baseline.txt. To specify a value, add a line in the format "name = value", optionally appending a comment (any characters after a "#" are ignored).
+The simulator starts up with default values for the sensors, actuators, and clock.  You can create a 'baseline' .bsl text file to specify different initial values. To see the format in action, look in param/default_baseline.bsl. To specify a value, add a line in the format "name = value", optionally appending a comment (any characters after a "#" are ignored).
+
+>`./TerraBot.py -m sim -b param/default_baseline.bsl`
 
 The possible values you can change are : 
 > time, wpump, fan, led, temperature, humidity, smoist, wlevel, tankwater, plant_health, leaf_droop, lankiness
@@ -210,7 +213,7 @@ The "leaf_droop" (float in [0, 1]) value will cause the leaves of the plants to 
 
 The "lankiness" (float in [0, 1]) value determines how lanky the plants are. A lanky plant is usually indicative of a lack of sunlight and vice versa, but you can set it artificially here.
 
-The rest are pretty self-explanatory. If a value not specified, the value in lib/default_baseline.txt is what will be used. All numbers can be floats, though "led" will be cast to an int.
+The rest are pretty self-explanatory. If a value not specified, the value in param/default_baseline.bsl is what will be used. All numbers can be floats, though "led" will be cast to an int.
 
 
 
