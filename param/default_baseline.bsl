@@ -1,11 +1,11 @@
 #These are the default values if not specified
 
-time = 0                    # [0, inf) seconds 
-#time = _-__:__:__          # day-hour:min:sec also works
+#time = 0                    # [0, inf) seconds 
+time = 11-13:13:10         # day-hour:min:sec also works
 
 temperature = 20        
 humidity = 50
-smoist = 400
+smoist = 800
 wlevel = 140
 tankwater = 0
 
