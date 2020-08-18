@@ -1,0 +1,19 @@
+AT 1-03:00:00
+humidity = [noise, normal] # Left humidity sensor is acting noisy
+light = [normal, 0]        # Right light sensor is stuck off
+fan = off                  # Fans are not working
+
+AT 1-04:30:0
+humidity = [normal, normal] # Humidity sensors back to normal
+light = [600, normal]       # Left light sensor stuck at 600
+fan = normal                # Fans are back to normal
+current = [12.2, normal]    # Current sensor is stuck
+
+AT 1-09:00:00
+fan = on    # Fans are stuck on
+wpump = off # Water pump is stuck off
+
+AT 1-09:15:00
+fan = normal             # Fans are back to normal
+wpump = normal           # Water pump is back to normal
+light = [normal, normal] # Lights are back to normal
