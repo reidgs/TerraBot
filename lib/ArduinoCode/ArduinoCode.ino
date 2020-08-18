@@ -42,11 +42,18 @@ int led_pin = 11;
 int wpump_pin = 12;
 int fan_pin = 13;
 
+struct Timing {
+  long unsigned int next = 0;
+  long unsigned int period = 1000;
+}
+
 // Time dependant variables
-float last_update = 0;
+//float last_update = 0;
 long unsigned int last_dht = 0;
 float time_now = 0;
-int interval = 1000;
+//int interval = 1000;
+Timing light_timing, temp_timing, humidity_timing;
+Timing wlevel_timing, smoist_timing, current_timing;
 
 // Used to make light/current data more useable
 long light_sum1 = 0;
@@ -58,11 +65,22 @@ long cur_count = 0;
 
 
 //Frequency Adjustment
-void freq_change( const std_msgs::Float32& cmd_msg){
-  interval = round(1000.0 / cmd_msg.data);
+void freq_change( const std_msgs::String& cmd_msg){
+  size_t sep = cmd_msg.data.find("|");
+  String ssensor = cmd_msg.data.substring(0, sep-1);
+  float freq = stof(cmd_msg.data.substring(sep+1));
+  float period = (freq == 0 ? 99999999 : round(1000.0/freq));
+
+  if (sensor == "light")     light_timing.period = period;
+  else if (sensor == "temp") temp_timing.period = period;
+  else if (sensor == "humid") humidity_timing.period = period;
+  else if (sensor == "level") wlevel_timing.period = period;
+  else if (sensor == "smoist")smoist_timing.period = period;
+  else if (sensor == "cur")   current_timing.period = period;
+  else printf("Oops\n");
 }
 
-ros::Subscriber<std_msgs::Float32> freq_sub("freq_raw", &freq_change);
+ros::Subscriber<std_msgs::String> freq_sub("freq_raw", &freq_change);
 
 // Functions for Actuators
 void led_activate( const std_msgs::Int32& cmd_msg){
@@ -143,26 +161,27 @@ float to_amp(int analog) {
 }
 void loop(){
   // Keep track of the amount of light
-  if (light_count < 1000) {
+  time_now = millis()
+  if (light_timing.next - time_now) < 1000) {
     light_count++;
     light_sum1 += analogRead(light_pin1);
     light_sum2 += analogRead(light_pin2);
   }
   // Needed so we can integrate
-  if (cur_count < 1000) {
+  if (current_timing.next - time_now < 1000) {
     cur_count++;
     cur_sum += analogRead(cur_pin);
   }
 
   // updates the reading for temp and humidity
-  if(millis() - last_dht > 2500){
+  if(time_now - last_dht > 2500){
       dht1.read(&temperature1, &humidity1, NULL);
       dht2.read(&temperature2, &humidity2, NULL);
-      last_dht = millis();
+      last_dht = time_now;
   }
 
-  if(millis() - last_update > interval){
-      last_update = millis();
+  if(time_now >= temp_timing.next){
+      temp_timing.next = time_now + temp_timing.period;
 
       // Get Temperature
       temp_msg.data_length = 2;
@@ -171,6 +190,10 @@ void loop(){
       t_array[1] = temperature2;
       temp_msg.data = t_array;
       temp_pub.publish(&temp_msg);
+    }
+
+  if(time_now >= humidity_timing.next){
+      humidity_timing.next = time_now + humidity_timing.period;
 
       // Get Humidity
       humid_msg.data_length = 2;
@@ -179,6 +202,10 @@ void loop(){
       h_array[1] = humidity2;
       humid_msg.data = h_array;
       humid_pub.publish(&humid_msg);
+  }
+
+  if(time_now >= light_timing.next){
+      light_timing.next = time_now + light_timing.period;
 
       // Get light
       light_msg.data_length = 2;
@@ -192,6 +219,10 @@ void loop(){
       light_sum1 = 0;
       light_sum2 = 0;
       light_count = 0;
+  }
+
+  if(time_now >= wlevel_timing.next){
+      wlevel_timing.next = time_now + wlevel_timing.period;
 
       // Get the level (complicated enough for own function)
       level_msg.data = get_level();
@@ -199,6 +230,10 @@ void loop(){
       // Experimentally, a value of ~180 indicates an empty reservoir
       level_msg.data = 180 - level_msg.data;
       level_pub.publish(&level_msg);
+  }
+
+  if(time_now >= smoist_timing.next){
+      smoist_timing.next = time_now + smoist_timing.period;
 
       // Get the soil moisture
       smoist_msg.data_length = 2;
@@ -210,6 +245,10 @@ void loop(){
       s_array[1] = 1023 - s_array[1];
       smoist_msg.data = s_array;
       smoist_pub.publish(&smoist_msg);
+  }
+
+  if(time_now >= current_timing.next){
+      current_timing.next = time_now + current_timing.period;
 
       // Get current
       cur_msg.data_length = 2;
