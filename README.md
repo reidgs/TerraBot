@@ -263,6 +263,7 @@ One can specify a sequence of modifications that take effect at different times,
 >`
 >`AT 1-04:30:00       # Starting at 4:30am
 >`light = [normal, normal] # Lights are now working
+
 Note that 1) comments can be placed at the end of lines and 2) the time format is day-HH:MM:SS, where 1-00:00:00 is the beginning of the run.
 
 *If no file is passed in, there will be no intereference in the transfer of data.*
@@ -293,18 +294,21 @@ We strongly recommend creating your own baseline and test files to evaluate situ
 Test files consist of several parts.  First, one can specify a baseline and/or interference file within a test file.  This is indicated as such:
 >`BASELINE = smoist_up.bsl
 >`INTERFERENCE = smoist_up.inf
+
 If multiple baseline or interference lines are included, only the last one in the file is used.  Also, the specifications in the test file override any command line specifications.
 
 #### DELAY ####
 Next, one can specify how long to wait before applying any of the test constraints (see below).  It is useful to delay starting to test for a period of time to give the agent a chance to initialize (for instance, if it takes a while to produce an initial schedule).  This constraint can be specified in one of two ways:
 >`DELAY FOR <value> # Wait "value" seconds before starting to test
 >`DELAY UNTIL day-HH:MM:SS # Wait until the given time (measured from the start of the TerraBot operating)
+  
 So, for instance, "DELAY UNTIL 1-03:30:00" would wait for 3.5 hours before starting to apply the test constraints.  As above, the last DELAY constraint in the file is used.
 
 #### STOP or QUIT ####
 Third, one can specify how long to test for.  The STOP constraint just ends testing, the QUIT constraint stops testing and causes the TerraBot program to quit.  For both variants, the time until ending can be specified either using seconds or date-time:
 >`STOP AFTER 36000 # Stop testing after 10 hours
 >`QUIT AT 3-23:59:59 # Run testing for 3 full days, and then quit the simulator
+
 Note again that comments can be place at the end of lines
 
 #### WHENEVER ####
@@ -314,6 +318,7 @@ The triggers for WHENEVER constraints can be a Boolean relation or a date-time. 
 >`WHENVER smoist[0] < 450 or smoist[1] < 450 # Every time either soil moisture sensor gets below 450>`
 >`WHENEVER wpump # Every time the pump is turned on
 >`WHENEVER 1-00:00:00 # Every midnight
+
 Note that at most one instance of a given WHENEVER constraint will be active at a given time.
 
 The body of a WHENEVER constraint indicates a sequence of subconstraints that must hold for the WHENEVER constraint to be successful.  If one of the subconstraints fails to hold, then the WHENEVER constraint fails and a failure message is printed out.  If all of the subconstraints hold, then the WHENEVER constraint succeeds and a success message is printed out.  In either case, the constraint is deactivated (awaiting to be triggered again).  The subconstraints are described below, along with several examples.
@@ -322,8 +327,10 @@ The body of a WHENEVER constraint indicates a sequence of subconstraints that mu
 The WAIT subconstraint will wait a certain amount of time for a condition to evaluate to true. If the condition is true then this subconstraint succeeds and control is passed to the next one (if any or, if not, the whole WHENEVER constraint succeeds).  If the amount of time passes without the condition being true, then the subconstraint (and the whole WHENEVER constraint) fails.  As with other constraints, the time can be specified as a number of seconds or as a date-time:
 >`WAIT temperature[0] < 25 FOR 3600 # Wait an hour for the temperature to come below 25 C
 >`WAIT not led UNTIL 1-23:00:00 # Wait until 11pm for the LEDs to be turned off
+
 In addition, a variant of the WAIT constraint can be used without a condition:
 >`WAIT FOR 60 # Wait a minute until going on to the next subconstraint.
+
 This variant always succeeds, after the given amount of time has passed.
 
 ##### ENSURE #####
