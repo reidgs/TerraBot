@@ -172,7 +172,7 @@ def sim_loop():
     speedup = default_speedup                
     now = 0
     if bl is not None:
-        now = bl.params['time']
+        now = bl.params['start']
     clock_pub.publish(rospy.Time.from_sec(now)) #Publish initial time (I think this is unnecessary)
 
     time.sleep(1) #give a sec
@@ -209,7 +209,7 @@ lankiness = 0
 plant_health = 0
 age = 0
 if bl is not None:
-    age = bl.params['time'] 
+    age = bl.params['start'] 
     droop = bl.params['leaf_droop']
     lankiness = bl.params['lankiness']
     plant_health = bl.params['plant_health']

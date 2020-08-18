@@ -11,6 +11,8 @@ from lib import tester as tester_mod
 from lib import send_email
 from lib import sim_camera as cam
 from lib.terrabot_utils import clock_time
+from baseline import Baseline
+from os.path import abspath
 
 ### Default values for the optional variables
 verbose = False
@@ -252,7 +254,13 @@ def start_simulator():
     if (sim_log == None): sim_log = open("Log/simulator.log", "a+", 0)
     fard_args = ["--speedup", str(args.speedup)]
     if args.graphics: fard_args += ["--graphics"]
-    if args.baseline: fard_args += ["--baseline", args.baseline]
+    if args.baseline: 
+        try: # In case of syntax errors, try parsing here first
+            Baseline(abspath(args.baseline))
+        except Exception as inst:
+            print(inst.args)
+            terminate_gracefully()
+        fard_args += ["--baseline", args.baseline]
     if log: fard_args = fard_args + ["-l"]
     sim_p = sp.Popen(["python", "lib/farduino.py"] + fard_args,
                      stdout = sim_log, stderr = sim_log)
