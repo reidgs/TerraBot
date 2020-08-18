@@ -11,17 +11,17 @@
   - [Agent Node](#agent-node)
     + [Interactive Agent](#interactive-agent)
 - [Simulator](#simulator)
-  - [Getting Started](#getting-started)
-    - [TerraBot Simulator Installation](#terrabot-simulator-installation)
-    - [Running the Simulator](#running-the-simulator)
-    - [Baseline File](#baseline-file)
-    - [Speeding up Time](#speeding-up-time)
-  - [Additional Items](#additional-items)
-    + [Health Ping](#health-ping)
-    + [Frequency](#frequency)
-    + [Camera](#camera)
-- [Interference](#interference-file)
-- [Time Series](#time-series)
+  - [Installation](#installation)
+  - [Running the Simulator](#running-the-simulator)
+  - [Graphics](#graphics)
+  - [Baseline File](#baseline-file)
+  - [Speeding up Time](#speeding-up-time)
+- [Additional Items](#additional-items)
+  - [Health Ping](#health-ping)
+  - [Frequency](#frequency)
+  - [Camera](#camera)
+  - [Interference](#interference-file)
+  - [Time Series](#time-series)
 - [Testing](#testing)
   - [Test File](#test-file)
     + [START](#start)
@@ -162,9 +162,7 @@ of your agent node.
 
 We are working to try to get the ranges of the sensors, the nominal values, and the rate of change of the sensors, to match the real world.  The values are approximate, however, so you should not assume that the real world and the simulator will behave exactly the same.
 
-### Getting Started ###
-
-#### TerraBot Simulator Installation ####
+### Installation ###
 The simulator and ROS require Ubuntu distributions. **We suggest installing a VirtualBox VM** on your computer so that you
 can implement your agent. **We will provide you with a virtual machine that already has Ubuntu, ROS, and the TerraBot code installed.**
 
@@ -180,15 +178,15 @@ this step may take a while.
 * Panda3d, for graphics rendering
 * TerraBot and simulator (lib/farduino.py) nodes
 
-#### Running the Simulator ####
+### Running the Simulator ###
 In order to run the simulator, run the TerraBot with the simulator mode flag (-m sim), and optionally 1) if you wish to see a graphical representation of the terrarium (-g); 2) the multiplier you wish for the speed (-s <speedup>); and 3) a file that contains baseline (starting) values for the sensors, actuators, and the time which you would like the simulator to start at (seconds since midnight, day 1 of the simulated run) (-b <baselinefile>).  
 
 >`./TerraBot.py -m sim -g -b param/default_baseline.bsl`  
 
-##### Graphics #####
+### Graphics ###
 The -g flag will enable display of a graphical representation of the simulation. The graphics window contains a 3D model of the terrarium and the plants within, along with a text panel containing information about the current environment, e.g., whether the pump is on or off, humidity, etc. Sounds are played to represent the pump and fan. The arrow keys and WASD can be used to navigate the scene, and the viewport can be reset by pressing 'r'. The camera will take pictures directly from this scene, from the perspective of the blue camera model, as in the real terrarium. Note that the camera <i>can still be used</i> even when the -g flag is not included, and the images produced will be equivalent to those taken with the graphics on.
 
-##### Baseline File ####
+### Baseline File ###
 The simulator starts up with default values for the sensors, actuators, and clock.  You can create a 'baseline' .bsl text file to specify different initial values. To see the format in action, look in param/default_baseline.bsl. To specify a value, add a line in the format "name = value", optionally appending a comment (any characters after a "#" are ignored).
 
 The possible values you can change are : 
@@ -204,7 +202,7 @@ The "lankiness" value (a float in [0, 1]) determines how lanky the plants are. A
 
 The rest are pretty self-explanatory. If a value not specified, the value in param/default_baseline.bsl is what will be used. All numbers can be floats, though "led" will be cast to an int.
 
-##### Speeding up Time ####
+### Speeding up Time ###
 Note that much of what happens in a greenhouse happens very slowly, thus a speedup of 100 or more is recommended for development and testing.  However, what happens when actuators are on can happen very quickly (e.g., watering takes just a few seconds).  To accommodate this, the simulator automatically sets the speed low when either the pump or fans are on and then sets the speed to the user-desired value whenever they are both are off.  Your agent can also publish a "speedup" message to change the default speedup during run time, but this is not standard practice (and has no effect when operating on the actual hardware).
 
 For example to run the simulator at 100x speed (i.e., 100 seconds of simulated time for every second of wall clock time), use:  
@@ -212,10 +210,10 @@ For example to run the simulator at 100x speed (i.e., 100 seconds of simulated t
 
 *Note: to ensure consistency between your code in simulation and with the actual hardware, you should refrain from referring to outside functions (OS time.time()) and should instead refer to the ROS time topic via rospy.get_time().*
 
-### Additional Items ###
+## Additional Items ##
 There are some additional items that you need to know aobut in order to complete the assignments.  Specifically, they involve the health of your agent, the frequency of sensor readings, and access to the camera.
 
-##### Health Ping #####
+### Health Ping ###
 Because of the long lasting nature of this project, it is possible that there may be unforeseen
 errors in your code which will cause it to crash. Crashed code means no control over the system and
 certain doom for your plants! In order to avoid this outcome, we have included restart functionality.  
@@ -225,7 +223,7 @@ a set amount of time (default 6 minutes, either real or simulated time), it will
 
 After a set number of crashes (currently 5), the TerraBot will quit.  There is a command-line option to send email when this happens, so that the team and the instructors can be notified.  Don't worry about how to do this - it is not necessary for development and testing, and we will use this feature only during the grow cycles.
 
-##### Frequency #####
+### Frequency ###
 It is our intention to eventually have you manage how much energy and water you use.  
 Since reading the sensors takes energy, there is a way to tell the system how frequently for the Arduino will read from the sensors.
 The more often the sensors are read, the more accurate your data will be, but the more energy you will use as well.
@@ -235,10 +233,10 @@ For example, a frequency of 10 polls the given sensors at 10 Hz; a frequency of 
 Notice that this setting is variable, meaning it can be changed over the course of the deployment by sending a new 'freq' message.
 This is useful, for instance, if you want to read the sensors infrequently until some event occurrs and then change the frequency to do better closed-loop control.  The default is 1 for all sensors.
 
-##### Camera #####
+### Camera ###
 The camera is different from the rest of the sensors, as it is controlled directly by the Pi, and not by the Arduino. You can take a picture using the 'camera' topic; the single argument is the name of the file to store the JPEG image.  Note that, if you are using relative path name, the path is relative to the directory where you ran TerraBot, not to the directory you ran your agent.  **Make sure if the file path includes a directory that the directory actually exists, otherwise the image will not be saved.**
 
-## Interference File ##
+### Interference File ###
 The interference file contains a schedule of times to manipulate the data being transferred between nodes. There are six functions, through one of which your data will be passed:
 
 * normal : trasfers data directly without any modifications
@@ -251,15 +249,15 @@ The interference file contains a schedule of times to manipulate the data being 
 
 *If no file is passed in, there will be no intereference in the transfer of data.*
 
-## Time Series ##
+### Time Series ###
 
 
-## Grading ##
+## Testing ##
 Your programming assignments will be graded automatically.  Trace files (.trc) will indicate what behaviors are expected to occur, and the grader, running in conjunction with the simulator, will check to see that all the conditions are successfully met.  The trace files to use can be specified on the command line using either the -t (one trace file) or -T (directory containing multiple trace files), along with the mode set to "grade" (e.g., -m grade).
 
 You may test your agent by creating your own trace files (and your own interference files). We may give you example trace files, as well, but the actual grading will use trace files that you have not previously seen.
 
-### Trace File ###
+### Test File ###
 The grader traces through commands given in this file and acts accordingly. The first line in the trace file is the address to the baseline file, and the second line is the address to the interference file. The commands for grading start on the third line of the trace file. The four commands available are: START, ENSURE, WAIT, and QUIT.
 
 ##### START #####
