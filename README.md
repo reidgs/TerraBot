@@ -258,7 +258,9 @@ For the fan and water pump, the available modification constraints are:
   on : the actuator is stuck on
 ```
 The fan, pump, LEDs, and water level (wlevel) all are singletons, and the modification constraints are indicated thusly:
->`wpump = off
+```
+wpump = off
+```
 The rest of the sensors are redundant, and one has to indicate the modification constraints for each, separately:
 ```
 humidity = [normal, noise]
@@ -346,8 +348,9 @@ WAIT temperature[0] < 25 FOR 3600 # Wait an hour for the temperature to come bel
 WAIT not led UNTIL 1-23:00:00 # Wait until 11pm for the LEDs to be turned off
 ```
 In addition, a variant of the WAIT constraint can be used without a condition:
->`WAIT FOR 60 # Wait a minute until going on to the next subconstraint.
-
+```
+WAIT FOR 60 # Wait a minute until going on to the next subconstraint.
+```
 This variant always succeeds, after the given amount of time has passed.
 
 ##### ENSURE #####
