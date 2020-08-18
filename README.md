@@ -24,12 +24,12 @@
   - [Time Series](#time-series)
 - [Testing](#testing)
   - [Test File](#test-file)
-    + [START](#start)
-    + [QUIT](#quit)
-    + [WAIT](#wait)
-    + [ENSURE](#ensure)
-  
-    
+    + [DELAY](#delay)
+    + [STOP/QUIT](#stop/quit)
+    + [WHENEVER]
+      + [WAIT](#wait)
+      + [ENSURE](#ensure)
+      + [SET](#set)
 
 ## Overview ##
 Welcome to the Autonomous Agents TerraBot project! For this project you and your partners
@@ -148,6 +148,8 @@ Once the interactive agent is started and connects to the TerraBot (while the tw
   s <int>: set the simulated time speedup to the given value
   v: print the current sensor values
 
+Currently, the only run-time command is "q", which quits the agent.  
+
 *Note that the interactive agent can be run concurrently with other agents, so that you can view sensor values or turn on/off actuators manually while your autonomous system is running (this should be used only during development, not during testing).*
 
 ## Simulator ##
@@ -237,41 +239,109 @@ This is useful, for instance, if you want to read the sensors infrequently until
 The camera is different from the rest of the sensors, as it is controlled directly by the Pi, and not by the Arduino. You can take a picture using the 'camera' topic; the single argument is the name of the file to store the JPEG image.  Note that, if you are using relative path name, the path is relative to the directory where you ran TerraBot, not to the directory you ran your agent.  **Make sure if the file path includes a directory that the directory actually exists, otherwise the image will not be saved.**
 
 ### Interference File ###
-The interference file contains a schedule of times to manipulate the data being transferred between nodes. There are six functions, through one of which your data will be passed:
+The interference file contains a schedule of times to manipulate the data being transferred between nodes. Interference files can be used in conjunction with the simulator or the real hardware, although it is mainly intended to be used with the simulator to simulate sensor and actuator failures.
 
-* normal : trasfers data directly without any modifications
-* noise : slightly modifies data before transfering
-* off : sets all data to 0 (or type equivelent)  
-**_Only for sensors:_**
-* low : sets a low value for that sensor 
-* opt : sets an optimal value for that sensor 
-* high : sets a high value for that sensor
+For sensor data and the LEDs, the available modification constraints are:
+  normal : transfers data directly without any modifications
+  noise : slightly modifies data before transfering, adding Gaussian noise
+  <value> : the sensor is stuck at that value
+For the fan and water pump, the available modification constraints are:
+  normal : transfers data directly without any modifications
+  off : the actuator is stuck off  
+  on : the actuator is stuck on
+
+The fan, pump, LEDs, and water level (wlevel) all are singletons, and the modification constraints are indicated thusly:
+>`wpump = off
+The rest of the sensors are redundant, and one has to indicate the modification constraints for each, separately:
+>`humidity = [normal, noise]
+>`temperature = [noise, 20.0]
+
+One can specify a sequence of modifications that take effect at different times, by placing an "AT" command before a set of modification constraints.
+>`AT 1-03:00:00       # Starting at 3am, the first day
+>`light = [normal, 0] # Right light sensor is stuck off
+>`fan = off           # Fans are not working
+>`
+>`AT 1-04:30:00       # Starting at 4:30am
+>`light = [normal, normal] # Lights are now working
+Note that 1) comments can be placed at the end of lines and 2) the time format is day-HH:MM:SS, where 1-00:00:00 is the beginning of the run.
 
 *If no file is passed in, there will be no intereference in the transfer of data.*
 
 ### Time Series ###
+The time series program (agents/time_series.py) provides a way to visualize the sensor data and actuator commands over time.  The program connects to the TerraBot node and subscribes to all the topics that the TerraBot handles (except for frequency and speedup).  It can optionally log the data for later replay. 
 
+The program displays a set of windows, one for each topic, and plots the topic values over time (the X-axis).  A window scrolls when the values approach the right side of the window.  The Y-axis for the fans and pump are discrete (either 0/off or 1/on), while the Y-axis for the sensors and LEDs are continuous.  The sensor values are plotted in green and the actuator values in blue.
 
+The command line options are:
+    -h (--help): show help message and exit
+    -s (--sim): use the simulator
+    -w (--width) <value>: width of the windows, in hours (indicates how much data can be shown at once and how quickly it scrolls)
+    -l (--log) <filename>: log the sensor data to the file
+    -r (--replay) <filename>: replay the sensor data from the file
+    -s (--speedup) <value>: playback speed for replaying (not to be confused with the speedup of the simulator)
+
+In addition, there are two run-time commands:
+  q: quit the program
+  v: print the current sensor and actuator values
+  
 ## Testing ##
-Your programming assignments will be graded automatically.  Trace files (.trc) will indicate what behaviors are expected to occur, and the grader, running in conjunction with the simulator, will check to see that all the conditions are successfully met.  The trace files to use can be specified on the command line using either the -t (one trace file) or -T (directory containing multiple trace files), along with the mode set to "grade" (e.g., -m grade).
+Your programming assignments will be graded automatically.  Test files (.tst) will indicate what behaviors are expected to occur, and the tester will check to see that all the conditions are successfully met.  The test files to use can be specified on the command line using the -t option, followed by the .tst file. 
 
-You may test your agent by creating your own trace files (and your own interference files). We may give you example trace files, as well, but the actual grading will use trace files that you have not previously seen.
+We strongly recommend creating your own baseline and test files to evaluate situations that you think might occur in real life - experience shows that unexpected combinations of factors often occur in practice, especially when running the system for two weeks growing real plants.  Creating a comprehensive set of test environments (and sharing these with others) is just good practice.
 
 ### Test File ###
-The grader traces through commands given in this file and acts accordingly. The first line in the trace file is the address to the baseline file, and the second line is the address to the interference file. The commands for grading start on the third line of the trace file. The four commands available are: START, ENSURE, WAIT, and QUIT.
+Test files consist of several parts.  First, one can specify a baseline and/or interference file within a test file.  This is indicated as such:
+>`BASELINE = smoist_up.bsl
+>`INTERFERENCE = smoist_up.inf
+If multiple baseline or interference lines are included, only the last one in the file is used.  Also, the specifications in the test file override any command line specifications.
 
-##### START #####
-The START command starts the grading process. It does not take any arguments.
+#### DELAY ####
+Next, one can specify how long to wait before applying any of the test constraints (see below).  It is useful to delay starting to test for a period of time to give the agent a chance to initialize (for instance, if it takes a while to produce an initial schedule).  This constraint can be specified in one of two ways:
+>`DELAY FOR <value> # Wait "value" seconds before starting to test
+>`DELAY UNTIL day-HH:MM:SS # Wait until the given time (measured from the start of the TerraBot operating)
+So, for instance, "DELAY UNTIL 1-03:30:00" would wait for 3.5 hours before starting to apply the test constraints.  As above, the last DELAY constraint in the file is used.
 
-##### QUIT #####
-The QUIT command terminates the current grading process. It does not take any arguments. If there are additional trace files that have not been traced through, the grader will start tracing through the next file, otherwise, the TerraBot will terminate all processes and exit. 
+#### STOP/QUIT ####
+Third, one can specify how long to test for.  The STOP constraint just ends testing, the QUIT constraint stops testing and causes the TerraBot program to quit.  For both variants, the time until ending can be specified either using seconds or date-time:
+>`STOP AFTER 36000 # Stop testing after 10 hours
+>`QUIT AT 3-23:59:59 # Run testing for 3 full days, and then quit the simulator
+Note again that comments can be place at the end of lines
+
+#### WHENEVER ####
+The bulk of test files consist of WHENEVER constraints.  These are subtests that are activiated whenever a particular condition is met.  WHENEVER constraints consist of a trigger and a body, which is a sequence of WAIT, ENSURE, and SET subconstraints that specify what behavior is expected of the system.
+
+The triggers for WHENEVER constraints can be a Boolean relation or a date-time. The Boolean relations can consist of numbers, sensor values, and actuator states (light, temperature, humidity, smoist, current, wlevel, led, wpump, fan, camera, ping).  The date-time trigger is specified in terms of the the first occurrence, and every time it finishes, another 24 hours are added on to the trigger time. Examples include:
+>`WHENVER smoist[0] < 450 or smoist[1] < 450 # Every time either soil moisture sensor gets below 450>`
+>`WHENEVER wpump # Every time the pump is turned on
+>`WHENEVER 1-00:00:00 # Every midnight
+Note that at most one instance of a given WHENEVER constraint will be active at a given time.
+
+The body of a WHENEVER constraint indicates a sequence of subconstraints that must hold for the WHENEVER constraint to be successful.  If one of the subconstraints fails to hold, then the WHENEVER constraint fails and a failure message is printed out.  If all of the subconstraints hold, then the WHENEVER constraint succeeds and a success message is printed out.  In either case, the constraint is deactivated (awaiting to be triggered again).  The subconstraints are described below, along with several examples.
 
 ##### WAIT #####
-The WAIT command will wait a certain amount of time for a value to evaluate to true. It takes in two arguments seperated by commas: the first argument is the expression being checked, and the second argument is the maximum wait time allowed. This command is finished and the next command starts once either: the first argument evaluates to true within the time frame (passed task), or the maximum wait time passes (failed task).
-> EX: wait a maximum of 5 seconds for the led's value to be 255  
-> `WAIT,grader_vars['led']==255,5` 
+The WAIT subconstraint will wait a certain amount of time for a condition to evaluate to true. If the condition is true then this subconstraint succeeds and control is passed to the next one (if any or, if not, the whole WHENEVER constraint succeeds).  If the amount of time passes without the condition being true, then the subconstraint (and the whole WHENEVER constraint) fails.  As with other constraints, the time can be specified as a number of seconds or as a date-time:
+>`WAIT temperature[0] < 25 FOR 3600 # Wait an hour for the temperature to come below 25 C
+>`WAIT not led UNTIL 1-23:00:00 # Wait until 11pm for the LEDs to be turned off
+In addition, a variant of the WAIT constraint can be used without a condition:
+>`WAIT FOR 60 # Wait a minute until going on to the next subconstraint.
+This variant always succeeds, after the given amount of time has passed.
 
 ##### ENSURE #####
-The ENSURE command will ensure that the value of the first argument given evaluates to true throughout the whole time period set. It takes in two arguments seperated by commas: the first argument is the expresion being checked, while the second argument is the length of the time period. This command is finished and the next command starts once either: the first argument evaluates to false (failed task), or the time period set passes (passed task).
-> EX: ensure the water pump is on for at least 10 seconds  
->`ENSURE,grader_vars['wpump'],10` 
+The ENSURE subconstraint will ensure that some condition is true throughout the whole time period. If the condition is ever false then this subconstraint fails (as does the whole WHENEVER constraint).  If the amount of time passes and the condition remains true during the whole time period, control is passed to the next subconstraint (if any or, if not, the whole WHENEVER constraint succeeds).  As with other constraints, the time can be specified as a number of seconds or as a date-time:
+>`ENSURE smoist[0] < 600 and smoist[1] < 600 FOR 3600 # Don't let things get too wet
+>`ENSURE not led UNTIL 2-06:59:59 # Lights must be off until just before 7am the next day 
+
+##### SET #####
+The SET constraint enables you to specify local variables that can be included in the constraint conditions.  This provides the ability, for instance, to count the number of camera images taken during the day, or how much the soil moisture has changed since the last time the constraint was run.  The general form is "SET <variable> = <value>", where "value" can be a combination of numbers, sensor values, and other variables. The constraint always succeeds.
+>`SET last_humid = (humidity[0] + humidity[1])/2
+>`SET dhumid = last_humid - (humidity[0] + humidity[1])/2
+>`SET num_pics = num_pics + 1
+
+Simple test examples are provided in the TerraBot/param directory.  Here is a test, consisting of two WHENEVER constraints, for the behavior expected of the pump - that it should turn on soon after the soil moisture falls below some threshold and should not overwater the plants: 
+>`WHENEVER smoist[0] < 450 or smoist[1] < 450
+>`  WAIT wpump FOR 60 # Wait one minute for water pump to be on
+>`  WAIT not wpump FOR 360 # Turn pump off before 6 minutes have elapsed
+>`  WAIT smoist[0] > 450 and smoist[1] > 450 FOR 3600 # Wait an hour for both moisture sensors to be above threshold
+>`
+>`WHENEVER wmump # Don't let pump overwater things
+>`  ENSURE smoist[0] < 600 and smoist[1] < 600 FOR 3600
