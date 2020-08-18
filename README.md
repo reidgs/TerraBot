@@ -106,16 +106,16 @@ may be malicious and cause the sensor data and actuator commands to be corrupted
 
 #### Command Line Arguments ####
 The following command line arguments are avaiable when running TerraBot.py:
-    -h (--help): show help message and exit
-    -v (--verbose): print more messages describing the workings of the system
-    -l (--log): log all message traffic (in an auto-generated subdirectory of Log)
-    -m (--mode) serial | sim : mode to run in (default is serial)
-    -g (--graphics): Show graphical representation of simulation (only in sim mode)
-    -s (--speedup) <value>: Increase simulated time (only in sim mode; automatically decreases speedup when fans or pump are on)
-    -b (--baseline) <text file>: Initial clock time, sensor, and actuator values (only in sim mode)
-    -i (--interference) <text file>: Set of instructions for when to manipulate sensor and actuator values
-    -t (--test) <text file>: Tests correct execution based on a set of constraints that describe expected behavior
-    -a (--agent) <python file>: Your agent program (if "none" - the default  - the agent node must be run externally)
+>   -h (--help): show help message and exit
+>   -v (--verbose): print more messages describing the workings of the system
+>   -l (--log): log all message traffic (in an auto-generated subdirectory of Log)
+>   -m (--mode) serial | sim : mode to run in (default is serial)
+>   -g (--graphics): Show graphical representation of simulation (only in sim mode)
+>   -s (--speedup) <value>: Increase simulated time (only in sim mode; automatically decreases speedup when fans or pump are on)
+>   -b (--baseline) <text file>: Initial clock time, sensor, and actuator values (only in sim mode)
+>   -i (--interference) <text file>: Set of instructions for when to manipulate sensor and actuator values
+>   -t (--test) <text file>: Tests correct execution based on a set of constraints that describe expected behavior
+>   -a (--agent) <python file>: Your agent program (if "none" - the default  - the agent node must be run externally)
 
 #### Run Time Commands ####
 Currently, the only run-time command is "q", which gracefully quits the system.  
