@@ -25,8 +25,8 @@
 - [Testing](#testing)
   - [Test File](#test-file)
     + [DELAY](#delay)
-    + [STOP/QUIT](#stop/quit)
-    + [WHENEVER]
+    + [STOP/QUIT](#stop-or-quit)
+    + [WHENEVER](#whenever)
       + [WAIT](#wait)
       + [ENSURE](#ensure)
       + [SET](#set)
@@ -301,7 +301,7 @@ Next, one can specify how long to wait before applying any of the test constrain
 >`DELAY UNTIL day-HH:MM:SS # Wait until the given time (measured from the start of the TerraBot operating)
 So, for instance, "DELAY UNTIL 1-03:30:00" would wait for 3.5 hours before starting to apply the test constraints.  As above, the last DELAY constraint in the file is used.
 
-#### STOP/QUIT ####
+#### STOP or QUIT ####
 Third, one can specify how long to test for.  The STOP constraint just ends testing, the QUIT constraint stops testing and causes the TerraBot program to quit.  For both variants, the time until ending can be specified either using seconds or date-time:
 >`STOP AFTER 36000 # Stop testing after 10 hours
 >`QUIT AT 3-23:59:59 # Run testing for 3 full days, and then quit the simulator
