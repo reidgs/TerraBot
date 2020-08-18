@@ -1,5 +1,5 @@
 from datetime import datetime
-from terrabot_utils import clock_to_seconds, clock_time, time_since_midnight
+from terrabot_utils import dtime_to_seconds, clock_time, time_since_midnight
 from terrabot_utils import Agenda
 
 sensor_names = ['light', 'temperature', 'humidity', 'smoist', 'wlevel',
@@ -14,16 +14,14 @@ class Baseline(Agenda):
             for line in f.readlines():
                 l = line.split('#')[0].strip(' \n')
                 if (l.find('START AT') == 0) :
-                    dtime = datetime.strptime(l, "START AT %d-%H:%M:%S")
-                    time = clock_to_seconds(dtime) + time0
+                    time = dtime_to_seconds(l[len("START AT ")])
                     actions = []
                     self.add_to_schedule([time, actions])
                     self.time0 = time
                     print("START: %s" %clock_time(time))
                     last_time = time
                 elif (l.find('AT') == 0):
-                    dtime = datetime.strptime(l, "AT %d-%H:%M:%S")
-                    time = clock_to_seconds(dtime) + time0
+                    time = dtime_to_seconds(l[len("AT ")]) + time0
                     if (time < last_time):
                         print("Time must run forward: %s" %l)
                         quit()

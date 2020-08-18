@@ -1,7 +1,9 @@
+from terrabot_utils import dtime_to_seconds
+
 #TODO add error catching support, used_energy?
 class Baseline:
     def __init__(self, filename):
-        self.params = {'time' : 0, 'temperature' : 20, 'humidity' : 50, \
+        self.params = {'start' : 0, 'temperature' : 20, 'humidity' : 50, \
                         'smoist' : 400, 'wlevel' : 140, 'tankwater' : 0, \
                         'wpump' : False, 'fan' : False, 'led' : 0, \
                         'leaf_droop' : 0, 'lankiness' : 0, 'plant_health' : 1}
@@ -21,26 +23,15 @@ class Baseline:
                 key = pair[0].strip(' ')
                 val = pair[1].strip(' ')
                 
-                if key == 'wpump':
-                    self.params['wpump'] = (val == 'on')
-                elif key == 'fan':
-                    self.params['fan'] = (val == 'on')
-                elif key == 'leaf_droop':
-                    self.params['leaf_droop'] = min(1, max(0, float(val)))
-                elif key == 'lankiness':
-                    self.params['lankiness'] = min(1, max(0, float(val)))
-                elif key == 'plant_health':
-                    self.params['plant_health'] = min(1, max(0, float(val)))
-                elif key == 'time':
-                    if val.find('-') >= 0:
-                        day = int(val[:val.find('-')])
-                        hour, minute, second = val[val.find('-') +1:].split(':')
-                        hour = int(hour)
-                        minute = int(minute)
-                        second = int(second)
-                        self.params['time'] = (3600 * 24 * day) + (3600 * hour) + (60 * minute) + second
-                    else:
-                        self.params['time'] = int(val)
+                if key in ['wpump', 'fan']:
+                    self.params[key] = (val == 'on')
+                elif key in ['leaf_droop', 'lankiness', 'plant_health']:
+                    self.params[key] = min(1, max(0, float(val)))
+                elif key == 'start':
+                    print(val, val.find('-'))
+                    self.params['time'] = (int(val) if (val.find('-') < 0) else
+                                           dtime_to_seconds(val))
+                    print(self.params['time'])
                 elif key not in self.params.keys():
                     print("invalid parameter name: {}".format(key))
                     return

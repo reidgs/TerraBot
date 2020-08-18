@@ -1,7 +1,7 @@
 #import rospy
 import copy
 from datetime import datetime
-from terrabot_utils import clock_time, time_since_midnight, clock_to_seconds
+from terrabot_utils import clock_time, time_since_midnight, dtime_to_seconds
 from terrabot_utils import Agenda
 
 def parse_error(line):
@@ -26,10 +26,9 @@ class Constraint:
 
     def has_time(self): return self.abs_time != None or self.rel_time != None
     def set_timeout(self, time, time0):
-        self.timeout = (time + self.rel_time if self.rel_time != None else
-                        time if self.abs_time == None else
-                        time0 + clock_to_seconds(datetime.strptime(self.abs_time,
-                                                                   "%d-%H:%M:%S")))
+        self.timeout = (time + self.rel_time if (self.rel_time != None) else
+                        time if (self.abs_time == None) else
+                        time0 + dtime_to_seconds(self.abs_time))
     def evaluate_time(self, time): return time >= self.timeout
     def evaluate_condition(self, vars):
         for key in vars: locals()[key] = vars[key]

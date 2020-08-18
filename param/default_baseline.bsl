@@ -1,7 +1,7 @@
 #These are the default values if not specified
 
-#time = 0                    # [0, inf) seconds 
-time = 11-13:13:10         # day-hour:min:sec also works
+start = 0              # [0, inf) seconds 
+#start = 1-00:00:00    # day-hour:min:sec also works, day=1 is the first day
 
 temperature = 20        
 humidity = 50
