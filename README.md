@@ -105,12 +105,12 @@ In the transfering process, the data received by the TerraBot node are passed th
 may be malicious and cause the sensor data and actuator commands to be corrupted in various ways before being sent on to the agent node.
 
 #### Command Line Arguments ####
-The following command line arguments are avaiable when running TerraBot.py:
+The following command line arguments are available when running TerraBot.py:
 ```
   -h (--help): show help message and exit
   -v (--verbose): print more messages describing the workings of the system
   -l (--log): log all message traffic (in an auto-generated subdirectory of Log)
-  -m (--mode) serial | sim : mode to run in (default is serial)
+  -m (--mode) serial | sim : mode to run in (default is serial on the real greenhouse, sim is simulator)
   -g (--graphics): Show graphical representation of simulation (only in sim mode)
   -s (--speedup) <value>: Increase simulated time (only in sim mode; automatically decreases speedup when fans or pump are on)
   -b (--baseline) <text file>: Initial clock time, sensor, and actuator values (only in sim mode)
