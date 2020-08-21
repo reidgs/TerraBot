@@ -139,7 +139,7 @@ The agent node is how you autonomously control the greenhouse. You will be able 
 The interactive agent (agents/interactive_agent.py) enables you to interact with the TerraBot (either the real hardware or the simulator) using the same topics that your agent will be using. This program can be very useful for exploring how the TerraBot works, debugging, and checking on the statues of sensors.  You start the interactive agent in a separate window from TerraBot.  The command line options are:
 ```
 -s (--sim), to indicate that TerraBot is using the simulator
- -l (--log), which prints the sensor data (this latter flag is not really very useful anymore, but is there for historical reasons).  
+-l (--log), which prints the sensor data (this latter flag is not really very useful anymore, but is there for historical reasons).  
 ```
 
 Once the interactive agent is started and connects to the TerraBot (while the two programs can be started in any order, it is usually better to start TerraBot first), you can send commands to the TerraBot via text input. The available commands are:
@@ -181,6 +181,10 @@ accurately mimic the software on the pi. (any ubuntu distro should be valid thou
 * ROS: [Instructions here](https://wiki.ros.org/melodic/Installation/Ubuntu_) for installing ROS.
 Keep in mind that only the Desktop install is neccesary. Depending on your internet connection
 this step may take a while.
+* Python 2.7 is required for ROS not 3.X. We will use the following packages:
+** sklearn for machine learning
+** opencv (python) for computer vision)
+** pytransitions for finite state machines
 * Panda3d, for graphics rendering
 * TerraBot and simulator (lib/farduino.py) nodes
 
