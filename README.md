@@ -181,10 +181,7 @@ accurately mimic the software on the pi. (any ubuntu distro should be valid thou
 * ROS: [Instructions here](https://wiki.ros.org/melodic/Installation/Ubuntu_) for installing ROS.
 Keep in mind that only the Desktop install is neccesary. Depending on your internet connection
 this step may take a while.
-* Python 2.7 is required for ROS not 3.X. We will use the following packages:
-** sklearn for machine learning
-** opencv (python) for computer vision)
-** pytransitions for finite state machines
+* Python 2.7 is required for our version of ROS not 3.X. We will use the following packages: sklearn for machine learning, opencv for computer vision, pytransitions for finite state machines
 * Panda3d, for graphics rendering
 * TerraBot and simulator (lib/farduino.py) nodes
 
