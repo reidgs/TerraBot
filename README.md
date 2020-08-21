@@ -136,7 +136,7 @@ never access the same topics as the Arduino. When not using the actual hardware,
 The agent node is how you autonomously control the greenhouse. You will be able to access sensor data by subscribing to the topics to which the TerraBot publishes. You will also be able to write data to the actuators by publishing to the topics to which the TerraBot subscribes.
 
 #### Interactive Agent ####
-The interactive agent (agents/interactive_agent.py) enables you to interact with the TerraBot (either the real hardware or the simulator) using the same topics that your agent will be using. You start the interactive agent in a separate window from TerraBot.  The command line options are:
+The interactive agent (agents/interactive_agent.py) enables you to interact with the TerraBot (either the real hardware or the simulator) using the same topics that your agent will be using. This program can be very useful for exploring how the TerraBot works, debugging, and checking on the statues of sensors.  You start the interactive agent in a separate window from TerraBot.  The command line options are:
 ```
 -s (--sim), to indicate that TerraBot is using the simulator
  -l (--log), which prints the sensor data (this latter flag is not really very useful anymore, but is there for historical reasons).  
@@ -154,13 +154,11 @@ Once the interactive agent is started and connects to the TerraBot (while the tw
   s <int>: set the simulated time speedup to the given value
   v: print the current sensor values
 ```
-Currently, the only run-time command is "q", which quits the agent.  
-
 *Note that the interactive agent can be run concurrently with other agents, so that you can view sensor values or turn on/off actuators manually while your autonomous system is running (this should be used only during development, not during testing).*
 
 ## Simulator ##
 
-Since access to the actual greenhouse is somewhat limited, and things can take a long time, we have provided a simulator so that you can test your code before deploying it on the actual hardware. 
+Since access to the actual greenhouse is somewhat limited, and growing plants can take a long time, we have provided a simulator so that you can test your code before deploying it on the actual hardware. 
 
 The simulator uses the same ROS topics as, and works in a way almost identical to, the Arduino node. The code for your agent and the TerraBot node is the exact same
 as it would be on the Raspberry Pi. However, instead of having an Arduino node, the simulator comes with a
@@ -192,12 +190,14 @@ In order to run the simulator, run the TerraBot with the simulator mode flag (-m
 >`./TerraBot.py -m sim -g -b param/default_baseline.bsl`  
 
 ### Graphics ###
-The -g flag will enable display of a graphical representation of the simulation. The graphics window contains a 3D model of the terrarium and the plants within, along with a text panel containing information about the current environment, e.g., whether the pump is on or off, humidity, etc. Sounds are played to represent the pump and fan. The arrow keys and WASD can be used to navigate the scene, and the viewport can be reset by pressing 'r'. The camera will take pictures directly from this scene, from the perspective of the blue camera model, as in the real terrarium. Note that the camera <i>can still be used</i> even when the -g flag is not included, and the images produced will be equivalent to those taken with the graphics on.
+We have included an option to display a graphical representation of the TerraBot hardware and the state of the simulation.  The display also includes a representation of the growing plants, showing how they develop (and either thrive or die) over time.
+
+The graphics display is enabled using the -g flag when running TerraBot. The graphics window contains a 3D model of the terrarium and the plants within, along with a text panel containing information about the current environment, e.g., whether the pump is on or off, humidity, etc. Sounds are played to represent the pump and fan. The arrow keys and WASD can be used to navigate the scene, and the viewport can be reset by pressing 'r'. The camera will take pictures directly from this scene, from the perspective of the blue camera model, as in the real terrarium. Note that the camera <i>can still be used</i> even when the -g flag is not included, and the images produced will be equivalent to those taken with the graphics on.
 
 ### Baseline File ###
-The simulator starts up with default values for the sensors, actuators, and clock.  You can create a 'baseline' .bsl text file to specify different initial values. To see the format in action, look in param/default_baseline.bsl. To specify a value, add a line in the format "name = value", optionally appending a comment (any characters after a "#" are ignored).
+The simulator starts up with default values for the sensors, actuators, and clock.  You can create a 'baseline' (.bsl) text file to specify different initial values. This enables you to set up specific scenarios that you want to test for, rather than waiting for them to arise at some point in time during the simulation. 
 
-The possible values you can change are : 
+The file param/default_baseline.bsl illustrates the format of the baseline files. In particular, to specify a value, add a line in the format "name = value", optionally appending a comment (any characters after a "#" are ignored).  The possible values you can change are : 
 > start, wpump, fan, led, temperature, humidity, smoist, wlevel, tankwater, plant_health, leaf_droop, lankiness
 
 The "start" value is used to specify a starting time for the simulation. The plants will be grown automatically up to this date, according to the "leaf_droop", "lankiness", and "plant_health" values (see below). The format is either an int (the time in seconds) OR in the form DAY-HH:MM:SS (note that start=0 and start=1-00:00:00 are equivalent).
@@ -243,7 +243,7 @@ This is useful, for instance, if you want to read the sensors infrequently until
 The camera is different from the rest of the sensors, as it is controlled directly by the Pi, and not by the Arduino. You can take a picture using the 'camera' topic; the single argument is the name of the file to store the JPEG image.  Note that, if you are using relative path name, the path is relative to the directory where you ran TerraBot, not to the directory you ran your agent.  **Make sure if the file path includes a directory that the directory actually exists, otherwise the image will not be saved.**
 
 ### Interference File ###
-The interference file contains a schedule of times to manipulate the data being transferred between nodes. Interference files can be used in conjunction with the simulator or the real hardware, although it is mainly intended to be used with the simulator to simulate sensor and actuator failures.
+Probably the one factor that makes reliable autonomous systems hard to develop is that unexpected events occur frequently.  While these can be rare and occur unpredictably, it is important for your agent to detect and handle anomalies that arise.  To that end, we have implemented a mechanism where it can seem as though sensors and actuators are noisy or not working correctly.  Which sensors and actuators are malfunctioning and what times, and how they are malfunctioning, are described in an *interference file*.  The interference file contains a schedule of times to manipulate the data being transferred between nodes. Interference files can be used in conjunction with the simulator or the real hardware, although it is mainly intended to be used with the simulator to simulate sensor and actuator failures.
 
 For sensor data and the LEDs, the available modification constraints are:
 ```
@@ -280,7 +280,7 @@ Note that 1) comments can be placed at the end of lines and 2) the time format i
 *If no file is passed in, there will be no intereference in the transfer of data.*
 
 ### Time Series ###
-The time series program (agents/time_series.py) provides a way to visualize the sensor data and actuator commands over time.  The program connects to the TerraBot node and subscribes to all the topics that the TerraBot handles (except for frequency and speedup).  It can optionally log the data for later replay. 
+It is often useful to visualize how the sensor and actuator data change over time.  For instance, to see how quickly environmental variables (such as moisture and humidity) change or to see whether the fans turn on at regular intervals.  To facilitate this, the time series program (agents/time_series.py) provides a way to visualize the sensor data and actuator commands over time.  The program connects to the TerraBot node and subscribes to all the topics that the TerraBot handles (except for frequency and speedup).  It can optionally log the data for later replay, so that you can analyze how things are working or input data to a machine learning algorithm. 
 
 The program displays a set of windows, one for each topic, and plots the topic values over time (the X-axis).  A window scrolls when the values approach the right side of the window.  The Y-axis for the fans and pump are discrete (either 0/off or 1/on), while the Y-axis for the sensors and LEDs are continuous.  The sensor values are plotted in green and the actuator values in blue.
 
