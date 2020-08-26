@@ -125,6 +125,9 @@ def print_sensor_values():
     print("Humidity: %.2f" %subplotsG['Humidity'].current)
     print("Soil Moisture: %.2f" %subplotsG['Soil Moisture'].current)
     print("Water Level: %.2f" %subplotsG['Water Level'].current)
+    print("LEDs: %d" %subplotsG['LEDs'].current)
+    print("Fan: %s" %("on" if subplotsG['Fan'].current else "off"))
+    print("Pump: %s" %("on" if subplotsG['Pump'].current  else "off"))
 
 parser = argparse.ArgumentParser(description = "Interactive Agent")
 parser.add_argument('-w', '--width', default = 24,
@@ -168,7 +171,7 @@ def handle_stdin ():
         input = sys.stdin.readline()
         if input[0] == 'q':
             quit()
-        elif input[0] == 's':
+        elif input[0] == 'v':
             print_sensor_values()
         else:
             print("Usage: q (quit)\n\ts (sensor values)")
