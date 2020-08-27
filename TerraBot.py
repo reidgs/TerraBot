@@ -11,7 +11,7 @@ from lib import tester as tester_mod
 from lib import send_email
 from lib import sim_camera as cam
 from lib.terrabot_utils import clock_time
-from baseline import Baseline
+from lib.baseline import Baseline
 from os.path import abspath
 
 ### Default values for the optional variables
