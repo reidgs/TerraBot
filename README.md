@@ -40,23 +40,25 @@ be prepared!
 
 Each greenhouse contains two light, moisture, temperature, and humidity sensors, one water-level sensor, one current sensor, and one camera. For the redundant sensors, data values are contained in arrays, where index 0 contains the sensor reading of the first sensor and index 1 contains the sensor reading of the second sensor.  For the current sensor, the first index is the current, the second is the energy usage, to date.
 
-| Name (topic name)            | Description                                                 | Message Type      | Range      |Optimal Growing|
-| ---------------------------- | ----------------------------------------------------------- | ----------------- | ---------- |---------------|
-| **_Sensors_**                |**_Use these to determine the system's state_**              |  **_—_**          |  **_—_**   |               | 
-| Current (cur)                | The current draw (index 0) and total energy usage (index 1) | Float32Array      |            |               |
-| Light (light)                | Light intesnity in the system                               | Int32Array        | 0-1000     | [850,950)     | 
-| Water level (level)          | Height of the water in the reservoir (in mm)                | Float32           | 3300=15cm  |               |
-| Temperature (temp)           | Internal temperature of the system                          | Int32Array        | in Celcius | [22C,28C)     |
-| Soil Moisture (smoist)       | The moisture of the pad  (higher is drier)                  | Int32Array        | 280-600    | [500,650)     |
-| Humidity (humid)             | Internal relative humidity  (%)                             | Int32Array        |  0-100     | <80%          |
-| Camera                       | Captures a photograph of stystem's state                    |   —               |   —        |               |
-| **_Actuators_**              |**_Use these to adjust the system's state_**                 | **_—_**           |  **_—_**   |               |
-| LED (led)                    | Adjust the power of the system's LED light fixture          | Int32             | 0-255      |               |
-| Water Pump (wpump)           | Toggle whether the water pump is on or off                  | Bool              | True-False |               |
-| Fan (fan)                    | Toggle whether the fan is on or off                         | Bool              | True-False |               |
-| Frequency (freq)             | Adjust the sensing frequency of a specific sensor           | See lib/frqmsg.py |  —         |               |
+| Name (topic name)            | Description                                                 | Message Type      | Range      |
+| ---------------------------- | ----------------------------------------------------------- | ----------------- | ---------- |
+| **_Sensors_**                |**_Use these to determine the system's state_**              |  **_—_**          |  **_—_**   | 
+| Current (cur)                | The current draw (index 0) and total energy usage (index 1) | Float32Array      |            |
+| Light (light)                | Light intesnity in the system                               | Int32Array        | 0-1000     | 
+| Water level (level)          | Height of the water in the reservoir (in mm)                | Float32           | 3300=15cm  | 
+| Temperature (temp)           | Internal temperature of the system                          | Int32Array        | in Celcius | 
+| Soil Moisture (smoist)       | The moisture of the pad  (higher is drier)                  | Int32Array        | 280-600    | 
+| Humidity (humid)             | Internal relative humidity  (%)                             | Int32Array        |  0-100     | 
+| Camera                       | Captures a photograph of stystem's state                    |   —               |   —        | 
+| **_Actuators_**              |**_Use these to adjust the system's state_**                 | **_—_**           |  **_—_**   | 
+| LED (led)                    | Adjust the power of the system's LED light fixture          | Int32             | 0-255      |
+| Water Pump (wpump)           | Toggle whether the water pump is on or off                  | Bool              | True-False |
+| Fan (fan)                    | Toggle whether the fan is on or off                         | Bool              | True-False | 
+| Frequency (freq)             | Adjust the sensing frequency of a specific sensor           | See lib/frqmsg.py |  —         |
 
 Note: The water pump pumps 1cm depth of water (~.93cups) per minute.
+
+For optimal growing parameters, see TerraBot/agents/limits.py
 
 ### TerraBot Software Architecture ###
 An Arduino communicates directly with the sensors and actuators, converts the raw data into clean data, and then forwards that data to a Raspberry Pi.
@@ -182,7 +184,7 @@ accurately mimic the software on the pi. (any ubuntu distro should be valid thou
 Keep in mind that only the Desktop install is neccesary. Depending on your internet connection
 this step may take a while.
 * Python 2.7 is required for our version of ROS not 3.X. We will use the following packages: sklearn for machine learning, opencv for computer vision, pytransitions for finite state machines
-* Panda3d, for graphics rendering
+* Panda3d, for graphics rendering (pip install panda3d)
 * TerraBot and simulator (lib/farduino.py) nodes
 
 ### Running the Simulator ###
