@@ -1,6 +1,6 @@
 scale = {}
 limits = {}
-optimal = {}
+optimal = {} # Note, not all the sensors have 'optimal' levels
 names = {}
 
 scale['light_level'] = [0, 1000]
