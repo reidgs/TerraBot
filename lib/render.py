@@ -421,12 +421,13 @@ class Terrarium(ShowBase):
         self.textpanel2.text = \
         '''
         Time : {:04.2f} seconds
+        Light level: {:04.2f}
         Temperature : {:04.2f} degrees
         Soil water : {:04.2f} ml 
         Humidity : {:04.2f} ml
         Volume : {:04.2f} ml
         Current Speedup : {}x
-        '''.format(params['time'], params['temperature'], params['soilwater'] * 2, \
+        '''.format(params['time'], light, params['temperature'], params['soilwater'] * 2, \
             params['airwater'], params['volume'], speedup)
 
         self.fansound(params['fan'])
