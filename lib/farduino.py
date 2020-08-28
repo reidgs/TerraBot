@@ -206,7 +206,7 @@ def sim_loop():
     
 droop = 0
 lankiness = 0
-plant_health = 0
+plant_health = 1
 age = 0
 if bl is not None:
     age = bl.params['start'] 
