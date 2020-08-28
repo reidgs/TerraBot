@@ -153,6 +153,7 @@ Once the interactive agent is started and connects to the TerraBot (while the tw
   l <int>: turn leds to the given value, between 0 and 255
   c <filename>: take an image and store in the given file
   r <sensor> <val>: set the frequency of publishing the named sensor's values, in terms of seconds (e.g. 10 is 10 Hz, 0.1 is once every ten seconds, default is 1, for all sensors)
+  e <sensor> <val>: set the period of publishing the named sensor's values, in seconds (for convenience - period is 1/frequency)
   s <int>: set the simulated time speedup to the given value
   v: print the current sensor values
 ```
