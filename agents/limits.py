@@ -4,8 +4,8 @@ optimal = {} # Note, not all the sensors have 'optimal' levels
 names = {}
 
 scale['light_level'] = [0, 1000]
-limits['light_level'] = [800, 950]
-optimal['light_level'] = [850,950]
+limits['light_level'] = [850, 950]
+optimal['light_level'] = [860,940]
 names['light_level'] = 'lights'
 
 scale['water_level'] = [0, 200]
@@ -14,18 +14,18 @@ optimal['water_level'] = [5,200]
 names['water_level'] = 'w_level'
 
 scale['moisture'] = [0, 1000]
-limits['moisture'] = [450, 650]
-optimal['moisture'] = [500,650]
+limits['moisture'] = [500, 650]
+optimal['moisture'] = [550,600]
 names['moisture'] = 'moist'
 
 scale['humidity'] = [0, 100]
-limits['humidity'] = [75, 90]
-optimal['humidity'] = [60, 80]
+limits['humidity'] = [60, 80]
+optimal['humidity'] = [70, 75]
 names['humidity'] = 'humid'
 
 scale['temperature'] = [10, 40] # Celcius
-limits['temperature'] = [24, 30]
-optimal['temperature'] = [24,29]
+limits['temperature'] = [24, 29]
+optimal['temperature'] = [26,27]
 names['temperature'] = 'temp'
 
 scale['current'] = [0, 1000]
