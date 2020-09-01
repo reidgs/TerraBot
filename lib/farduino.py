@@ -123,7 +123,7 @@ def sense_temp():
 
 def sense_humid():
     h_array = Int32MultiArray()
-    h_array.data = [int(env.params['airwater'] )] * 2
+    h_array.data = [round(env.params['humidity'])] * 2
     publishers['humid'].publish(h_array)
               
 def sensor_forward_time(duration):
