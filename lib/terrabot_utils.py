@@ -16,7 +16,7 @@ def dtime_to_seconds(dtime):
     return clock_to_seconds(datetime.strptime(dtime, "%d-%H:%M:%S"))
 
 def clock_time(time):
-    return datetime.fromtimestamp(time).strftime("%d %H:%M:%S")
+    return datetime.fromtimestamp(time).strftime("%d-%H:%M:%S")
 
 def time_since_midnight(time):
     dtime = datetime.fromtimestamp(time)

@@ -16,7 +16,8 @@ import random
 import plant
 import math
 from time import sleep
-
+from terrabot_utils import clock_time
+from environment import max_daylight, day_fraction, airwater_to_humid
 
 # Importing math constants and functions
 from math import pi, sin, cos
@@ -25,7 +26,7 @@ import atexit
 
 class Terrarium(ShowBase):
 
-    def __init__(self, shown, initTime, leafDroop, lankiness, plant_health):
+    def __init__(self, shown, t0, initTime, leafDroop, lankiness, plant_health):
         loadPrcFileData('', 'win-size 1024 768')
         loadPrcFileData("", "window-type none")
         
@@ -44,6 +45,8 @@ class Terrarium(ShowBase):
         self.pic = False
         self.loc = None
         self.shown = shown
+
+        self.start_time = t0;
             
         atexit.register(self.userExit)
         self.BASE_TEXT = '''
@@ -51,15 +54,18 @@ class Terrarium(ShowBase):
         Fans: OFF
         LEDs: 255
         '''
-        self.BASE_TEXT2 = '''
-        Time : 0 seconds
-        Temperature : 20 degrees
-        Soil water : 0 ml 
-        Humidity : 50 ml
-        Volume : 3000 ml
-        Current Speedup : 1x
+
+        self.BASE_TEXT2 = \
         '''
-        
+        Time : {:s}
+        Light level: 0
+        Temperature : 20 C
+        Soil moisture : 0
+        Humidity : 50%
+        Volume : 3000 ml
+        Speedup : 1x
+        '''.format(clock_time(t0 + initTime))
+
         self.lastTime = initTime
         self.droop = leafDroop
         self.lankiness = lankiness
@@ -259,7 +265,8 @@ class Terrarium(ShowBase):
 
     # Panda Lighting
     def setupLights(self):
-        
+        global ambientLight
+
         ambientLight = AmbientLight("ambientLight")
         ambientLight.setColor((.8, .8, .8, 1))
         render.setLight(render.attachNewNode(ambientLight))
@@ -321,6 +328,11 @@ class Terrarium(ShowBase):
         if mult < 0:
             mult = 0.0
         self.t_growmat.setColorScale(.7 + mult / 3, .7 + mult / 3, .7 + mult / 3, 1)
+
+    def setAmbient(self, time):
+        global ambientLight
+        sunlight = max(0.2, day_fraction(time))
+        ambientLight.setColor((sunlight, sunlight, sunlight, 1))
 
     def fansound(self, fan):
         if not self.shown:
@@ -393,6 +405,7 @@ class Terrarium(ShowBase):
         self.setFans(params['fan']) #Fan Update
         self.setTankWater(params['tankwater']) #Tankwater update
         self.setSoilColor(params['soilwater'])
+        self.setAmbient(params['time'])
         
         for plant in self.plants:
             plant.grow(params, params['time'] - self.lastTime, light)
@@ -420,15 +433,16 @@ class Terrarium(ShowBase):
 
         self.textpanel2.text = \
         '''
-        Time : {:04.2f} seconds
-        Light level: {:04.2f}
-        Temperature : {:04.2f} degrees
-        Soil water : {:04.2f} ml 
-        Humidity : {:04.2f} ml
+        Time : {:s}
+        Light level: {:01.0f}
+        Temperature : {:04.1f} C
+        Soil moisture : {:03.1f}
+        Humidity : {:02.0f}%
         Volume : {:04.2f} ml
-        Current Speedup : {}x
-        '''.format(params['time'], light, params['temperature'], params['soilwater'] * 2, \
-            params['airwater'], params['volume'], speedup)
+        Speedup : {}x
+        '''.format(clock_time(self.start_time + params['time']), light, \
+                   params['temperature'], 2*params['soilwater'], \
+                   params['humidity'], params['volume'], speedup)
 
         self.fansound(params['fan'])
         self.pumpsound(params['wpump'])

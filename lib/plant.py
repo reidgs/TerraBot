@@ -131,15 +131,15 @@ class LettuceLeaf:
 stem_rate = 2 / (.7 * 20 * day)     #cm/sec*health  takes 20 days to grow 2 cm in full light
 leaf_stem_rate = stem_rate * 8      #cm/sec*health  leaf stems grow ~8x faster than main (?)
 
-optimal_temperature = [18, 25]      #degrees celcius the temps out of which health will decline
+optimal_temperature = [20, 28]      #degrees celcius the temps out of which health will decline
 temp_health_rate = .01 / 3600       #health/degree*second the rate at which health declines if outside of this range
                                     #or increases if inside it.
 
-optimal_soilwater = [450 / 2, 700 / 2]      #ml " "
+optimal_soilwater = [500 / 2, 650 / 2]      #ml " "
 sw_health_rate = .1 / (100 * 3600)  #health/ml*second
 
-optimal_airwater = [0, 70]         #ml " "
-aw_health_rate = .01 / (5 * day)  #health/ml*sec
+optimal_humidity = [60, 80]         # Percentage
+humidity_health_rate = .01 / (5 * day)  #health/ml*sec
 
 minimum_light = 250                 #Again, very ballpark. less light will be detrimental.
 light_health_up_rate = .01 / 3600
@@ -299,10 +299,10 @@ class Plant(object):
         else:
             health_delta += sw_health_rate * duration
 
-        if env_params['airwater'] < optimal_airwater[0]:
-            health_delta -= duration * aw_health_rate * (optimal_airwater[0] - env_params['airwater'])
-        elif env_params['airwater'] > optimal_airwater[1]:
-            health_delta -= duration * aw_health_rate * (env_params['airwater'] - optimal_airwater[1])
+        if env_params['humidity'] < optimal_humidity[0]:
+            health_delta -= duration * humidity_health_rate * (optimal_humidity[0] - env_params['humidity'])
+        elif env_params['humidity'] > optimal_humidity[1]:
+            health_delta -= duration * humidity_health_rate * (env_params['humidity'] - optimal_humidity[1])
         else:
             health_delta += sw_health_rate * duration
 

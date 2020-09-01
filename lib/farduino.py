@@ -8,18 +8,17 @@ from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiA
 from topic_def import *
 from rosgraph_msgs.msg import Clock
 import time
-from datetime import datetime
 import argparse                                                    
 from baseline import Baseline
 from os.path import abspath
-from terrabot_utils import clock_time, time_since_midnight
 
 import environment as env
 from render import Terrarium
 from freqmsg import frommsg
 import threading
 import sys
-
+from datetime import datetime
+from terrabot_utils import clock_time
 
 ### Parse arguments
 
@@ -166,14 +165,16 @@ generate_subscribers()
 ### Sim loop (Put here for threading purposes)
 doloop = True
 
+t0 = int(datetime(2000, 1, 1).strftime('%s')) # Initialize to 01-00:00:00, for display purposes
+
 def sim_loop():   
-    global doloop   
+    global doloop
     tick_time = .25  # This is how long between runs of the below loop in seconds
     speedup = default_speedup                
-    now = 0
+    now = t0
     if bl is not None:
-        now = bl.params['start']
-    clock_pub.publish(rospy.Time.from_sec(now)) #Publish initial time (I think this is unnecessary)
+        now += bl.params['start']
+    clock_pub.publish(rospy.Time.from_sec(now)) #Publish initial time
 
     time.sleep(1) #give a sec
      
@@ -213,8 +214,9 @@ if bl is not None:
     droop = bl.params['leaf_droop']
     lankiness = bl.params['lankiness']
     plant_health = bl.params['plant_health']
-    
-renderer = Terrarium(args.graphics, age, droop, lankiness, plant_health)
+
+renderer = Terrarium(args.graphics, t0, age, droop, lankiness, plant_health)
+env.params['time'] = age
 renderer.update_env_params(env.params, default_speedup, env.light_average())
 
 def cam_cb(data):

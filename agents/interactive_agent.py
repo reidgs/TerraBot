@@ -97,6 +97,7 @@ def power_reaction(data, sensorsG):
 def cam_reaction(data):
     print ("picture taken\t" + data.data)
 
+last_ping = 0
 def ping():
     global last_ping
     print("PING! %s" %clock_time(sensorsG.time))
@@ -116,7 +117,7 @@ def timeAt(sec):
 init_ros()
 init_sensors()
 rospy.sleep(2) # Give a chance for the initial sensor values to be read
-ping()
+while rospy.get_time() == 0: rospy.sleep(0.1) # Wait for clock to start up correctly
 
 while not rospy.core.is_shutdown():
     sensorsG.time = rospy.get_time()
@@ -177,7 +178,7 @@ while not rospy.core.is_shutdown():
                             sensorsG.moisture_raw[1]))
                     print("  Reservoir level: %.1f" %sensorsG.water_level)
                 else:
-                    print("Usage: q (quit)\n\tf [on|off] (fan on/off)\n\tp [on|off] (pump on/off)\n\tl [<level>|on|off] (led set to level ('on'=255; 'off'=0)\n\tr [smoist|cur|light|level|temp|humid] [<frequency>] (update sensor to frequency)\n\t. [smoist|cur|light|level|temp|humid] [<period>] (update sensor to every <period> seconds)\n\tc <file> (take a picture, store in 'file')\n\ts [<speedup>] (change current speedup)\n\tv (print sensor values)")
+                    print("Usage: q (quit)\n\tf [on|off] (fan on/off)\n\tp [on|off] (pump on/off)\n\tl [<level>|on|off] (led set to level ('on'=255; 'off'=0)\n\tr [smoist|cur|light|level|temp|humid] [<frequency>] (update sensor to frequency)\n\te [smoist|cur|light|level|temp|humid] [<period>] (update sensor to every <period> seconds)\n\tc <file> (take a picture, store in 'file')\n\ts [<speedup>] (change current speedup)\n\tv (print sensor values)")
             except:
                 print("An error occurred and the action could not be executed")
             

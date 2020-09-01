@@ -1,6 +1,5 @@
 from math import sqrt
 
-
 ### ENVIRONMENT ###
 
 #Probably a plant class to store a plants' height, color, location, etc.
@@ -16,7 +15,7 @@ from math import sqrt
 # plants --> smoist, humidity
 # smoist <-- plants, temperature, wpump
 # smoist --> plants, humidity, tankwater
-# humidity <-- plants, smoist, tankwater, fan
+# humidity <-- plants, smoist, tankwater, fan, temp
 # humidity --> plants
 # temperature <-- light?, fan
 # temperature --> plants, smoist, humidity, tankwater
@@ -37,13 +36,14 @@ from math import sqrt
 max_soilwater = 1000        #ml The level at which the soil is fully saturated and will begin to overflow
 flow_rate = 3.5             #ml/sec The rate at which the pump will pump water
 drip_rate = .1              #ml/sec The rate at which water drips from the pipe when the pump is off
-volume_rate = 1000 / 45          #ml/mm in the reservoir (used for sensing level)
+evap_rate = 1.4             #ml/sec The nominal rate at which water will evaporate
+volume_rate = 1000.0 / 45   #ml/mm in the reservoir (used for sensing level)
 light_diffuse = .7          #The percentage of sunlight that reaches the other side
 max_daylight = 588          #The sunlight right at the window at midday
 tank_width = .4             #m the width of the terrarium
-led_power = 2.35            #units of light per LED level
+led_power = 3.725           #units of light per LED level
 room_temp = 20              #degrees C the room temperature out of the greenhouse
-room_airwater = 25          #water content of air outside greenhouse
+room_humidity = 50          # Humicity of air outside greenhouse
 fan_cool_rate = .05 / 60    #deg C /min The rate at which temp decreases due to the fan
 pipe_capacity = 30          #ml The capacity of the pipe
 
@@ -52,10 +52,12 @@ pump_current = .2           # The current needed to support each device when it'
 fan_current = .06           #
 
 #Environment Parameters
-params = { 'time' : 0,
+params = { 'time' : 0, # This should start at 2020-10-01-00:00:00
+           'start' : 0, # This is in seconds, starting at zero
 
-             'soilwater' : 350,
-             'airwater' : room_airwater,
+           'humidity' : 50, # Percent
+             'soilwater' : 550/2,
+             'airwater' : None, # Calculate from humidity
              'temperature' : room_temp,
              
              'volume' : 3000.0,
@@ -86,7 +88,7 @@ def light_level(distance):
     #Gives light level at a distance from the lit side of the tank TODO change to tanh? or maybe not
     sunlight = max_daylight * (1 + distance * coeff2) * day_fraction(params['time'])
     ledlight = led_power * params['led']
-    return min(1.1 * max_daylight, sqrt(sunlight**2 + ledlight**2)) #This is done pythagorically, there may be a better way
+    return min(1000, sqrt(sunlight**2 + ledlight**2)) #This is done pythagorically, there may be a better way
                                                 #I think its ok? for the light to be too high at the extreme
                                                 #This is NOT Ok if temp is based on light 
     
@@ -107,32 +109,63 @@ def temp_equil_rate():
 def temp_evap_multiplier():
     #most evaporative movements are multiplied by this to account for temperature
     return 1 + params['temperature'] / 200
-    
-def evapotranspiration_rate():
+
+def humidity_evap_multiplier():
+    # Evaporation is inversely proportional to humidity of greenhouse
+    #  Zero at 100% humidity, 1 at 50%, 2 at 0%
+    return 2 * (1 - params['humidity'] / 100)
+
+# TODO This should be based on plants size and health but, as a proxy,
+#   make it relative to length that the plants have been growing
+max_plant_area = 25 # cm^2
+def estimated_plant_area():
+    dt = (params['time'] - params['start'])
+    return max_plant_area*dt/(14*86400.0) # Max out after 14 days
+
+def transpiration_rate():
     #The rate at which water moves soil->air due to plants
-    #TODO This should be based on plants. i.e. more for healthier/bigger plants,...
-    #Also should be more with fan on?
-    return 4.0 / 1000 #* temp_evap_multiplier()? # approx 4ml/hr...?
+    return (0.05/3600)*estimated_plant_area()
     
 def soil_evaporation_rate():
     #The rate at which water moves soil->air due to direct evaporation
     #average about 1 ml/hr, based on soil water content
-    base = (.5 + (params['soilwater'] / max_soilwater)) / 3600
+    base = (evap_rate / 3600) * (params['soilwater'] / max_soilwater)
     if params['fan']:
         base *= 3 #Fan increases evaporation speed
-    return base * temp_evap_multiplier()
-        
+    return base * temp_evap_multiplier() * humidity_evap_multiplier()
+
 def tank_evaporation_rate():
     #The rate at which water moves tank->air due to direct evaporation
-    return 5.0 / 3600 * temp_evap_multiplier() #This need to be better
+    base = evap_rate / 3600
+    return base * temp_evap_multiplier() * humidity_evap_multiplier()
+
+def temp_to_pressure(temp):
+    return 6.11*10**((7.5*temp)/(237.7+temp))
+
+def airwater_to_humid(airwater, temp):
+    Es = temp_to_pressure(temp)
+    E = (temp + 273.15)*461.5*(airwater/3933.0)
+    return 100*E/Es
+
+def humid_to_airwater(humid, temp): # In percent
+    Es = temp_to_pressure(temp)
+    E = Es*humid/100.0
+    return (3933.0*E)/(461.5*(temp + 273.15))
+
+# if humid > 100, then calculate the excess water that should precipitate out
+def update_airwater_humid(airwater, temp):
+    humid = airwater_to_humid(airwater, temp)
+    if (humid <= 100): return (humid, airwater, 0)
+    else:
+        sat_water = humid_to_airwater(100, temp)
+        return (100, sat_water, airwater - sat_water)
     
 def exit_rate():
-    #The rate at which water leaves the greenhouse via air
-    #This should increase with airwater, and be _much_ larger with fan
-    base = (6 + .001 * (params['airwater'] - room_airwater)) / 400 if params['fan'] else (params['airwater'] - room_airwater) / 13000
-    if params['temperature'] > room_temp:
-        base *= (1 + (params['temperature'] - room_temp) / 80)
-    return base
+    # The rate at which water leaves the greenhouse via air.
+    # Based on difference in humidity between greenhouse and room,
+    #  is _much_ faster with the fan
+    base = params['airwater'] * (2.0 if params['fan'] else 0.01)/3600
+    return base * (params['humidity']/room_humidity - 1)
         
 def get_cur():
     return (5.0 + led_current * params['led'] +
@@ -167,7 +200,8 @@ def forward_water_cycle(duration):
        params['tankwater'] += params['soilwater'] - max_soilwater
        params['soilwater'] = max_soilwater
     #from soil to air because of plants
-    vol = min(duration * evapotranspiration_rate(), params['soilwater'])
+    aw = params['airwater']
+    vol = min(duration * transpiration_rate(), params['soilwater'])
     params['soilwater'] -= vol
     params['airwater'] += vol
     #from soil to air by evaporation
@@ -179,8 +213,13 @@ def forward_water_cycle(duration):
     params['tankwater'] -= vol
     params['airwater'] += vol
     #from air to outside the greenhouse
-    params['airwater'] = min(max(0.0, params['airwater'] - exit_rate() * duration), 100)
-    
+    vol = duration * exit_rate()
+    params['airwater'] = min(max(0.0, params['airwater'] - vol), 100)
+    humid, params['airwater'], excess_water = \
+           update_airwater_humid(params['airwater'], params['temperature'])
+    params['humidity'] = humid
+    params['tankwater'] += excess_water
+
     return duration
     
 def forward_temperature(duration):
@@ -192,6 +231,7 @@ def forward_temperature(duration):
     params['temperature'] += duration * light_heat_rate()
     #Change to equilibriate with outside env TODO if duration is big, newtons law of cooling may get out of hand
     params['temperature'] += duration * temp_equil_rate()
+    params['temperature'] = max(params['temperature'], room_temp)
 
 
 def forward_time(duration): #Here is where most of the env mutation takes place
@@ -217,12 +257,9 @@ def init(bl):
             if k in params:
                 params[k] = v
             elif k == 'humidity':
-                params['airwater'] = v
+                params['humidity'] = v
             elif k == 'smoist':
                 params['soilwater'] = v / 2
             elif k == 'wlevel':
                 params['volume'] = v * volume_rate
-    
-
-
-
+    params['airwater'] = humid_to_airwater(params['humidity'], params['temperature'])
