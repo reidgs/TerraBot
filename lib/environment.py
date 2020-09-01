@@ -45,7 +45,7 @@ led_power = 3.725           #units of light per LED level
 room_temp = 20              #degrees C the room temperature out of the greenhouse
 room_humidity = 50          # Humicity of air outside greenhouse
 fan_cool_rate = .05 / 60    #deg C /min The rate at which temp decreases due to the fan
-pipe_capacity = 30          #ml The capacity of the pipe
+pipe_capacity = 100          #ml The capacity of the pipe
 
 led_current = 3.2/255       #
 pump_current = .2           # The current needed to support each device when it's on
