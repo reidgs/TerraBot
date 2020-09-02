@@ -65,22 +65,22 @@ def init_ros ():
     rospy.Subscriber("cur_output", Float32MultiArray, power_reaction, sensorsG)
 
 def moisture_reaction(data, sensorsG):
-    sensorsG.moisture = (data.data[0] + data.data[1])/2
+    sensorsG.moisture = (data.data[0] + data.data[1])/2.0
     sensorsG.moisture_raw = data.data
     if is_logging: print("    Moisture: %d %d" %(data.data[0], data.data[1]))
 
 def humid_reaction(data, sensorsG):
-    sensorsG.humidity = (data.data[0] + data.data[1])/2
+    sensorsG.humidity = (data.data[0] + data.data[1])/2.0
     sensorsG.humidity_raw = data.data
     if is_logging: print("    Humidity: %d %d" %(data.data[0], data.data[1]))
 
 def temp_reaction(data, sensorsG):
-    sensorsG.temperature = (data.data[0] + data.data[1])/2
+    sensorsG.temperature = (data.data[0] + data.data[1])/2.0
     sensorsG.temperature_raw = data.data
     if is_logging: print("    Temperature: %d %d" %(data.data[0], data.data[1]))
 
 def light_reaction(data, sensorsG):
-    sensorsG.light_level = (data.data[0] + data.data[1])/2
+    sensorsG.light_level = (data.data[0] + data.data[1])/2.0
     sensorsG.light_level_raw = data.data
     if is_logging: print("    Lights: %d %d" %(data.data[0], data.data[1]))
 
@@ -100,19 +100,9 @@ def cam_reaction(data):
 last_ping = 0
 def ping():
     global last_ping
-    print("PING! %s" %clock_time(sensorsG.time))
+    #print("PING! %s" %clock_time(sensorsG.time))
     last_ping = sensorsG.time
     ping_pub.publish(True)
-    
-def timeAt(sec):
-    day = 1 + sec / (3600 * 24)
-    sec %= (3600 * 24)
-    hr = sec / 3600
-    sec %= 3600
-    minute = sec / 60
-    sec %= 60
-    return "{}-{:0>2d}:{:0>2d}:{:0>2d}".format(int(day), int(hr), int(minute), int(sec))
-
 
 init_ros()
 init_sensors()
@@ -163,7 +153,7 @@ while not rospy.core.is_shutdown():
                 elif input[0] == 's':
                     speedup_pub.publish(int(input[1:]))
                 elif input[0] == 'v':
-                    print("Sensor values at %s" % timeAt(int(sensorsG.time)))
+                    print("Sensor values at %s" % clock_time(sensorsG.time))
                     print("  Light level: %.1f (%.1f, %.1f)"
                           %(sensorsG.light_level, sensorsG.light_level_raw[0],
                             sensorsG.light_level_raw[1]))
@@ -182,5 +172,4 @@ while not rospy.core.is_shutdown():
             except:
                 print("An error occurred and the action could not be executed")
             
-
     rospy.sleep(1)

@@ -174,6 +174,11 @@ def terminate_sim():
 def terminate_serial():
     global serial_p, serial_log
     if (serial_p != None):
+        print("Turning off actuators")
+        publishers['led'].publish(0)
+        publishers['wpump'].publish(0)
+        publishers['fan'].publish(0)
+
         print("Terminating serial")
         terminate(serial_p, serial_log)
         serial_p = None; serial_log = None

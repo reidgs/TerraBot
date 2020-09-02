@@ -64,9 +64,6 @@ long light_count = 0;
 long cur_sum = 0;
 long cur_count = 0;
 
-std_msgs::String cam_msg;
-ros::Publisher cam_pub("camera", &cam_msg);
-
 #define SEN_CMP(sensor) (strncmp(cmd_msg.data, sensor, slen) == 0)
 
 //Frequency Adjustment
@@ -74,7 +71,6 @@ void freq_change( const std_msgs::String& cmd_msg){
   const char *sep = strchr(cmd_msg.data, '|');
   int slen = sep-cmd_msg.data;
   double freq = atof(sep+1);
-//  unsigned long period = (freq == 0 ? 99999999 : (unsigned long)(0.5 + 1000.0/freq));
   unsigned long period = (freq == 0 ? 99999999 : round(1000.0/freq));
   Timing *timingPtr = (SEN_CMP("light")  ? &light_timing :
 		       SEN_CMP("temp")   ? &temp_timing :
@@ -163,7 +159,6 @@ void setup(){
   nh.advertise(light_pub);
   nh.advertise(level_pub);
   nh.advertise(smoist_pub);
-  nh.advertise(cam_pub);
   nh.advertise(cur_pub);
 }
 
@@ -227,8 +222,8 @@ void loop(){
       light_pub.publish(&light_msg);
 
       // Reset light values
-      light_sum1 = 0; 
-     light_sum2 = 0;
+      light_sum1 = 0;
+      light_sum2 = 0;
       light_count = 0;
   }
 
