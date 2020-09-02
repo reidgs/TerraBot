@@ -91,9 +91,9 @@ def update_actuator_data(data, subplot):
     if (log_file) : log_file.write("%f '%s' %d\n" %(rospy.get_time(),
                                                     subplot.name, data.data))
 
-def add_time_series(fig, name, limits, force_update, color, nrow, plot_width):
+def add_time_series(fig, name, limits, force_update, color, pos, plot_width):
     global subplotsG, nrowsG, ncolsG
-    ax = fig.add_subplot(nrowsG, ncolsG, nrow)
+    ax = fig.add_subplot(nrowsG, ncolsG, pos)
     plt.title(name)
     subplotsG[name] = Subplots(name, ax, color, plot_width, force_update)
     ax.set_xlim(0, plot_width) # hours
@@ -163,6 +163,7 @@ def update_plots (hours_since_start):
         if (subplotsG[plot[0]].update(hours_since_start)): updated = True
     if (updated):
         fig.canvas.draw()
+        plt.pause(0.001)
         plt.show()
     return updated
 
@@ -170,6 +171,7 @@ def handle_stdin ():
     if sys.stdin in select.select([sys.stdin],[],[],0)[0]:
         input = sys.stdin.readline()
         if input[0] == 'q':
+            plt.close()
             quit()
         elif input[0] == 'v':
             print_sensor_values()

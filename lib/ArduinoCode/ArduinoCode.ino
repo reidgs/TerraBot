@@ -10,7 +10,9 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/Int32MultiArray.h>
+#include <std_msgs/String.h>
 #include <SimpleDHT.h>
+#include <string.h>
 
 // Internal Values
 byte temperature1 = 0;
@@ -38,20 +40,19 @@ SimpleDHT22 dht1(DHT_pin1);
 SimpleDHT22 dht2(DHT_pin2);
 
 // Actuator pins
-int led_pin = 11;
+//int led_pin = 11;
+int led_pin = 10;
 int wpump_pin = 12;
 int fan_pin = 13;
 
 struct Timing {
-  long unsigned int next = 0;
-  long unsigned int period = 1000;
-}
+  unsigned long next = 0;
+  unsigned long period = 1000;
+};
 
 // Time dependant variables
-//float last_update = 0;
 long unsigned int last_dht = 0;
-float time_now = 0;
-//int interval = 1000;
+unsigned long time_now = 0;
 Timing light_timing, temp_timing, humidity_timing;
 Timing wlevel_timing, smoist_timing, current_timing;
 
@@ -63,21 +64,29 @@ long light_count = 0;
 long cur_sum = 0;
 long cur_count = 0;
 
+std_msgs::String cam_msg;
+ros::Publisher cam_pub("camera", &cam_msg);
+
+#define SEN_CMP(sensor) (strncmp(cmd_msg.data, sensor, slen) == 0)
 
 //Frequency Adjustment
 void freq_change( const std_msgs::String& cmd_msg){
-  size_t sep = cmd_msg.data.find("|");
-  String ssensor = cmd_msg.data.substring(0, sep-1);
-  float freq = stof(cmd_msg.data.substring(sep+1));
-  float period = (freq == 0 ? 99999999 : round(1000.0/freq));
-
-  if (sensor == "light")     light_timing.period = period;
-  else if (sensor == "temp") temp_timing.period = period;
-  else if (sensor == "humid") humidity_timing.period = period;
-  else if (sensor == "level") wlevel_timing.period = period;
-  else if (sensor == "smoist")smoist_timing.period = period;
-  else if (sensor == "cur")   current_timing.period = period;
-  else printf("Oops\n");
+  const char *sep = strchr(cmd_msg.data, '|');
+  int slen = sep-cmd_msg.data;
+  double freq = atof(sep+1);
+//  unsigned long period = (freq == 0 ? 99999999 : (unsigned long)(0.5 + 1000.0/freq));
+  unsigned long period = (freq == 0 ? 99999999 : round(1000.0/freq));
+  Timing *timingPtr = (SEN_CMP("light")  ? &light_timing :
+		       SEN_CMP("temp")   ? &temp_timing :
+		       SEN_CMP("humid")  ? &humidity_timing :
+		       SEN_CMP("level")  ? &wlevel_timing :
+		       SEN_CMP("smoist") ? &smoist_timing :
+		       SEN_CMP("cur")    ? &current_timing : NULL);
+  if (timingPtr == NULL) printf("Oops\n");
+  else {
+    timingPtr->period = period;
+    timingPtr->next = time_now + period;
+  }
 }
 
 ros::Subscriber<std_msgs::String> freq_sub("freq_raw", &freq_change);
@@ -88,7 +97,8 @@ void led_activate( const std_msgs::Int32& cmd_msg){
 }
 
 void wpump_activate(const std_msgs::Bool& cmd_msg){
-  analogWrite(wpump_pin, cmd_msg.data ? 75 : 0);
+//  analogWrite(wpump_pin, cmd_msg.data ? 75 : 0);
+  analogWrite(wpump_pin, cmd_msg.data ? 90 : 0);
 }
 
 void fan_activate(const std_msgs::Bool& cmd_msg){
@@ -153,6 +163,7 @@ void setup(){
   nh.advertise(light_pub);
   nh.advertise(level_pub);
   nh.advertise(smoist_pub);
+  nh.advertise(cam_pub);
   nh.advertise(cur_pub);
 }
 
@@ -161,8 +172,8 @@ float to_amp(int analog) {
 }
 void loop(){
   // Keep track of the amount of light
-  time_now = millis()
-  if (light_timing.next - time_now) < 1000) {
+  time_now = millis();
+  if (light_timing.next - time_now < 1000) {
     light_count++;
     light_sum1 += analogRead(light_pin1);
     light_sum2 += analogRead(light_pin2);
@@ -216,8 +227,8 @@ void loop(){
       light_pub.publish(&light_msg);
 
       // Reset light values
-      light_sum1 = 0;
-      light_sum2 = 0;
+      light_sum1 = 0; 
+     light_sum2 = 0;
       light_count = 0;
   }
 
