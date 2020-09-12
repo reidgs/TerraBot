@@ -213,8 +213,6 @@ if simulate: # Use simulated time if starting simulator
     rospy.set_param("use_sim_time", True)
 rospy.init_node('TerraBot', anonymous = True)
 
-now = 0 if simulate else rospy.get_time()
-
 generate_publishers()
 generate_subscribers()
 
@@ -223,7 +221,7 @@ generate_subscribers()
 def ping_cb(data):
     global last_ping
     last_ping = rospy.get_time()
-    print("  PING! %s" %clock_time(last_ping))
+    #print("  PING! %s" %clock_time(last_ping))
     tester_update_var('ping', True)
 
 ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
@@ -309,6 +307,10 @@ if simulate:
 else:
     print("  Starting hardware")
     start_serial()
+# Wait for clock to start up correctly
+while rospy.get_time() == 0: rospy.sleep(0.1)
+now = rospy.get_time()
+
 ### Initiates the Agent file and redirects output
 if run_agent: 
     print("  Starting agent")

@@ -52,7 +52,7 @@ pump_current = .2           # The current needed to support each device when it'
 fan_current = .06           #
 
 #Environment Parameters
-params = { 'time' : 0, # This should start at 2020-10-01-00:00:00
+params = { 'time' : 0, # This should start at 2000-01-01-00:00:00
            'start' : 0, # This is in seconds, starting at zero
 
            'humidity' : 50, # Percent
@@ -124,7 +124,7 @@ def estimated_plant_area():
 
 def transpiration_rate():
     #The rate at which water moves soil->air due to plants
-    return (0.05/3600)*estimated_plant_area()
+    return (0.025/3600)*estimated_plant_area()
     
 def soil_evaporation_rate():
     #The rate at which water moves soil->air due to direct evaporation
