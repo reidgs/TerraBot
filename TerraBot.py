@@ -299,6 +299,20 @@ def tester_update_var(var, value):
         tester.vars[var_translations[var]] = value
         #print(var, value, tester.vars)
 
+if tester_file:
+    tester = tester_mod.Tester()
+    try:
+        tester.parse_file(tester_file)
+    except Exception as inst:
+        print(inst.args)
+        terminate_gracefully()
+    #tester.display()
+    dirname = os.path.dirname(tester_file) + "/"
+    args.baseline = (None if not tester.baseline_file else
+                     dirname + tester.baseline_file)
+    args.interference = (None if not tester.interf_file else
+                         dirname + tester.interf_file)
+
 ### Start up arduino/simulator
 print("Waiting for nodes")
 if simulate:
@@ -317,20 +331,8 @@ if run_agent:
     start_agent()
 print("System started")
 
-if tester_file:
-    tester = tester_mod.Tester()
-    try:
-        tester.parse_file(tester_file)
-    except Exception as inst:
-        print(inst.args)
-        terminate_gracefully()
-    #tester.display()
+if (tester != None):
     tester.init_constraints(now)
-    dirname = os.path.dirname(tester_file) + "/"
-    args.baseline = (None if not tester.baseline_file else
-                     dirname + tester.baseline_file)
-    args.interference = (None if not tester.interf_file else
-                         dirname + tester.interf_file)
 
 if (args.interference):
     interference = interf_mod.Interference(args.interference, now)
