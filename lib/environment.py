@@ -251,7 +251,7 @@ def forward_time(duration): #Here is where most of the env mutation takes place
     return duration
 
 def init(bl):
-    #print("initializing with " + str(initialparams))
+    #print("initializing with " + str(bl.params))
     if bl is not None:
         for k,v in bl.params.items():
             if k in params:
