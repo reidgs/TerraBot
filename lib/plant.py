@@ -2,7 +2,7 @@
 from random import random
 from math import sqrt, sin, cos, pi
 from panda3d.core import LVector3
-
+from environment import airwater_to_humid
 
 day = 3600 * 24
 
@@ -222,15 +222,14 @@ class Plant(object):
              'led' : 0,
              'wpump' : False,
              'fan' : False}
+        temp['humidity'] = airwater_to_humid(temp['airwater'],
+                                             temp['temperature'])
         for i in range(iterations):
-            
             self.grow(temp, gro, minimum_light + 100)
             
         for leaf in self.leaves:
             leaf.setDroopFrac(droop)
             
-            
-        
         self.health = min(1, plant_health + .005)
         
     def change_health(self, amount):

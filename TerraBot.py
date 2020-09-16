@@ -213,8 +213,6 @@ if simulate: # Use simulated time if starting simulator
     rospy.set_param("use_sim_time", True)
 rospy.init_node('TerraBot', anonymous = True)
 
-now = 0 if simulate else rospy.get_time()
-
 generate_publishers()
 generate_subscribers()
 
@@ -223,7 +221,7 @@ generate_subscribers()
 def ping_cb(data):
     global last_ping
     last_ping = rospy.get_time()
-    print("  PING! %s" %clock_time(last_ping))
+    #print("  PING! %s" %clock_time(last_ping))
     tester_update_var('ping', True)
 
 ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
@@ -301,20 +299,6 @@ def tester_update_var(var, value):
         tester.vars[var_translations[var]] = value
         #print(var, value, tester.vars)
 
-### Start up arduino/simulator
-print("Waiting for nodes")
-if simulate:
-    print("  Starting simulator")
-    start_simulator()
-else:
-    print("  Starting hardware")
-    start_serial()
-### Initiates the Agent file and redirects output
-if run_agent: 
-    print("  Starting agent")
-    start_agent()
-print("System started")
-
 if tester_file:
     tester = tester_mod.Tester()
     try:
@@ -323,12 +307,32 @@ if tester_file:
         print(inst.args)
         terminate_gracefully()
     #tester.display()
-    tester.init_constraints(now)
     dirname = os.path.dirname(tester_file) + "/"
     args.baseline = (None if not tester.baseline_file else
                      dirname + tester.baseline_file)
     args.interference = (None if not tester.interf_file else
                          dirname + tester.interf_file)
+
+### Start up arduino/simulator
+print("Waiting for nodes")
+if simulate:
+    print("  Starting simulator")
+    start_simulator()
+else:
+    print("  Starting hardware")
+    start_serial()
+# Wait for clock to start up correctly
+while rospy.get_time() == 0: rospy.sleep(0.1)
+now = rospy.get_time()
+
+### Initiates the Agent file and redirects output
+if run_agent: 
+    print("  Starting agent")
+    start_agent()
+print("System started")
+
+if (tester != None):
+    tester.init_constraints(now)
 
 if (args.interference):
     interference = interf_mod.Interference(args.interference, now)
