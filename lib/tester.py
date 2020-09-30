@@ -1,5 +1,5 @@
 #import rospy
-import copy
+import copy, os, sys
 from datetime import datetime
 from terrabot_utils import clock_time, time_since_midnight, dtime_to_seconds
 from terrabot_utils import Agenda
@@ -172,7 +172,7 @@ class Tester:
              'humidity' : [40,50],   'smoist'      : [350,350],
              'current'  : [0.0,0.0], 'wlevel'      : 150.0,
              'led'      : 0,         'wpump'       : False,
-             'fan'      : False,     'camera'      : False,
+             'fan'      : False,     'camera'      : None,
              'ping'	: False }
     baseline_file = None
     interf_file = None

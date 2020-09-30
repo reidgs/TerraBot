@@ -11,6 +11,7 @@ from direct.gui.OnscreenText import OnscreenText
 from panda3d.core import ClockObject
 from panda3d.core import AudioSound
 from panda3d.core import GraphicsEngine, Filename
+from pandac.PandaModules import WindowProperties
 from sys import exit
 import random
 import plant
@@ -34,6 +35,9 @@ class Terrarium(ShowBase):
 
         if shown:
             self.openMainWindow(type = "onscreen")
+            props = WindowProperties()
+            props.setTitle('TerraBot Simulator')
+            self.win.requestProperties(props)
         else:
             self.openMainWindow(type = "offscreen")
 

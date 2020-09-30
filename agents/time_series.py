@@ -4,8 +4,8 @@ import rospy, sys, select, os, time, argparse
 from std_msgs.msg import Float32, Int32, Int32MultiArray, Float32MultiArray, Bool, String
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
-#import my_limits as limits
 import limits
+from log_data import write_log_data_line, process_log_data_line
 
 class Subplots:
     name = None
@@ -77,19 +77,15 @@ def init_ros (use_simulator):
 
 def update_sensor_multi_data(data, subplot):
     subplot.current = (data.data[0] + data.data[1])/2
-    if (log_file) :
-        log_file.write("%f '%s' %.1f %.1f\n" %(rospy.get_time(), subplot.name,
-                                               data.data[0], data.data[1]))
+    write_log_data_line(log_file, subplot.name, data.data)
 
 def update_sensor_data(data, subplot):
     subplot.current = data.data
-    if (log_file) : log_file.write("%f '%s' %.1f\n" %(rospy.get_time(),
-                                                      subplot.name, data.data))
+    write_log_data_line(log_file, subplot.name, data.data)
 
 def update_actuator_data(data, subplot):
     subplot.current = data.data
-    if (log_file) : log_file.write("%f '%s' %d\n" %(rospy.get_time(),
-                                                    subplot.name, data.data))
+    write_log_data_line(log_file, subplot.name, data.data)
 
 def add_time_series(fig, name, limits, force_update, color, pos, plot_width):
     global subplotsG, nrowsG, ncolsG
@@ -176,19 +172,13 @@ def handle_stdin ():
         elif input[0] == 'v':
             print_sensor_values()
         else:
-            print("Usage: q (quit)\n\ts (sensor values)")
-
-def process_replay_data(line):
-    sline = line.split("'")
-    data = sline[2].strip(' \n').split(' ')
-    data = (float(data[0]) if (len(data) == 1) else
-            (float(data[0]) + float(data[1]))/2)
-    return (float(sline[0]), sline[1], data)
+            print("Usage: q (quit)\n\tv (sensor values)")
 
 if (replay_file):
     start_time = None
     for line in replay_file:
-        cur_time, name, data = process_replay_data(line)
+        cur_time, name, data = process_log_data_line(line)
+        if (isinstance(data, tuple)): data = (data[0] + data[1])/2
         subplotsG[name].current = data
         if (not start_time): start_time = cur_time
         hours_since_start = (cur_time - start_time)/3600.0

@@ -239,6 +239,7 @@ def camera_cb(data):
 #        sp.call("raspistill -n -md 2 -awb off -awbg 1,1 -ss 30000 -o %s"
         sp.call("raspistill -n -md 4 -awb auto -ss 30000 -rot 180 -o %s"
                 % data.data, shell = True)
+    tester_update_var('camera', data.data)
 
 camera_sub = rospy.Subscriber('camera', String, camera_cb)
 
@@ -261,7 +262,7 @@ def start_simulator():
         try: # In case of syntax errors, try parsing here first
             Baseline(abspath(args.baseline))
         except Exception as inst:
-            print(inst.args)
+            print("start_simulator: %s" %str(inst.args))
             terminate_gracefully()
         fard_args += ["--baseline", args.baseline]
     if log: fard_args = fard_args + ["-l"]
@@ -299,19 +300,26 @@ def tester_update_var(var, value):
         tester.vars[var_translations[var]] = value
         #print(var, value, tester.vars)
 
+def adjust_path(pathname, dirname):
+    return (tester.baseline_file if os.path.isabs(tester.baseline_file) else
+            abspath(dirname + tester.baseline_file))
+    
 if tester_file:
     tester = tester_mod.Tester()
     try:
         tester.parse_file(tester_file)
     except Exception as inst:
-        print(inst.args)
+        print("Tester parse: %s" %str(inst.args))
         terminate_gracefully()
     #tester.display()
     dirname = os.path.dirname(tester_file) + "/"
-    args.baseline = (None if not tester.baseline_file else
-                     dirname + tester.baseline_file)
-    args.interference = (None if not tester.interf_file else
-                         dirname + tester.interf_file)
+    # Command line option overrides test file
+    if (not args.baseline and tester.baseline_file):
+        args.baseline = adjust_path(tester.baseline_file, dirname)
+        print('baseline', args.baseline)
+    # Command line option overrides test file
+    if (not args.interference and tester.interf_file):
+        args.interference = adjust_path(tester.interf_file, dirname)
 
 ### Start up arduino/simulator
 print("Waiting for nodes")
@@ -355,6 +363,7 @@ while not rospy.core.is_shutdown():
     if tester:
         tester.process_constraints(now)
         tester_update_var('ping', False) # Ping should not be latched
+        tester_update_var('camera', None) # Camera should not be latched
         if tester.finished(now):
             print("Done testing!")
             if (tester.end_status() == 'QUIT'): terminate_gracefully()
