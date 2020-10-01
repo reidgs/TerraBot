@@ -27,13 +27,14 @@ def read_log_file(filename):
             log_data.append(process_log_data_line(line))
     return log_data
 
-def log_sensordata(log_data, time):
-    sensordata = {}
-    for datum in log_data:
-        if (datum[0] > time): break
+def log_sensordata(log_data, time, sensordata={}, next_index=0):
+    for index in range(next_index, len(log_data)):
+        datum = log_data[index]
+        #print(index, datum)
+        if (datum[0] > time): return (sensordata, index)
         else:
             sensordata[datum[1]] = datum[2]
-    return sensordata
+    return (sensordata, len(log_data))
 
 if __name__ == '__main__':
     import sys, select, os
