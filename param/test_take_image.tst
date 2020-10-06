@@ -8,7 +8,7 @@ WHENEVER None != camera # Changed the order to distinguish this from above
   ENSURE light[0] > 20 or light[1] > 20 FOR 1 # Test right away
 
 # Count the number of pictures taken
-WHENEVER camera
+WHENEVER camera != None
   SET num_pics = num_pics + 1
 # Ensure sure that 1-3 pictures get taken every day
 WHENEVER 1-00:00:00 # Every midnight
