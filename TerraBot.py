@@ -232,10 +232,10 @@ image_start_time = 1735000 # Should be in baseline
 def camera_cb(data):
     global simulate, images
     
+    print("Taking an image at %s, storing it in %s" %(clock_time(now), data.data))
     if simulate:
         publishers['cam'].publish(data.data)
     else:
-        print("Taking an image, storing it in %s" %data.data)
 #        sp.call("raspistill -n -md 2 -awb off -awbg 1,1 -ss 30000 -o %s"
         sp.call("raspistill -n -md 4 -awb auto -ss 30000 -rot 180 -o %s"
                 % data.data, shell = True)

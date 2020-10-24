@@ -81,6 +81,17 @@ class SetConstraint(Constraint):
         vars[self.var] = self.evaluate_condition(vars)
         return 1
 
+class PrintConstraint(Constraint):
+    condition = ""
+
+    def __init__(self, line, vars):
+        self.condition = line[len("PRINT"):]
+    def __str__(self):
+        return "[PRINT %s]" %self.condition
+    def evaluate(self, time, vars):
+        print(self.evaluate_condition(vars))
+        return 1
+
 class DelayConstraint(Constraint):
     def __init__(self, line):
         self.parse_time(line[len("DELAY"):], 'FOR', 'UNTIL')
@@ -205,6 +216,8 @@ class Tester:
                     self.add_to_whenever(SetConstraint(line, self.vars))
                 elif (line.startswith("WHENEVER")):
                     self.constraints.append(WheneverConstraint(line))
+                elif (line.startswith("PRINT")):
+                    self.add_to_whenever(PrintConstraint(line, self.vars))
                 elif (len(line) > 0):
                     parse_error("'%s' %d" %(line, len(line)))
 

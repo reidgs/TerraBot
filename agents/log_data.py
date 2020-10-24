@@ -9,16 +9,18 @@ def write_log_data_line(log_file, name, data):
                            %(rospy.get_time(), name, data[0], data[1]))
         elif (isinstance(data, int)):
             log_file.write("%f '%s' %d\n" %(rospy.get_time(), name, data))
-        else:
+        elif (isinstance(data, float)):
             log_file.write("%f '%s' %.1f\n" %(rospy.get_time(), name, data))
+        else:
+            log_file.write("%f '%s' %s\n" %(rospy.get_time(), name, data))
 
 def process_log_data_line(line):
     sline = line.split("'")
     data = sline[2].strip(' \n').split(' ')
-    return (float(sline[0]), sline[1], ((float(data[0]), float(data[1]))
-                                        if (len(data) > 1) else
-                                        float(data[0]) if ('.' in data[0]) else
-                                        int(data[0])))
+    return (float(sline[0]), sline[1],
+            ((float(data[0]), float(data[1])) if (len(data) > 1) else
+             float(data[0]) if ('.' in data[0]) else
+             int(data[0]) if (data[0].isdigit()) else data[0]))
 
 def read_log_file(filename):
     log_data = []

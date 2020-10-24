@@ -171,6 +171,8 @@ def sim_loop():
     global doloop
     tick_time = .25  # This is how long between runs of the below loop in seconds
     speedup = default_speedup                
+    pump_last_on = False
+    pump_last_off_time = 0
     now = t0
     if bl is not None:
         now += bl.params['start']
@@ -188,6 +190,12 @@ def sim_loop():
                       (max_speedup_fan if env.params['fan'] else default_speedup))
        
         now = rospy.get_time()
+        if (pump_last_on and not env.params['wpump']):
+            pump_last_on = False
+            pump_last_off_time = now
+        elif (env.params['wpump']):
+            pump_last_on = True
+        if (now - pump_last_off_time < 10): speedup = 1
         clock_pub.publish(rospy.Time.from_sec(now + (tick_time * speedup)))
         
         #DO STUFF 
