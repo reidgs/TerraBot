@@ -2,7 +2,6 @@
 import rospy
 
 def write_log_data_line(log_file, name, data):
-    print("WLDL", log_file, name, data)
     if (log_file):
         if (isinstance(data, tuple)):
             log_file.write("%f '%s' %.1f %.1f\n"

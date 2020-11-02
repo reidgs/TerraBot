@@ -10,7 +10,7 @@ from lib import interference as interf_mod
 from lib import tester as tester_mod
 from lib import send_email
 from lib import sim_camera as cam
-from lib.terrabot_utils import clock_time
+from lib.terrabot_utils import clock_time, time_since_midnight
 from lib.baseline import Baseline
 from os.path import abspath
 
@@ -60,7 +60,7 @@ def generate_publishers():
                             pub_name, tdef.actuator_types[name],
                             latch = True, queue_size = 1)
 
-light_total = 0
+insolation = 0
 last_light_reading = 0
 
 def cb_generic(name, data):
@@ -73,12 +73,17 @@ def cb_generic(name, data):
     tester_update_var(name, original)
 
     if (name == 'light'): # Integrate light levels
-        global last_light_reading, light_total
+        global last_light_reading, insolation
         now = rospy.get_time()
         if (last_light_reading > 0):
-            light_total += ((now - last_light_reading) *\
-                            ((original[0] + original[1])/2)/3600.0)
-            #print("LT: %.2f %d %.2f" %(light_total, (original[0] + original[1])/2,(now - last_light_reading)))
+            light_level = (original[0] + original[1])/2.0
+            dt = now - last_light_reading
+            insolation += dt*light_level/3600.0
+            #print("INSOLATION: %.2f %d %.2f" %(insolation, light_level, dt))
+            tester_update_var('insolation', insolation)
+        if (time_since_midnight(now) < time_since_midnight(last_light_reading)):
+            #print("INSOLATION TODAY: %.1f" %insolation)
+            insolation = 0 # Reset daily
         last_light_reading = now
 
     publishers[name].publish(edited)
@@ -293,7 +298,7 @@ var_translations = {'smoist' : 'smoist',      'cur' : 'current',
                     'temp'   : 'temperature', 'humid' : 'humidity',
                     'led'    : 'led',         'wpump' : 'wpump',
                     'fan'    : 'fan',         'camera' : 'camera',
-                    'ping'   : 'ping'}
+                    'ping'   : 'ping',        'insolation' : 'insolation'}
 def tester_update_var(var, value):
     global tester, var_translations
     if (tester):
