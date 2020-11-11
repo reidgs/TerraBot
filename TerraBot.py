@@ -306,8 +306,8 @@ def tester_update_var(var, value):
         #print(var, value, tester.vars)
 
 def adjust_path(pathname, dirname):
-    return (tester.baseline_file if os.path.isabs(tester.baseline_file) else
-            abspath(dirname + tester.baseline_file))
+    return (pathname if os.path.isabs(pathname) else
+            abspath(dirname + pathname))
     
 if tester_file:
     tester = tester_mod.Tester()
