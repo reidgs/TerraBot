@@ -11,7 +11,7 @@ from direct.gui.OnscreenText import OnscreenText
 from panda3d.core import ClockObject
 from panda3d.core import AudioSound
 from panda3d.core import GraphicsEngine, Filename
-from pandac.PandaModules import WindowProperties
+from panda3d.core import WindowProperties
 from sys import exit
 import random
 import plant

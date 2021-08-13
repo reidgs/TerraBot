@@ -206,7 +206,7 @@ if log:
     gen_log_files()
 
 ### Open log file for roscore
-core_log = open("Log/roscore.log", "a+", 0)
+core_log = open("Log/roscore.log", "a+")
 
 ### Start up roscore, redirecting output to logging files
 core_p = sp.Popen("roscore", stdout = core_log, stderr = core_log)
@@ -260,7 +260,7 @@ serial_log = None
 ### Initiates the Simulator and redirects output
 def start_simulator():
     global sim_p, sim_log, args
-    if (sim_log == None): sim_log = open("Log/simulator.log", "a+", 0)
+    if (sim_log == None): sim_log = open("Log/simulator.log", "a+")
     fard_args = ["--speedup", str(args.speedup)]
     if args.graphics: fard_args += ["--graphics"]
     if args.baseline: 
@@ -277,7 +277,7 @@ def start_simulator():
     
 def start_agent():
     global agent_p, agent_log, args
-    if (agent_log == None): agent_log = open("Log/agent.log", "a+", 0)
+    if (agent_log == None): agent_log = open("Log/agent.log", "a+")
     agent_p = sp.Popen(["python", args.agent], bufsize=0,
                        stdout = agent_log, stderr = agent_log)
     time.sleep(1) # chance to get started
@@ -286,7 +286,7 @@ def start_agent():
 ### Initiates the Arduino and redirects output
 def start_serial():
     global serial_p, serial_log
-    if (serial_log == None): serial_log = open("Log/rosserial.log", "a+", 0)
+    if (serial_log == None): serial_log = open("Log/rosserial.log", "a+")
     serial_p = sp.Popen(["rosrun", "rosserial_arduino",
                          "serial_node.py", "/dev/ttyACM0"],
                         stdout = serial_log, stderr = serial_log)
