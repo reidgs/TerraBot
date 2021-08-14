@@ -1,7 +1,7 @@
 #/bin/bash
 
-procs=`ps -auxw | awk '/ros|fard|Terra/ && !/awk/ {print $2}'`
-#echo $procs
+procs=`ps -auxw | awk '/ros|fard|Terra/ && !/awk/ && !/local/ {print $2}'`
+echo $procs
 
 if [ -z "$procs" ]; then
   echo "All good"
