@@ -30,6 +30,7 @@
       + [WAIT](#wait)
       + [ENSURE](#ensure)
       + [SET](#set)
+      + [PRINT](#print)
 
 ## Overview ##
 Welcome to the Autonomous Agents TerraBot project! For this project you and your partners
@@ -333,7 +334,7 @@ QUIT AT 3-23:59:59 # Run testing for 3 full days, and then quit the simulator
 Note again that comments can be place at the end of lines
 
 #### WHENEVER ####
-The bulk of test files consist of WHENEVER constraints.  These are subtests that are activiated whenever a particular condition is met.  WHENEVER constraints consist of a trigger and a body, which is a sequence of WAIT, ENSURE, and SET subconstraints that specify what behavior is expected of the system.
+The bulk of test files consist of WHENEVER constraints.  These are subtests that are activiated whenever a particular condition is met.  WHENEVER constraints consist of a trigger and a body, which is a sequence of WAIT, ENSURE, SET, and PRINT subconstraints that specify what behavior is expected of the system.
 
 The triggers for WHENEVER constraints can be a Boolean relation or a date-time. The Boolean relations can consist of numbers, sensor values, and actuator states (**light, temperature, humidity, smoist, current, wlevel, led, wpump, fan, camera, ping, mtime**).  **mtime** is the number of seconds past midnight -- you can get the hour of the day using (mtime//3600).  The date-time trigger is specified in terms of the first occurrence, and every time it finishes, another 24 hours are added on to the trigger time. Examples include:
 ```
@@ -383,4 +384,11 @@ WHENEVER smoist[0] < 450 or smoist[1] < 450
 # Don't let pump overwater things
 WHENEVER wmump 
   ENSURE smoist[0] < 600 and smoist[1] < 600 FOR 3600
+```
+
+                                            ##### PRINT #####
+The PRINT constraint enables you to print out information, useful for debugging the testing constraints.  The syntax is like the **print** statement in Python, except without parentheses.  You can use any of the variables that are allowable in WHENEVER, WAIT, and ENSURE statements (including local variables defined using SET).
+```
+PRINT "Current temperature: %d %d" %(temperature[0], temperature[1])
+PRINT "W1: %s %s %s" %(wlevel, (wlevel_start - wlevel), wpump_today)
 ```
