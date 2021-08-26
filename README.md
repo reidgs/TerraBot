@@ -386,7 +386,7 @@ WHENEVER wmump
   ENSURE smoist[0] < 600 and smoist[1] < 600 FOR 3600
 ```
 
-                                            ##### PRINT #####
+##### PRINT #####
 The PRINT constraint enables you to print out information, useful for debugging the testing constraints.  The syntax is like the **print** statement in Python, except without parentheses.  You can use any of the variables that are allowable in WHENEVER, WAIT, and ENSURE statements (including local variables defined using SET).
 ```
 PRINT "Current temperature: %d %d" %(temperature[0], temperature[1])
