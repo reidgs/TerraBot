@@ -30,6 +30,7 @@
       + [WAIT](#wait)
       + [ENSURE](#ensure)
       + [SET](#set)
+      + [PRINT](#print)
 
 ## Overview ##
 Welcome to the Autonomous Agents TerraBot project! For this project you and your partners
@@ -333,13 +334,14 @@ QUIT AT 3-23:59:59 # Run testing for 3 full days, and then quit the simulator
 Note again that comments can be place at the end of lines
 
 #### WHENEVER ####
-The bulk of test files consist of WHENEVER constraints.  These are subtests that are activiated whenever a particular condition is met.  WHENEVER constraints consist of a trigger and a body, which is a sequence of WAIT, ENSURE, and SET subconstraints that specify what behavior is expected of the system.
+The bulk of test files consist of WHENEVER constraints.  These are subtests that are activiated whenever a particular condition is met.  WHENEVER constraints consist of a trigger and a body, which is a sequence of WAIT, ENSURE, SET, and PRINT subconstraints that specify what behavior is expected of the system.
 
-The triggers for WHENEVER constraints can be a Boolean relation or a date-time. The Boolean relations can consist of numbers, sensor values, and actuator states (**light, temperature, humidity, smoist, current, wlevel, led, wpump, fan, camera, ping**).  The date-time trigger is specified in terms of the the first occurrence, and every time it finishes, another 24 hours are added on to the trigger time. Examples include:
+The triggers for WHENEVER constraints can be a Boolean relation or a date-time. The Boolean relations can consist of numbers, sensor values, and actuator states (**light, temperature, humidity, smoist, current, wlevel, led, wpump, fan, camera, ping, time, mtime**).  **time** is the clock time, in seconds; **mtime** is the number of seconds past midnight -- you can get the hour of the day using (mtime//3600).  The date-time trigger is specified in terms of the first occurrence, and every time it finishes, another 24 hours are added on to the trigger time. Examples include:
 ```
 WHENVER smoist[0] < 450 or smoist[1] < 450 # Every time either soil moisture sensor gets below 450>`
 WHENEVER wpump # Every time the pump is turned on
 WHENEVER 1-00:00:00 # Every midnight
+WHENEVER temperature[0] < 22 and (mtime//3600) >= 6 # Every time the temperature is below 22 after 6am
 ```
 Note that at most one instance of a given WHENEVER constraint will be active at a given time.
 
@@ -382,4 +384,11 @@ WHENEVER smoist[0] < 450 or smoist[1] < 450
 # Don't let pump overwater things
 WHENEVER wmump 
   ENSURE smoist[0] < 600 and smoist[1] < 600 FOR 3600
+```
+
+##### PRINT #####
+The PRINT constraint enables you to print out information, useful for debugging the testing constraints.  The syntax is like the **print** statement in Python, except without parentheses.  You can use any of the variables that are allowable in WHENEVER, WAIT, and ENSURE statements (including local variables defined using SET).  You can print out the time in string form using **clock_time(time)**.
+```
+PRINT "W1: %s %s %s" %(wlevel, (wlevel_start - wlevel), wpump_today)
+PRINT "Current temperature at %s: %d %d" %(clock_time(time), temperature[0], temperature[1])
 ```
