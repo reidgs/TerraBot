@@ -19,13 +19,13 @@ optimal['moisture'] = [550,600]
 names['moisture'] = 'moist'
 
 scale['humidity'] = [0, 100]
-limits['humidity'] = [60, 80]
-optimal['humidity'] = [70, 75]
+limits['humidity'] = [60, 90]
+optimal['humidity'] = [70, 78]
 names['humidity'] = 'humid'
 
 scale['temperature'] = [10, 40] # Celcius
-limits['temperature'] = [24, 29]
-optimal['temperature'] = [26,27]
+limits['temperature'] = [22, 29]
+optimal['temperature'] = [25,27]
 names['temperature'] = 'temp'
 
 scale['current'] = [0, 1000]

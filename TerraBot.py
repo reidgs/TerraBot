@@ -226,7 +226,7 @@ generate_subscribers()
 def ping_cb(data):
     global last_ping
     last_ping = rospy.get_time()
-    #print("  PING! %s" %clock_time(last_ping))
+    if verbose: print("  PING! %s" %clock_time(last_ping))
     tester_update_var('ping', True)
 
 ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
@@ -366,6 +366,8 @@ while not rospy.core.is_shutdown():
     now = rospy.get_time()
     if (interference): interference.update(now)
     if tester:
+        tester.vars['time'] = now
+        tester.vars['mtime'] = time_since_midnight(now)
         tester.process_constraints(now)
         tester_update_var('ping', False) # Ping should not be latched
         tester_update_var('camera', None) # Camera should not be latched
