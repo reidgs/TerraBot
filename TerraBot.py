@@ -13,6 +13,7 @@ from lib import sim_camera as cam
 from lib.terrabot_utils import clock_time, time_since_midnight
 from lib.baseline import Baseline
 from os.path import abspath
+from math import exp
 
 ### Default values for the optional variables
 verbose = False
@@ -62,9 +63,10 @@ def generate_publishers():
 
 insolation = 0
 last_light_reading = 0
+light_level = 0
 
 def cb_generic(name, data):
-    global now, interference
+    global now, interference, light_level
     original = data.data
     edited = data
     edited.data = (original if not interference else
@@ -129,6 +131,9 @@ parser.add_argument('-e', '--email', default = None,
         help = "email address to notify if restarting frequently")
 parser.add_argument('-p', '--password', default = None,
         help = "email address password")
+parser.add_argument('-f', '--fixedshutter', default = None,
+        help = "use fixed shutter speed")
+
 
 args = parser.parse_args()
 
@@ -139,6 +144,8 @@ tester_file = args.test
 simulate = mode == "sim"
 run_agent = (args.agent != "None") and (args.agent != "none")
 password = args.password
+fixed_shutter = (args.fixedshutter if args.fixedshutter == None else
+                 int(args.fixedshutter))
 
 num_restarts = 0
 max_restarts = 5
@@ -235,15 +242,21 @@ images = None
 image_start_time = 1735000 # Should be in baseline
 ### Camera callback - take a picture and store in the given location
 def camera_cb(data):
-    global simulate, images
+    global simulate, images, fixed_shutter
     
     print("Taking an image at %s, storing it in %s" %(clock_time(now), data.data))
     if simulate:
         publishers['cam'].publish(data.data)
     else:
+        # Shutter speed in microseconds, 2.8 aperture
+        shutter_speed = ((fixed_shutter if fixed_shutter != None else
+                          int((1e6*2.8*2.8)/(exp(3.32)*(max(1,light_level)**0.655)))))
+        print("LIGHT:", light_level, "SHUTTER: ", shutter_speed)
 #        sp.call("raspistill -n -md 2 -awb off -awbg 1,1 -ss 30000 -o %s"
-        sp.call("raspistill -n -md 4 -awb auto -ss 30000 -rot 180 -o %s"
-                % data.data, shell = True)
+#        sp.call("raspistill -n -md 4 -awb auto -ss 30000 -rot 180 -o %s"
+        
+        sp.call("raspistill -n -md 4 -awb auto -ss %d -o %s"
+                %(shutter_speed, data.data), shell = True)
     tester_update_var('camera', data.data)
 
 camera_sub = rospy.Subscriber('camera', String, camera_cb)
@@ -291,6 +304,7 @@ def start_serial():
                          "serial_node.py", "/dev/ttyACM0"],
                         stdout = serial_log, stderr = serial_log)
     time.sleep(1) # chance to get started
+    print("started serial")
 
 ### Update tester variables, if necessary
 var_translations = {'smoist' : 'smoist',      'cur' : 'current',
