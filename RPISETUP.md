@@ -52,6 +52,7 @@ From the Sketchbook folder run
 `git clone https://github.com/winlinvip/SimpleDHT.git`  
 Then to allow arduino to use the usb port run
 `sudo usermod -a -G dialout $USER`  
+'git clone https://github.com/bogde/HX711'
 
 ## Source code ##
 Install the source code from github  

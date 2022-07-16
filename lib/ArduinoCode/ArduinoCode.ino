@@ -13,6 +13,7 @@
 #include <std_msgs/String.h>
 #include <SimpleDHT.h>
 #include <string.h>
+#include <HX711.h>
 
 // Internal Values
 byte temperature1 = 0;
@@ -45,6 +46,18 @@ int led_pin = 10;
 int wpump_pin = 12;
 int fan_pin = 13;
 
+int weight_sck_pin1 = 2;
+int weight_dout_pin1 = 3;
+int weight_sck_pin2 = 4;
+int weight_dout_pin2 = 5;
+
+HX711 weight1, weight2;
+// All of these should be recalibrated on a per-sensor basis
+float weight_scale1 = 780.18;
+float weight_scale2 = 780.18;
+float weight_offset1 = 389900;
+float weight_offset2 = 389900;
+
 struct Timing {
   unsigned long next = 0;
   unsigned long period = 1000;
@@ -55,6 +68,7 @@ long unsigned int last_dht = 0;
 unsigned long time_now = 0;
 Timing light_timing, temp_timing, humidity_timing;
 Timing wlevel_timing, smoist_timing, current_timing;
+Timing weight_timing;
 
 // Used to make light/current data more useable
 long light_sum1 = 0;
@@ -77,6 +91,7 @@ void freq_change( const std_msgs::String& cmd_msg){
 		       SEN_CMP("humid")  ? &humidity_timing :
 		       SEN_CMP("level")  ? &wlevel_timing :
 		       SEN_CMP("smoist") ? &smoist_timing :
+		       SEN_CMP("weight") ? &weight_timing :
 		       SEN_CMP("cur")    ? &current_timing : NULL);
   if (timingPtr == NULL) printf("Oops\n");
   else {
@@ -139,6 +154,9 @@ ros::Publisher cur_pub("cur_raw", &cur_msg);
 std_msgs::Int32MultiArray smoist_msg;
 ros::Publisher smoist_pub("smoist_raw", &smoist_msg);
 
+std_msgs::Float32MultiArray weight_msg;
+ros::Publisher weight_pub("weight_raw", &weight_msg);
+
 // Code which is run on the Arduino
 void setup(){
   pinMode(led_pin, OUTPUT);
@@ -146,6 +164,13 @@ void setup(){
   pinMode(fan_pin, OUTPUT);
   pinMode(trig_pin, OUTPUT);
   pinMode(echo_pin, INPUT);
+
+  weight1.begin(weight_dout_pin1, weight_sck_pin1);
+  weight1.set_scale(weight_scale1);
+  weight1.set_offset(weight_offset1);
+  weight2.begin(weight_dout_pin2, weight_sck_pin2);
+  weight2.set_scale(weight_scale2);
+  weight2.set_offset(weight_offset2);
 
   nh.initNode();
   nh.subscribe(freq_sub);
@@ -159,6 +184,7 @@ void setup(){
   nh.advertise(light_pub);
   nh.advertise(level_pub);
   nh.advertise(smoist_pub);
+  nh.advertise(weight_pub);
   nh.advertise(cur_pub);
 }
 
@@ -251,6 +277,18 @@ void loop(){
       s_array[1] = 1023 - s_array[1];
       smoist_msg.data = s_array;
       smoist_pub.publish(&smoist_msg);
+  }
+
+  if(time_now >= weight_timing.next){
+      weight_timing.next = time_now + weight_timing.period;
+
+      // Get the weight
+      weight_msg.data_length = 2;
+      float w_array[2];
+      w_array[0] = weight1.is_ready() ? weight1.get_units(1) : -1;
+      w_array[1] = weight2.is_ready() ? weight2.get_units(1) : -1;
+      weight_msg.data = w_array;
+      weight_pub.publish(&weight_msg);
   }
 
   if(time_now >= current_timing.next){

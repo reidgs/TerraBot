@@ -15,6 +15,7 @@ class Sensors:
     moisture = 0
     humidity = 0
     temperature = 0
+    weight = 0
     water_level = 0
     current = 0
     energy = 0
@@ -22,6 +23,7 @@ class Sensors:
     moisture_raw = [0,0]
     humidity_raw = [0,0]
     temperature_raw = [0,0]
+    weight_raw = [0, 0]
 
 parser = argparse.ArgumentParser(description = "Interactive Agent")
 parser.add_argument('-l', '--log', action = 'store_true',
@@ -62,6 +64,7 @@ def init_ros ():
     rospy.Subscriber("level_output", Float32, level_reaction, sensorsG)
     rospy.Subscriber("temp_output", Int32MultiArray, temp_reaction, sensorsG)
     rospy.Subscriber("humid_output", Int32MultiArray, humid_reaction, sensorsG)
+    rospy.Subscriber("weight_output", Int32MultiArray, weight_reaction, sensorsG)
     rospy.Subscriber("cur_output", Float32MultiArray, power_reaction, sensorsG)
 
 def moisture_reaction(data, sensorsG):
@@ -73,6 +76,12 @@ def humid_reaction(data, sensorsG):
     sensorsG.humidity = (data.data[0] + data.data[1])/2.0
     sensorsG.humidity_raw = data.data
     if is_logging: print("    Humidity: %d %d" %(data.data[0], data.data[1]))
+
+def weight_reaction(data, sensorsG):
+    sensorsG.weight = (data.data[0] + data.data[1])/2.0
+    sensorsG.weight_raw = data.data
+    if is_logging: print("    Weight: %d %d" %(data.data[0], data.data[1]))
+    print(data.data[0], clock_time(sensorsG.time))
 
 def temp_reaction(data, sensorsG):
     sensorsG.temperature = (data.data[0] + data.data[1])/2.0
@@ -108,6 +117,7 @@ init_ros()
 init_sensors()
 rospy.sleep(2) # Give a chance for the initial sensor values to be read
 while rospy.get_time() == 0: rospy.sleep(0.1) # Wait for clock to start up correctly
+print("Connected and ready for interaction")
 
 while not rospy.core.is_shutdown():
     sensorsG.time = rospy.get_time()
@@ -166,9 +176,12 @@ while not rospy.core.is_shutdown():
                     print("  Soil moisture: %.1f (%.1f, %.1f)"
                           %(sensorsG.moisture, sensorsG.moisture_raw[0],
                             sensorsG.moisture_raw[1]))
+                    print("  Weight: %.1f (%.1f, %.1f)"
+                          %(sensorsG.weight, sensorsG.weight_raw[0],
+                            sensorsG.weight_raw[1]))
                     print("  Reservoir level: %.1f" %sensorsG.water_level)
                 else:
-                    print("Usage: q (quit)\n\tf [on|off] (fan on/off)\n\tp [on|off] (pump on/off)\n\tl [<level>|on|off] (led set to level ('on'=255; 'off'=0)\n\tr [smoist|cur|light|level|temp|humid] [<frequency>] (update sensor to frequency)\n\te [smoist|cur|light|level|temp|humid] [<period>] (update sensor to every <period> seconds)\n\tc <file> (take a picture, store in 'file')\n\ts [<speedup>] (change current speedup)\n\tv (print sensor values)")
+                    print("Usage: q (quit)\n\tf [on|off] (fan on/off)\n\tp [on|off] (pump on/off)\n\tl [<level>|on|off] (led set to level ('on'=255; 'off'=0)\n\tr [smoist|cur|light|level|temp|humid][weight] [<frequency>] (update sensor to frequency)\n\te [smoist|cur|light|level|temp|humid][weight] [<period>] (update sensor to every <period> seconds)\n\tc <file> (take a picture, store in 'file')\n\ts [<speedup>] (change current speedup)\n\tv (print sensor values)")
             except:
                 print("An error occurred and the action could not be executed")
             

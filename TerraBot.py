@@ -74,6 +74,8 @@ def cb_generic(name, data):
 
     tester_update_var(name, original)
 
+    if (name == 'weight'): print(original, clock_time(now))
+
     if (name == 'light'): # Integrate light levels
         global last_light_reading, insolation
         now = rospy.get_time()
@@ -312,7 +314,8 @@ var_translations = {'smoist' : 'smoist',      'cur' : 'current',
                     'temp'   : 'temperature', 'humid' : 'humidity',
                     'led'    : 'led',         'wpump' : 'wpump',
                     'fan'    : 'fan',         'camera' : 'camera',
-                    'ping'   : 'ping',        'insolation' : 'insolation'}
+                    'ping'   : 'ping',        'insolation' : 'insolation',
+                    'weight' : 'weight'}
 def tester_update_var(var, value):
     global tester, var_translations
     if (tester):
