@@ -67,6 +67,7 @@ class Terrarium(ShowBase):
         Soil moisture : 0
         Humidity : 50%
         Volume : 3000 ml
+        Weight : 100 g
         Speedup : 1x
         '''.format(clock_time(t0 + initTime))
 
@@ -403,7 +404,7 @@ class Terrarium(ShowBase):
                 leaf.setColor(lr + rm, lg + gm, lb + bm, 1)
 
 
-    def update_env_params(self, params, speedup, light):
+    def update_env_params(self, params, speedup, light, weight):
         self.setWater(params['volume']) #Reservoir update
         self.setLights(params['led']) #LED update
         self.setFans(params['fan']) #Fan Update
@@ -442,11 +443,12 @@ class Terrarium(ShowBase):
         Temperature : {:04.1f} C
         Soil moisture : {:03.1f}
         Humidity : {:02.0f}%
-        Volume : {:04.2f} ml
+        Volume : {:04.1f} ml
+        Weight : {:04.1f} g
         Speedup : {}x
         '''.format(clock_time(self.start_time + params['time']), light, \
                    params['temperature'], 2*params['soilwater'], \
-                   params['humidity'], params['volume'], speedup)
+                   params['humidity'], params['volume'], weight, speedup)
 
         self.fansound(params['fan'])
         self.pumpsound(params['wpump'])

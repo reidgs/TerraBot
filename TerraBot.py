@@ -74,8 +74,6 @@ def cb_generic(name, data):
 
     tester_update_var(name, original)
 
-    if (name == 'weight'): print(original, clock_time(now))
-
     if (name == 'light'): # Integrate light levels
         global last_light_reading, insolation
         now = rospy.get_time()
@@ -377,8 +375,10 @@ while not rospy.core.is_shutdown():
         input = sys.stdin.readline()
         if input[0] == 'q':
             terminate_gracefully()
+        if input[0] == 't':
+            print("Current time: %s" %clock_time(now))
         else:
-            print("Usage: q (quit)")
+            print("Usage: q (quit); t (current time)")
 
     now = rospy.get_time()
     if (interference): interference.update(now)

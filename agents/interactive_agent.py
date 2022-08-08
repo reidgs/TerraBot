@@ -64,7 +64,7 @@ def init_ros ():
     rospy.Subscriber("level_output", Float32, level_reaction, sensorsG)
     rospy.Subscriber("temp_output", Int32MultiArray, temp_reaction, sensorsG)
     rospy.Subscriber("humid_output", Int32MultiArray, humid_reaction, sensorsG)
-    rospy.Subscriber("weight_output", Int32MultiArray, weight_reaction, sensorsG)
+    rospy.Subscriber("weight_output", Float32MultiArray, weight_reaction, sensorsG)
     rospy.Subscriber("cur_output", Float32MultiArray, power_reaction, sensorsG)
 
 def moisture_reaction(data, sensorsG):
@@ -78,10 +78,10 @@ def humid_reaction(data, sensorsG):
     if is_logging: print("    Humidity: %d %d" %(data.data[0], data.data[1]))
 
 def weight_reaction(data, sensorsG):
-    sensorsG.weight = (data.data[0] + data.data[1])/2.0
+    # Each weight sensor holds half the weight of the pan
+    sensorsG.weight = (data.data[0] + data.data[1])
     sensorsG.weight_raw = data.data
     if is_logging: print("    Weight: %d %d" %(data.data[0], data.data[1]))
-    print(data.data[0], clock_time(sensorsG.time))
 
 def temp_reaction(data, sensorsG):
     sensorsG.temperature = (data.data[0] + data.data[1])/2.0

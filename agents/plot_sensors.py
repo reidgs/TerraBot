@@ -37,8 +37,8 @@ def update_actuator(name, actuator):
     if (not ax.texts):
         sensor_values[name] = ''
         ax.set_yticklabels([])
-        ax.set_yticks([],[])
-        ax.set_xticks([],[''])
+        #ax.set_yticks([],[])
+        #ax.set_xticks([],[''])
         ax.bar(names[name],[0])
     else: 
         ax.texts[0].remove()
