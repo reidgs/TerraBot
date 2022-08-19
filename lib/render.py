@@ -324,9 +324,10 @@ class Terrarium(ShowBase):
             self.t_fanonblades.hide()
 
     def setLights(self, val):
-        max_level = 255
+        # New grow lights are soft yellow/white
+        level = 0.8*min(1, val/255.0)
         for l in self.lights:
-            l.setColor((1 * (val / 255.0), 0, .5 * (val / 255.0), 1))
+            l.setColor((level, level, 0.8*level, 1))
 
     def setSoilColor(self, soilwater):
         mult = 1 - soilwater / 800.0
