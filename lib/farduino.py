@@ -129,8 +129,9 @@ def sense_humid():
 
 def sense_weight():
     w_array = Float32MultiArray()
-    # Each weight sensor holds half the weight of the pan
-    w_array.data = [env.get_weight()/2] * 2
+    # The average of the two sensors is the weight; Make it slightly uneven
+    weight = env.get_weight()
+    w_array.data = [weight*0.9, weight*1.1]
     publishers['weight'].publish(w_array)
               
 def sensor_forward_time(duration):
