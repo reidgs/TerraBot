@@ -38,14 +38,14 @@ flow_rate = 3.5             #ml/sec The rate at which the pump will pump water
 pipe_capacity = 10          #ml The capacity of the pipe
 drip_rate = 1.0             #ml/sec The rate at which water drips from the pipe when the pump is off
 uptake_rate = 0.1           #ml/sec The rate at which water is absorbed from the pan to the soil
-evap_rate = 1.4             #ml/sec The nominal rate at which water will evaporate
+evap_rate = 1.2             #ml/sec The nominal rate at which water will evaporate
 volume_rate = 1000.0 / 45   #ml/mm in the reservoir (used for sensing level)
 light_diffuse = .7          #The percentage of sunlight that reaches the other side
 max_daylight = 588          #The sunlight right at the window at midday
 tank_width = .4             #m the width of the terrarium
 led_power = 3.725           #units of light per LED level
 room_temp = 20              #degrees C the room temperature out of the greenhouse
-room_humidity = 50          # Humicity of air outside greenhouse
+room_humidity = 40          # Humidity of air outside greenhouse
 fan_cool_rate = .05 / 60    #deg C /min The rate at which temp decreases due to the fan
 
 led_current = 3.2/255       #
@@ -168,7 +168,7 @@ def exit_rate():
     # The rate at which water leaves the greenhouse via air.
     # Based on difference in humidity between greenhouse and room,
     #  is _much_ faster with the fan
-    base = params['airwater'] * (2.0 if params['fan'] else 0.01)/3600
+    base = params['airwater'] * (3.0 if params['fan'] else 0.1)/3600
     return base * (params['humidity']/room_humidity - 1)
         
 def get_cur():
