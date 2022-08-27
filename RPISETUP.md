@@ -6,7 +6,7 @@
 
 ###  Set up Logins on the Raspberry Pi ###
 * Name computer terrabot1 (or whichever number)
-* Make user name be robotanist-admin, with passphrase: H0w does your garden grow?
+* Make user name be robotanist-admin, with passphrase: [GET ADMIN PASSWORD FROM REID]
 * Menu -> Users + Groups
 * Add user robotanist, password TerraBot; log in automatically
 
