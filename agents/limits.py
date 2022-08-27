@@ -28,6 +28,10 @@ limits['temperature'] = [22, 29]
 optimal['temperature'] = [25,27]
 names['temperature'] = 'temp'
 
+scale['weight'] = [0, 1000]
+limits['weight'] = [300, 800]
+names['weight'] = 'weight'
+
 scale['current'] = [0, 1000]
 limits['current'] = [500, 600]
 names['current'] = 'current'

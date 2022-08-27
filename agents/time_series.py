@@ -69,6 +69,8 @@ def init_ros (use_simulator):
                      update_sensor_multi_data, subplotsG['Temperature'])
     rospy.Subscriber("humid_output", Int32MultiArray,
                      update_sensor_multi_data, subplotsG['Humidity'])
+    rospy.Subscriber("weight_output", Float32MultiArray, 
+                     update_sensor_multi_data, subplotsG['Weight'])
     rospy.Subscriber("led_input", Int32,
                      update_actuator_data, subplotsG['LEDs'])
     rospy.Subscriber("fan_input", Bool, update_actuator_data, subplotsG['Fan'])
@@ -102,7 +104,7 @@ def add_time_series(fig, name, limits, force_update, color, pos, plot_width):
 def init_plotting(plots, plot_width):
     global nrowsG, ncolsG
     fig = plt.figure()
-    nrowsG, ncolsG = (4, 2)
+    nrowsG, ncolsG = (5, 2)
     plt.subplots_adjust(hspace=0.7)
     plt.subplots_adjust(wspace=0.2)
     plt.ion()
@@ -117,9 +119,10 @@ def init_plotting(plots, plot_width):
 
 def print_sensor_values():
     print("Light Level: %.2f" %subplotsG['Light Level'].current)
-    print("Temperature: %.2f" %subplotsG['Temperature'].current)
     print("Humidity: %.2f" %subplotsG['Humidity'].current)
+    print("Temperature: %.2f" %subplotsG['Temperature'].current)
     print("Soil Moisture: %.2f" %subplotsG['Soil Moisture'].current)
+    print("Weight: %.2f" %subplotsG['Weight'].current)
     print("Water Level: %.2f" %subplotsG['Water Level'].current)
     print("LEDs: %d" %subplotsG['LEDs'].current)
     print("Fan: %s" %("on" if subplotsG['Fan'].current else "off"))
@@ -145,7 +148,8 @@ plotsG = [('Light Level', limits.scale['light_level'], False, 'g', 1),
           ('Humidity', limits.scale['humidity'], False, 'g', 3),
           ('Temperature', limits.scale['temperature'], False, 'g', 5),
           ('Soil Moisture', limits.scale['moisture'], False, 'g', 7),
-          ('Water Level', limits.scale['water_level'], False, 'g', 8),
+          ('Weight', limits.scale['weight'], False, 'g', 9),
+          ('Water Level', limits.scale['water_level'], False, 'g', 10),
           ('LEDs', [0, 255], True, 'b', 2),
           ('Fan', [0, 1], True, 'b', 4),
           ('Pump', [0, 1], True, 'b', 6)]
@@ -172,7 +176,7 @@ def handle_stdin ():
         elif input[0] == 'v':
             print_sensor_values()
         else:
-            print("Usage: q (quit)\n\tv (sensor values)")
+            print("Usage:  q (quit)\n\tv (sensor values)")
 
 if (replay_file):
     start_time = None
