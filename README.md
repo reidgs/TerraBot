@@ -193,7 +193,11 @@ To run the simulator, start TerraBot.py with the simulator mode flag (-m sim), a
 >`./TerraBot.py -m sim -g -b param/default_baseline.bsl`  
 
 ### Graphics ###
-We have included an option to display a graphical representation of the TerraBot hardware and the state of the simulation.  The display also includes a representation of the growing plants, showing how they develop (and either thrive or die) over time.
+We have included an option to display a graphical representation of the TerraBot hardware and the state of the simulation (see below).  The display also includes a representation of the growing plants, showing how they develop (and either thrive or die) over time.
+
+<p align="center">
+  <img src="https://github.com/reidgs/TerraBot/blob/master/simulator.JPG">
+</p>
 
 The graphics display is enabled using the -g flag when running TerraBot. The graphics window contains a 3D model of the terrarium and the plants within, along with a text panel containing information about the current environment, e.g., whether the pump is on or off, humidity, etc. Sounds are played to represent the pump and fan. The arrow keys and WASD can be used to navigate the scene, and the viewport can be reset by pressing 'r'. The camera will take pictures directly from this scene, from the perspective of the blue camera model, as in the real terrarium. Note that the camera <i>can still be used</i> even when the -g flag is not included, and the images produced will be equivalent to those taken with the graphics on.
 
