@@ -20,7 +20,7 @@ names['moisture'] = 'moist'
 
 scale['humidity'] = [0, 100]
 limits['humidity'] = [60, 90]
-optimal['humidity'] = [70, 78]
+optimal['humidity'] = [70, 80]
 names['humidity'] = 'humid'
 
 scale['temperature'] = [10, 40] # Celcius

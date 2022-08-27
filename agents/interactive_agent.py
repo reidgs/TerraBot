@@ -8,6 +8,7 @@ from datetime import datetime
 sys.path.insert(0, os.getcwd()[:os.getcwd().find('TerraBot')]+'TerraBot/lib')
 from terrabot_utils import clock_time
 from freqmsg import tomsg
+from topic_def import sensor_types, actuator_types
 
 class Sensors:
     time = 0
@@ -48,24 +49,34 @@ def init_ros ():
     if use_simulator: rospy.set_param("use_sim_time", True)
     rospy.init_node("interactive_agent", anonymous = True)
 
-    led_pub = rospy.Publisher("led_input", Int32, latch = True, queue_size = 1)
-    wpump_pub = rospy.Publisher("wpump_input", Bool, latch = True,
-                                queue_size = 1)
-    fan_pub = rospy.Publisher("fan_input", Bool, latch = True, queue_size = 1)
+    led_pub = rospy.Publisher("led_input", actuator_types['led'],
+                              latch = True, queue_size = 1)
+    wpump_pub = rospy.Publisher("wpump_input", actuator_types['wpump'],
+                                latch = True, queue_size = 1)
+    fan_pub = rospy.Publisher("fan_input", actuator_types['fan'],
+                              latch = True, queue_size = 1)
 
     ping_pub = rospy.Publisher("ping", Bool, latch = True, queue_size = 1)
-    camera_pub = rospy.Publisher("camera", String, latch = True, queue_size = 1)
+    camera_pub = rospy.Publisher("camera", actuator_types['cam'],
+                                 latch = True, queue_size = 1)
     speedup_pub = rospy.Publisher("speedup", Int32, latch = True, queue_size = 1)
-    freq_pub = rospy.Publisher("freq_input", String, latch=True, queue_size=1)
+    freq_pub = rospy.Publisher("freq_input", actuator_types['freq'],
+                               latch=True, queue_size=1)
 
-    rospy.Subscriber("smoist_output", Int32MultiArray,
+    rospy.Subscriber("smoist_output", sensor_types['smoist'],
                      moisture_reaction, sensorsG)
-    rospy.Subscriber("light_output", Int32MultiArray, light_reaction, sensorsG)
-    rospy.Subscriber("level_output", Float32, level_reaction, sensorsG)
-    rospy.Subscriber("temp_output", Int32MultiArray, temp_reaction, sensorsG)
-    rospy.Subscriber("humid_output", Int32MultiArray, humid_reaction, sensorsG)
-    rospy.Subscriber("weight_output", Int32MultiArray, weight_reaction, sensorsG)
-    rospy.Subscriber("cur_output", Float32MultiArray, power_reaction, sensorsG)
+    rospy.Subscriber("light_output", sensor_types['light'],
+                     light_reaction, sensorsG)
+    rospy.Subscriber("level_output", sensor_types['level'],
+                     level_reaction, sensorsG)
+    rospy.Subscriber("temp_output", sensor_types['temp'],
+                     temp_reaction, sensorsG)
+    rospy.Subscriber("humid_output", sensor_types['humid'],
+                     humid_reaction, sensorsG)
+    rospy.Subscriber("weight_output", sensor_types['weight'],
+                     weight_reaction, sensorsG)
+    rospy.Subscriber("cur_output", sensor_types['cur'],
+                     power_reaction, sensorsG)
 
 def moisture_reaction(data, sensorsG):
     sensorsG.moisture = (data.data[0] + data.data[1])/2.0
@@ -81,7 +92,6 @@ def weight_reaction(data, sensorsG):
     sensorsG.weight = (data.data[0] + data.data[1])/2.0
     sensorsG.weight_raw = data.data
     if is_logging: print("    Weight: %d %d" %(data.data[0], data.data[1]))
-    print(data.data[0], clock_time(sensorsG.time))
 
 def temp_reaction(data, sensorsG):
     sensorsG.temperature = (data.data[0] + data.data[1])/2.0
