@@ -43,17 +43,15 @@ Do as robotanist-admin
 * curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
 * sudo apt install build-essential arduino arduino-mk 
 * sudo apt install ros-noetic-rosserial ros-noetic- rosserial-arduino
-* add the line “source /opt/ros/noetic/setup.bash” to the end of the .bashrc file
+* add the line to the end of the .bashrc file
+    - source /opt/ros/noetic/setup.bash
 
 ### Installing TerraBot Software ###
 Do as robotanist
 * cd Desktop; git clone https://github.com/reidgs/TerraBot (use your git name and password)
 * cd $HOME; ln -s Desktop/TerraBot .
 * add the line “source /opt/ros/noetic/setup.bash” to the end of the .bashrc file; source ~/.bashrc
-* add the lines to bashrc:
-    - export TB_DIR=${HOME}/Desktop/TerraBot 
-    - export PYTHONPATH=${PYTHONPATH}:${ TB_DIR}:${ TB_DIR}/lib:${ TB_DIR}:${ TB_DIR}/agents
-# add the lines to bashrc for robotanist-admin:
+* add the lines to bashrc (for both robotanist and robotanist-admin):
     - export TB_DIR=${HOME}/Desktop/TerraBot 
     - export PYTHONPATH=${PYTHONPATH}:${ TB_DIR}:${ TB_DIR}/lib:${ TB_DIR}:${ TB_DIR}/agents
 * invoke raspi-config and enable camera and SSH
@@ -81,7 +79,7 @@ Do as robotanist-admin
 * sudo make python
 * sudo make test
 * cd ortools; sudo cp init.p* /usr/lib/python3.8; sudo cp init.p* /usr/lib/python3.8/or-tools
-* in .bashrc (both robotanist and robotanist-admin) add the line:
+* add the line to .bashrc (both for robotanist and robotanist-admin) :
     - export PYTHONPATH=${PYTHONPATH}:/usr/lib/python3.8:/usr/lib/python3.8/or-tools
 
 ### Set up Python Libraries ###
