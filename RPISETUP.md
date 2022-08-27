@@ -62,7 +62,7 @@ Do as robotanist-admin
 * cd $HOME; ln -s Desktop/TerraBot .
 * mkdir ~/Sketchbook/libraries; cd ~/Sketchbook/libraries
 * rosrun rosserial_arduino make_libraries.py .
-* git clone https://github.com/winlinvip/SimpleDHT.git
+* git clone https://github.com/RobTillaart/DHT20.git
 * sudo usermod -a -G dialout,robotanist $USER
 * sudo usermod -a -G dialout robotanist
 * cd ~/TerraBot/lib/ArduinoCode
