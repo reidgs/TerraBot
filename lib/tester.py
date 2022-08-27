@@ -251,6 +251,7 @@ class Tester:
 
     def activate(self, whenever, time):
         active = whenever.activate(time)
+        print("ACTIVATE (%s): %s" %(clock_time(time), active.brief()))
         self.active.append(active)
 
     def deactivate(self, whenever):

@@ -375,8 +375,10 @@ while not rospy.core.is_shutdown():
         input = sys.stdin.readline()
         if input[0] == 'q':
             terminate_gracefully()
+        if input[0] == 't':
+            print("Current time: %s" %clock_time(now))
         else:
-            print("Usage: q (quit)")
+            print("Usage: q (quit); t (current time)")
 
     now = rospy.get_time()
     if (interference): interference.update(now)

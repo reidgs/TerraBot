@@ -37,8 +37,8 @@ def update_actuator(name, actuator):
     if (not ax.texts):
         sensor_values[name] = ''
         ax.set_yticklabels([])
-        ax.set_yticks([],[])
-        ax.set_xticks([],[''])
+        #ax.set_yticks([],[])
+        #ax.set_xticks([],[''])
         ax.bar(names[name],[0])
     else: 
         ax.texts[0].remove()
@@ -61,10 +61,17 @@ def init_ros (use_simulator):
                      update_sensor_multi_data, 'temperature')
     rospy.Subscriber("humid_output", Int32MultiArray,
                      update_sensor_multi_data, 'humidity')
+    rospy.Subscriber("weight_output", Float32MultiArray,
+                     update_sensor_multi_data, 'weight')
     rospy.Subscriber("cur_output", Float32MultiArray, update_power_data, 'cur')
     rospy.Subscriber("led_input", Int32, update_sensor_data, 'led')
     rospy.Subscriber("fan_input", Bool, update_binary_data, 'fan')
     rospy.Subscriber("wpump_input", Bool, update_binary_data, 'pump')
+
+    # Initialize actuators
+    sensor_values['led'] = 'Off'
+    sensor_values['fan'] = 'Off'
+    sensor_values['pump'] = 'Off'
 
 def update_sensor_multi_data(data, name):
     sensor_values[name] =(data.data[0] + data.data[1])/2
@@ -85,26 +92,31 @@ def init_plotting():
     plt.subplots_adjust(wspace=0.3)
     plt.ion()
 
-    add_sensor('light_level', fig, 5,2,1)
-    add_sensor('moisture', fig, 5,2,3)
-    add_sensor('humidity', fig, 5,2,5)
-    add_sensor('temperature', fig, 5,2,7)
-    add_sensor('water_level', fig, 5,2,8)
-    add_sensor('current', fig, 5,2,9)
-    add_sensor('energy', fig, 5,2,10)
+    add_sensor('light_level', fig, 6,2,1)
+    add_sensor('humidity', fig, 6,2,3)
+    add_sensor('temperature', fig, 6,2,5)
+    add_sensor('moisture', fig, 6,2,7)
+    add_sensor('weight', fig, 6,2,9)
+    add_sensor('water_level', fig, 6,2,10)
+    add_sensor('current', fig, 6,2,11)
+    add_sensor('energy', fig, 6,2,12)
 
-    add_actuator('led', fig, 5,2,2)
-    add_actuator('fan', fig, 5,2,4)
-    add_actuator('pump', fig, 5,2,6)
+    add_actuator('led', fig, 6,2,2)
+    add_actuator('fan', fig, 6,2,4)
+    add_actuator('pump', fig, 6,2,6)
 
     plt.show()
 
 def print_sensor_values():
-    print("Light Level: %.2f" %subplotsG['Light Level'].current)
-    print("Temperature: %.2f" %subplotsG['Temperature'].current)
-    print("Humidity: %.2f" %subplotsG['Humidity'].current)
-    print("Soil Moisture: %.2f" %subplotsG['Soil Moisture'].current)
-    print("Water Level: %.2f" %subplotsG['Water Level'].current)
+    print("Light Level: %.2f" %sensor_values['light_level'])
+    print("Temperature: %.2f" %sensor_values['temperature'])
+    print("Humidity: %.2f" %sensor_values['humidity'])
+    print("Weight: %.2f" %sensor_values['weight'])
+    print("Soil Moisture: %.2f" %sensor_values['moisture'])
+    print("Water Level: %.2f" %sensor_values['water_level'])
+    print("LED: %s" %sensor_values['led'])
+    print("Fan: %s" %sensor_values['fan'])
+    print("Water Pump: %s" %sensor_values['pump'])
 
 parser = argparse.ArgumentParser(description = "Interactive Agent")
 parser.add_argument('-s', '--sim', action = 'store_true', help="use simulator")
@@ -126,9 +138,9 @@ while not rospy.core.is_shutdown():
         input = sys.stdin.readline()
         if input[0] == 'q':
             quit()
-        elif input[0] == 's':
+        elif input[0] == 'v':
             print_sensor_values()
         else:
-            print("Usage: q (quit)\n\ts (sensor values)")
+            print("Usage:  q (quit)\n\tv (sensor values)")
 
     rospy.sleep(1)

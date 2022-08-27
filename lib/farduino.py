@@ -92,7 +92,8 @@ sensor_timing = { 'smoist' : [0.0, 1.0],
                   'light' : [0.0, 1.0],
                   'level' : [0.0, 1.0],
                   'temp' : [0.0, 1.0],
-                  'humid' : [0.0, 1.0]}
+                  'humid' : [0.0, 1.0],
+                  'weight' : [0.0, 1.0]}
     
 ## Sensor functions
 #These functions sense from the environment and publish to their topic
@@ -125,6 +126,13 @@ def sense_humid():
     h_array = Int32MultiArray()
     h_array.data = [round(env.params['humidity'])] * 2
     publishers['humid'].publish(h_array)
+
+def sense_weight():
+    w_array = Float32MultiArray()
+    # The average of the two sensors is the weight; Make it slightly uneven
+    weight = env.get_weight()
+    w_array.data = [weight*0.9, weight*1.1]
+    publishers['weight'].publish(w_array)
               
 def sensor_forward_time(duration):
     for name in sensor_names:
@@ -205,7 +213,8 @@ def sim_loop():
         sensor_forward_time(duration)
         
         #rerender to the viewing window
-        renderer.update_env_params(env.params, speedup, env.light_average())
+        renderer.update_env_params(env.params, speedup, env.light_average(),
+                                   env.get_weight())
     #Stop panda window
     if args.graphics:
         renderer.userExit()
@@ -225,17 +234,16 @@ if bl is not None:
 
 renderer = Terrarium(args.graphics, t0, age, droop, lankiness, plant_health)
 env.params['time'] = age
-renderer.update_env_params(env.params, default_speedup, env.light_average())
+renderer.update_env_params(env.params, default_speedup, env.light_average(),
+                           env.get_weight())
 
 def cam_cb(data):
     global renderer
     renderer.takeAndStorePic(data.data)
 
 #Steup cam subscriber
-subscribers['cam'] = rospy.Subscriber('cam_raw', 
-                                             actuator_types['cam'],  
-                                             cam_cb)
-
+subscribers['cam'] = rospy.Subscriber('cam_raw', actuator_types['cam'],  
+                                      cam_cb)
 
 #Start sim loop THEN panda
 

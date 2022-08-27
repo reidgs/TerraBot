@@ -33,23 +33,26 @@ from math import sqrt
 
 # Natural Constants #TODO tweak these
 
-max_soilwater = 1000        #ml The level at which the soil is fully saturated and will begin to overflow
+max_soilwater = 500        #ml The level at which the soil is fully saturated and will begin to overflow
 flow_rate = 3.5             #ml/sec The rate at which the pump will pump water
-drip_rate = .1              #ml/sec The rate at which water drips from the pipe when the pump is off
-evap_rate = 1.4             #ml/sec The nominal rate at which water will evaporate
+pipe_capacity = 10          #ml The capacity of the pipe
+drip_rate = 1.0             #ml/sec The rate at which water drips from the pipe when the pump is off
+uptake_rate = 0.1           #ml/sec The rate at which water is absorbed from the pan to the soil
+evap_rate = 1.2             #ml/sec The nominal rate at which water will evaporate
 volume_rate = 1000.0 / 45   #ml/mm in the reservoir (used for sensing level)
 light_diffuse = .7          #The percentage of sunlight that reaches the other side
 max_daylight = 588          #The sunlight right at the window at midday
 tank_width = .4             #m the width of the terrarium
 led_power = 3.725           #units of light per LED level
 room_temp = 20              #degrees C the room temperature out of the greenhouse
-room_humidity = 50          # Humicity of air outside greenhouse
+room_humidity = 40          # Humidity of air outside greenhouse
 fan_cool_rate = .05 / 60    #deg C /min The rate at which temp decreases due to the fan
-pipe_capacity = 100          #ml The capacity of the pipe
 
 led_current = 3.2/255       #
 pump_current = .2           # The current needed to support each device when it's on
 fan_current = .06           #
+
+base_weight = 100           # Weight of dry rockwool and pan, in grams
 
 #Environment Parameters
 params = { 'time' : 0, # This should start at 2000-01-01-00:00:00
@@ -63,6 +66,7 @@ params = { 'time' : 0, # This should start at 2000-01-01-00:00:00
              'volume' : 3000.0,
              'tankwater' : 0.0,
              'pipewater' : 0.0,
+             'panwater' : 0.0,
              'energy' : 0,
              
              'led' : 0,
@@ -164,7 +168,7 @@ def exit_rate():
     # The rate at which water leaves the greenhouse via air.
     # Based on difference in humidity between greenhouse and room,
     #  is _much_ faster with the fan
-    base = params['airwater'] * (2.0 if params['fan'] else 0.01)/3600
+    base = params['airwater'] * (3.0 if params['fan'] else 0.1)/3600
     return base * (params['humidity']/room_humidity - 1)
         
 def get_cur():
@@ -172,6 +176,11 @@ def get_cur():
            (pump_current if params['wpump'] else 0) +
            (fan_current if params['fan'] else 0))
      
+def get_weight():
+    # Water weighs about 1 g per 1 ml, add some for plants
+    return (base_weight + params['soilwater'] + params['panwater'] +
+            estimated_plant_area())
+
 # Environment Runtime Functions
  
 def forward_water_cycle(duration):
@@ -180,25 +189,35 @@ def forward_water_cycle(duration):
         duration = .5
 
     #Pump water if in reservoir and pump on, accounting for pipe lag
+    # With the addition of the weight sensors, had to change how water movement
+    #  works - now, goes from the pipe to the pan and then to the soil
     if params['wpump']:
         vol = min(duration * flow_rate, params['volume'])
         params['volume'] -= vol
         params['pipewater'] += vol
         if params['pipewater'] > pipe_capacity:
-            params['soilwater'] += params['pipewater'] - pipe_capacity
+            params['panwater'] += params['pipewater'] - pipe_capacity
             params['pipewater'] = pipe_capacity
             
     elif params['pipewater'] > 0: #Could be if. should dripping be ok when the pump is on?
         vol = min(duration * drip_rate, params['pipewater'])
         params['pipewater'] -= vol
-        params['soilwater'] += vol
+        params['panwater'] += vol
     
         
     #Do water movement:
     #from soil to tankwater by overflow if soil fully saturated
-    if params['soilwater'] > max_soilwater:
-       params['tankwater'] += params['soilwater'] - max_soilwater
-       params['soilwater'] = max_soilwater
+    total_water = params['soilwater'] + params['panwater']
+    if total_water > max_soilwater:
+       params['tankwater'] += total_water - max_soilwater
+       params['panwater'] = max(0, max_soilwater - params['soilwater'])
+       params['soilwater'] = max_soilwater - params['panwater']
+    #from pan to soil
+    if params['panwater'] > 0:
+        vol = min(duration * uptake_rate, params['panwater'])
+        params['panwater'] -= vol
+        params['soilwater'] += vol
+
     #from soil to air because of plants
     aw = params['airwater']
     vol = min(duration * transpiration_rate(), params['soilwater'])
