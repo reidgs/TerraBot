@@ -1,9 +1,8 @@
 ARDUINO_DIR = /usr/share/arduino
 ARDUINO_PORT = /dev/ttyACM*
+ARDUINO_SKETCHBOOK = ${HOME}/Sketchbook
 
-USER_LIB_PATH = ${HOME}/Sketchbook/libraries
-
-ARDUINO_LIBS = ros_lib SimpleDHT HX711
+ARDUINO_LIBS = ros_lib DHT20 HX711 Wire
 
 BOARD_TAG = mega2560
 include /usr/share/arduino/Arduino.mk

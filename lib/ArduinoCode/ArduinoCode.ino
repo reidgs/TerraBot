@@ -11,8 +11,8 @@
 #include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/Int32MultiArray.h>
 #include <std_msgs/String.h>
-#include <SimpleDHT.h>
 #include <string.h>
+#include <DHT20.h>
 #include <HX711.h>
 
 // Internal Values
@@ -25,10 +25,8 @@ int lvl = 0;
 ros::NodeHandle  nh;
 
 // Sensor Pins
-int DHT_pin1 = A8;
 int smoist_pin1 = A7;
 int light_pin1 = A6;
-int DHT_pin2 = A5;
 int smoist_pin2 = A4;
 int light_pin2 = A3;
 int trig_pin = A2;
@@ -36,9 +34,10 @@ int echo_pin = A1;
 int cur_pin = A0;
 
 
-// Needed to setup DHT
-SimpleDHT22 dht1(DHT_pin1);
-SimpleDHT22 dht2(DHT_pin2);
+// Set up DHT sensor
+// This will undoubtedly have to change once we integrate the IC2 multiplexer
+DHT20 dht1;
+DHT20 dht2;
 
 // Actuator pins
 //int led_pin = 11;
@@ -53,10 +52,10 @@ int weight_dout_pin2 = 5;
 
 HX711 weight1, weight2;
 // All of these should be recalibrated on a per-sensor basis
-float weight_scale1 = 780.18;
-float weight_scale2 = 780.18;
-float weight_offset1 = 389900;
-float weight_offset2 = 389900;
+float weight_scale1 = 478.058; //780.18;
+float weight_offset1 = -602740; //-610145;
+float weight_scale2 = 470.411; //780.18;
+float weight_offset2 = 326580; //312910;
 
 struct Timing {
   unsigned long next = 0;
@@ -165,6 +164,10 @@ void setup(){
   pinMode(trig_pin, OUTPUT);
   pinMode(echo_pin, INPUT);
 
+  dht1.begin();
+  dht2.begin();
+  //Wire.setClock(400000);
+
   weight1.begin(weight_dout_pin1, weight_sck_pin1);
   weight1.set_scale(weight_scale1);
   weight1.set_offset(weight_offset1);
@@ -207,8 +210,14 @@ void loop(){
 
   // updates the reading for temp and humidity
   if(time_now - last_dht > 2500){
-      dht1.read(&temperature1, &humidity1, NULL);
-      dht2.read(&temperature2, &humidity2, NULL);
+      if (dht1.read() == DHT20_OK) {
+        temperature1 = dht1.getTemperature();
+        humidity1 = dht1.getHumidity();
+      }
+      if (dht2.read() == DHT20_OK) {
+        temperature2 = dht2.getTemperature();
+        humidity2 = dht2.getHumidity();
+      }
       last_dht = time_now;
   }
 
@@ -285,7 +294,13 @@ void loop(){
       // Get the weight
       weight_msg.data_length = 2;
       float w_array[2];
+      // The HX711 package sets parameters globally, so rather than
+      //   updating the package, need to set parameters for each sensor
+      weight1.set_scale(weight_scale1);
+      weight1.set_offset(weight_offset1);
       w_array[0] = weight1.is_ready() ? weight1.get_units(1) : -1;
+      weight2.set_scale(weight_scale2);
+      weight2.set_offset(weight_offset2);
       w_array[1] = weight2.is_ready() ? weight2.get_units(1) : -1;
       weight_msg.data = w_array;
       weight_pub.publish(&weight_msg);
