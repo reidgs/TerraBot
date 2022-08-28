@@ -1,4 +1,4 @@
-## Creating VirtualBox Image for TerraBot##
+## Creating VirtualBox Image for TerraBot ##
 
 ### Set up VirtualBox Image ### 
 In VirtualBox
