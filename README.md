@@ -187,6 +187,8 @@ can implement your agent. **We will provide you with a virtual machine that alre
 [Instructions are here](https://www.wikihow.com/Install-VirtualBox) for installing VirtualBox.
 If you want to install your own version of the system on an Ubuntu machine, see the instructions in README.virtualbox (and ignore the specific instructions related to VirtualBox).
 
+[Instructions are here](M1SETUP.md) for installing natively on M1 arm64 (Apple Silicon) devices.
+
 ### Running the Simulator ###
 To run the simulator, start TerraBot.py with the simulator mode flag (-m sim), and optionally 1) -g, if you wish to see a graphical representation of the terrarium; 2) -s <speedup>, to specify the multiplier you wish for the speed; and 3) -b <baselinefile>, a file that contains baseline (starting) values for the sensors, actuators, and the time which you would like the simulator to start at (seconds since midnight, day 1 of the simulated run).  
 
