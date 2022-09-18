@@ -90,7 +90,8 @@ class PrintConstraint(Constraint):
     def __str__(self):
         return "[PRINT %s]" %self.condition
     def evaluate(self, time, vars):
-        print(self.evaluate_condition(vars))
+        print("PRINT (%s): %s"
+              %(clock_time(time), self.evaluate_condition(vars)))
         return 1
 
 class DelayConstraint(Constraint):
@@ -185,7 +186,7 @@ class Tester:
              'current'  : [0.0,0.0], 'wlevel'      : 150.0,
              'led'      : 0,         'wpump'       : False,
              'fan'      : False,     'camera'      : None,
-             'ping'	: False }
+             'ping'	: False,     'weight'      : 0 }
     baseline_file = None
     interf_file = None
     delay_time = None
