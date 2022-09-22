@@ -96,6 +96,12 @@ Do as robotanist-admin
     - sudo rm -v /etc/ssh/ssh_host_*
     - sudo dpkg-reconfigure openssh-server
     - sudo systemctl restart ssh
-
+* Deal with the audio server
+    - sudo chown robotanist /usr/bin/pulseaudio
+    - sudo chgrp robotanist /usr/bin/pulseaudio
+    - pact list -> look for the card associated with the microphone
+    - edit stream-av and stream-audio to change the plughw card to match (e.g., plughw:1,0)
+ * Check pump pressure
+    - if pump is too weak (or too strong), edit wpump_activate in Arduino.ino (and make upload)
 
 
