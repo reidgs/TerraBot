@@ -44,9 +44,9 @@ int lvl = 0;
 ros::NodeHandle  nh;
 
 // Sensor Pins
-int light_pin1 = A3;
-int smoist_pin1 = A4;
-int DHT_pin1 = A5;
+int light_pin1 = A4;
+int smoist_pin1 = A5;
+int DHT_pin1 = A6;
 
 int light_pin2 = A8;
 int smoist_pin2 = A9;
@@ -86,10 +86,10 @@ int weight_dout_pin2 = 5;
 
 HX711 weight1, weight2;
 // All of these should be recalibrated on a per-sensor basis
-float weight_scale1 = 478.058; //780.18;
-float weight_offset1 = -602740; //-610145;
-float weight_scale2 = 470.411; //780.18;
-float weight_offset2 = 326580; //312910;
+float weight_scale1 = 1; //-423.4;
+float weight_offset1 = 0; //358888;
+float weight_scale2 = 1; //-433.6;
+float weight_offset2 = 0; //437300;
 
 struct Timing {
   unsigned long next = 0;
