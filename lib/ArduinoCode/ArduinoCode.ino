@@ -1,3 +1,6 @@
+//#define USE_DHT20
+//#define USE_TCA
+#define USE_BOTH
 
 /*
  * Automated Systems TerraBot Arduino File
@@ -12,32 +15,63 @@
 #include <std_msgs/Int32MultiArray.h>
 #include <std_msgs/String.h>
 #include <string.h>
-#include <DHT20.h>
+#ifdef USE_DHT20
+  #include <Wire.h>
+  #include <DHT20.h>
+#ifdef USE_TCA
+  #include <TCA9548.h>
+#endif
+#else
+  #include <dhtnew.h>
+  //#include <SimpleDHT.h>
+#endif
 #include <HX711.h>
 
 // Internal Values
+#if 1
+int temperature1 = 0;
+int humidity1 = 0;
+int temperature2 = 0;
+int humidity2 = 0;
+#else
 byte temperature1 = 0;
 byte humidity1 = 0;
 byte temperature2 = 0;
 byte humidity2 = 0;
+#endif
 int lvl = 0;
 
 ros::NodeHandle  nh;
 
 // Sensor Pins
-int smoist_pin1 = A7;
-int light_pin1 = A6;
-int smoist_pin2 = A4;
-int light_pin2 = A3;
+int light_pin1 = A4;
+int smoist_pin1 = A5;
+int DHT_pin1 = A6;
+
+int light_pin2 = A8;
+int smoist_pin2 = A9;
+int DHT_pin2 = A10;
+
 int trig_pin = A2;
 int echo_pin = A1;
 int cur_pin = A0;
 
+#ifdef USE_TCA
+TCA9548 tca(0x70);
+#endif
 
 // Set up DHT sensor
-// This will undoubtedly have to change once we integrate the IC2 multiplexer
+#ifdef USE_DHT20
 DHT20 dht1;
+#ifdef USE_BOTH
 DHT20 dht2;
+#endif
+#else
+DHTNEW dht1(DHT_pin1);
+#ifdef USE_BOTH
+DHTNEW dht2(DHT_pin2);
+#endif
+#endif
 
 // Actuator pins
 //int led_pin = 11;
@@ -52,10 +86,10 @@ int weight_dout_pin2 = 5;
 
 HX711 weight1, weight2;
 // All of these should be recalibrated on a per-sensor basis
-float weight_scale1 = 478.058; //780.18;
-float weight_offset1 = -602740; //-610145;
-float weight_scale2 = 470.411; //780.18;
-float weight_offset2 = 326580; //312910;
+float weight_scale1 = 1; //-423.4;
+float weight_offset1 = 0; //358888;
+float weight_scale2 = 1; //-433.6;
+float weight_offset2 = 0; //437300;
 
 struct Timing {
   unsigned long next = 0;
@@ -164,9 +198,22 @@ void setup(){
   pinMode(trig_pin, OUTPUT);
   pinMode(echo_pin, INPUT);
 
+#ifdef USE_TCA
+  tca.begin(0);
+#endif
+
+  //Wire.setClock(5000);
+#ifdef USE_DHT20
   dht1.begin();
+#ifdef USE_BOTH
   dht2.begin();
-  //Wire.setClock(400000);
+#endif
+#else
+  dht1.setType(22);
+#ifdef USE_BOTH
+  dht2.setType(22);
+#endif
+#endif
 
   weight1.begin(weight_dout_pin1, weight_sck_pin1);
   weight1.set_scale(weight_scale1);
@@ -210,14 +257,39 @@ void loop(){
 
   // updates the reading for temp and humidity
   if(time_now - last_dht > 2500){
-      if (dht1.read() == DHT20_OK) {
+/*
+      int status = dht1.read(&temperature1, &humidity1, NULL);
+      if (status != SimpleDHTErrSuccess) {
+         temperature1 = status; 
+         humidity1 = 42;
+      }
+*/
+#ifdef USE_TCA
+      tca.selectChannel(1);
+#endif
+      int status = dht1.read();
+#ifdef USE_DHT20
+      if (status == DHT20_OK) {
+#else
+      if (status == DHTLIB_OK) {
+#endif
         temperature1 = dht1.getTemperature();
         humidity1 = dht1.getHumidity();
       }
-      if (dht2.read() == DHT20_OK) {
+#ifdef USE_BOTH 
+#ifdef USE_TCA
+      tca.selectChannel(0);
+#endif
+      status = dht2.read();
+#ifdef USE_DHT20
+      if (status == DHT20_OK) {
+#else
+      if (status == DHTLIB_OK) {
+#endif
         temperature2 = dht2.getTemperature();
         humidity2 = dht2.getHumidity();
       }
+#endif
       last_dht = time_now;
   }
 
