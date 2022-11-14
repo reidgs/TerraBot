@@ -3,6 +3,7 @@ import copy, os, sys
 from datetime import datetime
 from terrabot_utils import clock_time, time_since_midnight, dtime_to_seconds
 from terrabot_utils import Agenda
+#from limits import optimal, limits
 
 def parse_error(line):
     raise Exception("Unknown syntax: %s" % line)
