@@ -15,6 +15,8 @@ parser.add_argument('-p', '--period', type=int, default=period,
 parser.add_argument('-s', '--sim', action = 'store_true', help="use simulator")
 args = parser.parse_args()
 
+period = args.period
+
 def init_ros ():
     if args.sim: rospy.set_param("use_sim_time", True)
     rospy.init_node("process_tracker", anonymous = True)
@@ -46,6 +48,11 @@ def process_current_procs():
     procs = [process_procname(proc) for proc in rosnode.get_node_names()]
     return set(procs)
 
+def check_for_quit():
+    if sys.stdin in select.select([sys.stdin],[],[],period)[0]:
+        input = sys.stdin.readline()
+        if input[0] == 'q': exit()
+    
 def run_tracker(tf, previous_procs):
     init_ros()
     while rosgraph.is_master_online():
@@ -58,9 +65,7 @@ def run_tracker(tf, previous_procs):
                                  ' '.join(sorted_procs)))
             tf.flush()
             previous_procs = current_procs
-        if sys.stdin in select.select([sys.stdin],[],[],0)[0]:
-            input = sys.stdin.readline()
-            if input[0] == 'q': exit()
+        check_for_quit()
     return previous_procs
 
 previous_procs = process_tracker_file(args.trackerfile)
@@ -68,8 +73,5 @@ with open(args.trackerfile, "a") as tf:
     while True:
         if rosgraph.is_master_online():
             previous_procs = run_tracker(tf, previous_procs)
-        if sys.stdin in select.select([sys.stdin],[],[],0)[0]:
-            input = sys.stdin.readline()
-            if input[0] == 'q': exit()
-        time.sleep(1)
+        check_for_quit()
     tf.close()
