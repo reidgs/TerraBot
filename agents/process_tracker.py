@@ -36,9 +36,11 @@ def process_tracker_file(tracker_file):
     if (not exists(tracker_file)):
         return set()
     else:
+        line = None
         with open(tracker_file, "r") as tf:
             for line in tf:
                 pass
+        if (not line): return set() # No lines in file, yet
         # 'line' is the last line in the tracker file
         proc_names = line.replace('\n','').split(' ')[1:]
         print("Last set of processes: ", proc_names)
