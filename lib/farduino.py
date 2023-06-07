@@ -196,7 +196,7 @@ def sim_loop():
         speedup = min(default_speedup, #speedup should be maxed if pumping/fanning
                       (max_speedup_pump if env.params['wpump'] else default_speedup),
                       (max_speedup_fan if env.params['fan'] else default_speedup))
-       
+
         now = rospy.get_time()
         if (pump_last_on and not env.params['wpump']):
             pump_last_on = False

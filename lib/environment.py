@@ -52,7 +52,7 @@ led_current = 3.2/255       #
 pump_current = .2           # The current needed to support each device when it's on
 fan_current = .06           #
 
-base_weight = 100           # Weight of dry rockwool and pan, in grams
+base_weight = 500           # Weight of support panel, dry rockwool and pan, in grams
 
 #Environment Parameters
 params = { 'time' : 0, # This should start at 2000-01-01-00:00:00
@@ -179,7 +179,7 @@ def get_cur():
 def get_weight():
     # Water weighs about 1 g per 1 ml, add some for plants
     return (base_weight + params['soilwater'] + params['panwater'] +
-            estimated_plant_area())
+            + params['tankwater'] + estimated_plant_area())
 
 # Environment Runtime Functions
  
