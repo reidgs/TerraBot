@@ -49,3 +49,13 @@ In VirtualBox
 * In VirtualBox, File -> Export Appliance
 * Be sure to choose the location for writing the file; otherwise accept all the defaults
 
+### Optimize Parameters ###
+* Choose **Settings -> System -> Motherboard**
+* Set RAM to about half of your total RAM (up to 10GB)
+* Choose **Processor** tab
+* Set it to at least 4 (more is better, but also keep in mind how many CPU threads you have -- at least a couple should be left for your overall machine not given to the submachine)
+* Click **OK**
+
+
+
+
