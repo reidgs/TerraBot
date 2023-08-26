@@ -54,7 +54,9 @@ int DHT_pin2 = A10;
 
 int trig_pin = A2;
 int echo_pin = A1;
+#ifdef USE_CURRENT
 int cur_pin = A0;
+#endif
 
 #ifdef USE_TCA
 TCA9548 tca(0x70);
@@ -86,11 +88,10 @@ int weight_dout_pin2 = 5;
 
 HX711 weight1, weight2;
 // All of these should be recalibrated on a per-sensor basis
-float weight_scale1 = 1; //-423.4;
-float weight_offset1 = 0; //358888;
-float weight_scale2 = 1; //-433.6;
-float weight_offset2 = 0; //437300;
-
+float weight_scale1 = 1;
+float weight_offset1 = 0;
+float weight_scale2 = -1;
+float weight_offset2 = 0;
 struct Timing {
   unsigned long next = 0;
   unsigned long period = 1000;
@@ -108,8 +109,10 @@ long light_sum1 = 0;
 long light_sum2 = 0;
 long light_count = 0;
 
+#ifdef USE_CURRENT
 long cur_sum = 0;
 long cur_count = 0;
+#endif
 
 #define SEN_CMP(sensor) (strncmp(cmd_msg.data, sensor, slen) == 0)
 
@@ -181,8 +184,10 @@ ros::Publisher light_pub("light_raw", &light_msg);
 std_msgs::Float32 level_msg;
 ros::Publisher level_pub("level_raw", &level_msg);
 
+#ifdef USE_CURRENT
 std_msgs::Float32MultiArray cur_msg;
 ros::Publisher cur_pub("cur_raw", &cur_msg);
+#endif
 
 std_msgs::Int32MultiArray smoist_msg;
 ros::Publisher smoist_pub("smoist_raw", &smoist_msg);
@@ -235,7 +240,9 @@ void setup(){
   nh.advertise(level_pub);
   nh.advertise(smoist_pub);
   nh.advertise(weight_pub);
+#ifdef USE_CURRENT
   nh.advertise(cur_pub);
+#endif
 }
 
 float to_amp(int analog) {
@@ -249,12 +256,13 @@ void loop(){
     light_sum1 += analogRead(light_pin1);
     light_sum2 += analogRead(light_pin2);
   }
+#ifdef USE_CURRENT
   // Needed so we can integrate
   if (current_timing.next - time_now < 1000) {
     cur_count++;
     cur_sum += analogRead(cur_pin);
   }
-
+#endif
   // updates the reading for temp and humidity
   if(time_now - last_dht > 2500){
 /*
@@ -365,19 +373,22 @@ void loop(){
 
       // Get the weight
       weight_msg.data_length = 2;
-      float w_array[2];
+      static float w_array[2] = {0,0};
       // The HX711 package sets parameters globally, so rather than
       //   updating the package, need to set parameters for each sensor
       weight1.set_scale(weight_scale1);
       weight1.set_offset(weight_offset1);
-      w_array[0] = weight1.is_ready() ? weight1.get_units(1) : -1;
+      // Sometimes, the weight sensors go offline for a bit - in that case,
+      // use the previous value
+      if (weight1.is_ready()) w_array[0] = weight1.get_units(1);
       weight2.set_scale(weight_scale2);
       weight2.set_offset(weight_offset2);
-      w_array[1] = weight2.is_ready() ? weight2.get_units(1) : -1;
+      if (weight2.is_ready()) w_array[1] = weight2.get_units(1);
       weight_msg.data = w_array;
       weight_pub.publish(&weight_msg);
   }
 
+#ifdef USE_CURRENT
   if(time_now >= current_timing.next){
       current_timing.next = time_now + current_timing.period;
 
@@ -393,5 +404,6 @@ void loop(){
       cur_sum = 0;
       cur_count = 0;
   }
+#endif
   nh.spinOnce();
 }
