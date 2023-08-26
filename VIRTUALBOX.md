@@ -54,7 +54,7 @@ In VirtualBox
 * Set RAM to about half of your total RAM (up to 10GB)
 * Choose **Processor** tab
 * Set it to at least 4 (more is better, but also keep in mind how many CPU threads you have -- at least a couple should be left for your overall machine not given to the submachine)
-* Click **Okay**
+* Click **OK**
 
 
 
