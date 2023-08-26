@@ -128,7 +128,7 @@ def print_sensor_values():
     print("Fan: %s" %("on" if subplotsG['Fan'].current else "off"))
     print("Pump: %s" %("on" if subplotsG['Pump'].current  else "off"))
 
-parser = argparse.ArgumentParser(description = "Interactive Agent")
+parser = argparse.ArgumentParser(description = "Time Series Plotter")
 parser.add_argument('-w', '--width', default = 24,
                     help="width of the plot, in hours")
 parser.add_argument('-l', '--log', help="log the sensor data to file")
