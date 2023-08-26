@@ -1,49 +1,35 @@
-# Installing `TerraBot` on Apple Silicon (M1)
+# Installing TerraBot on Apple Silicon (M1)
 
-## 1. Obtain `Conda` for managing Python installations
-- Do *not* use the Anaconda installer, instead prefer [`miniconda`](https://docs.conda.io/en/latest/miniconda.html) or [`miniforge / mambaforge`](https://github.com/conda-forge/miniforge)
-    - Recommended to use [miniconda](https://docs.conda.io/en/latest/miniconda.html) 
-        ```bash
-        # in Downloads/
-        wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh
-        chmod a+x Miniconda3-latest-MacOSX-arm64.sh
-        ./Miniconda3-latest-MacOSX-arm64.sh
-        ```
+## Convert the OVA to QCow2
+- **Note:** If you have the Autonomous Agents USB stick, this part has already been done for you
+- On Ubuntu: 
+  ```
+  tar -xvf TerraBot\ 2023.ova
+  sudo apt-get install qemu-utils
+  qemu-img convert -O qcow2 TerraBot\ 2023-disk001.vmdk TerraBot\ 2023.qcow2
+  ```
+  (For Mac, use `brew install qemu`)
 
-## 2. Install `ros-noetic` to a specialized conda env
+  To check for consistency: `qemu-img check TerraBot\ 2023.qcow2`
+  
+## Create the Virtual Machine using UTM
+Download UTM from ```https://mac.getutm.app```
+(you can also get the exact same app on the app store but it will be $10 instead of free)
 
-(full instructions obtained from [here](https://github.com/RoboStack/ros-noetic))
+Open UTM and click **Create new Virtual Machine**, then click **Emulate**, followed by **Custom**
 
-```bash
-# if you don't have mamba yet, install it first in the base environment (not needed when using mambaforge):
-conda install mamba -c conda-forge
+Checkmark **Skip ISO boot**
 
-mamba create -n 15-482 ros-noetic-desktop python=3.9 -c robostack -c robostack-experimental -c conda-forge --no-channel-priority --override-channels
+Keep clicking **continue** until Wizard is done
 
-# activate the new conda environment
-mamba init
-source ~/.zshrc # or .bashrc (basically restart the terminal)
-conda activate 15-482
+Click on **VM settings**, go to **drives** tab and click **New**.  Click **Import** and select the qcow2 drive.  Delete the other drive that exists.
 
-# optionally, install some compiler packages if you want to e.g. build packages in a catkin_ws:
-mamba install cmake pkg-config make ninja
+Go to **QEMU** tab and disable **UEFI boot**
 
-# reload environment to activate required scripts before running anything
-conda deactivate && conda activate 15-482
+Go to **systems** tab and set CPU cores to total cores of the laptop (8 for basic M1).
 
-# if you want to use rosdep, also do:
-mamba install rosdep
-rosdep init  # note: do not use sudo!
-rosdep update
+Set RAM to 4GB (set it to 8+ if you have 16GB RAM on your machine)
 
-# install 15-482 TerraBot dependencies
-pip install panda3d install transitions sklearn ortools opencv-python matplotlib
-```
+Enable **Force Multicore**
 
-## 3. Clone `TerraBot` and open it:
-```bash
-conda activate 15-482 # (do all your 15-482 work in this env)
-git clone https://github.com/reidgs/TerraBot
-cd TerraBot
-python TerraBot.py -m sim -s 1 -g
-```
+Click **Save**
