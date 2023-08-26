@@ -33,6 +33,20 @@ log_files = {}
 publishers = {}
 subscribers = {}
 
+### Update tester variables, if necessary
+var_translations = {'smoist' : 'smoist',      'cur' : 'current',
+                    'light'  : 'light',       'level' : 'wlevel',
+                    'temp'   : 'temperature', 'humid' : 'humidity',
+                    'led'    : 'led',         'wpump' : 'wpump',
+                    'fan'    : 'fan',         'camera' : 'camera',
+                    'ping'   : 'ping',        'insolation' : 'insolation',
+                    'weight' : 'weight'}
+def tester_update_var(var, value):
+    global tester, var_translations
+    if (tester):
+        tester.vars[var_translations[var]] = value
+        #print(var, value, tester.vars)
+
 def gen_log_files():
     global log_files
 
@@ -244,7 +258,8 @@ image_start_time = 1735000 # Should be in baseline
 def camera_cb(data):
     global simulate, images, fixed_shutter
     
-    print("Taking an image at %s, storing it in %s" %(clock_time(now), data.data))
+    print("Taking an image at %s, storing it in %s"
+          %(clock_time(rospy.get_time()), data.data))
     if simulate:
         publishers['cam'].publish(data.data)
     else:
@@ -305,20 +320,6 @@ def start_serial():
                         stdout = serial_log, stderr = serial_log)
     time.sleep(1) # chance to get started
     print("started serial")
-
-### Update tester variables, if necessary
-var_translations = {'smoist' : 'smoist',      'cur' : 'current',
-                    'light'  : 'light',       'level' : 'wlevel',
-                    'temp'   : 'temperature', 'humid' : 'humidity',
-                    'led'    : 'led',         'wpump' : 'wpump',
-                    'fan'    : 'fan',         'camera' : 'camera',
-                    'ping'   : 'ping',        'insolation' : 'insolation',
-                    'weight' : 'weight'}
-def tester_update_var(var, value):
-    global tester, var_translations
-    if (tester):
-        tester.vars[var_translations[var]] = value
-        #print(var, value, tester.vars)
 
 def adjust_path(pathname, dirname):
     return (pathname if os.path.isabs(pathname) else
