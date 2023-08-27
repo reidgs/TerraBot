@@ -49,8 +49,9 @@ class Terrarium(ShowBase):
         self.pic = False
         self.loc = None
         self.shown = shown
+        self.renderCount = -1
 
-        self.start_time = t0;
+        self.start_time = t0
             
         atexit.register(self.userExit)
         self.BASE_TEXT = '''
@@ -359,9 +360,11 @@ class Terrarium(ShowBase):
             self.pumponSound.stop()
             
     def reRenderPlants(self):
-        for testPlant in self.plants:
+        # I think panda was occasionally dying b/c it was rendering too often
+        self.renderCount += 1
+        if (self.renderCount%5 != 0): return
 
-    
+        for testPlant in self.plants:
             baseStem = testPlant.stemModel
             baseStem.reparentTo(testPlant.node)
             stemFrac = testPlant.stem_height 
