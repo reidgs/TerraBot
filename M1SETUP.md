@@ -33,3 +33,5 @@ Set RAM to 4GB (set it to 8+ if you have 16GB RAM on your machine)
 Enable **Force Multicore**
 
 Click **Save**
+
+**Note:** Firefox can be buggy under UTM; you should use **chromium** (already installed) instead
