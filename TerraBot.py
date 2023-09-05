@@ -47,6 +47,12 @@ def tester_update_var(var, value):
         tester.vars[var_translations[var]] = value
         #print(var, value, tester.vars)
 
+def tester_update_behaviors(behavior, enabled_p):
+    global tester
+    if (tester):
+        if (enabled_p): tester.vars['enabled_behaviors'].add(behavior)
+        else: tester.vars['enabled_behaviors'].remove(behavior)
+
 def gen_log_files():
     global log_files
 
@@ -275,6 +281,17 @@ def camera_cb(data):
     tester_update_var('camera', data.data)
 
 camera_sub = rospy.Subscriber('camera', String, camera_cb)
+
+def enable_cb (data):
+    #print("Enabling behavior:", data.data)
+    tester_update_behaviors(data.data, True)
+
+def disable_cb (data):
+    #print("Disabling behavior:", data.data)
+    tester_update_behaviors(data.data, False)
+
+enable_sub = rospy.Subscriber('enable', String, enable_cb)
+disable_sub = rospy.Subscriber('disable', String, disable_cb)
 
 ### Spawn subprocesses
 

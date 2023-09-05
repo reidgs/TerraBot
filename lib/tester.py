@@ -34,6 +34,9 @@ class Constraint:
     def evaluate_time(self, time): return time >= self.timeout
     def evaluate_condition(self, vars):
         for key in vars: locals()[key] = vars[key]
+        # A hack to get behavior tracking to work
+        global enabled_behaviors
+        enabled_behaviors = vars['enabled_behaviors']
         return eval(self.condition)
 
     def time_str(self, rel_word, abs_word):
@@ -181,13 +184,19 @@ class WheneverConstraint(Constraint):
             print("FAILURE (%s): at %s in %s"
                   %(clock_time(time), curr_constraint, self.brief()))
 
+
+def enabled(behavior):
+    global enabled_behaviors
+    return behavior in enabled_behaviors
+
 class Tester:
     vars = { 'light'    : [10,100],  'temperature' : [20,20],
              'humidity' : [40,50],   'smoist'      : [350,350],
              'current'  : [0.0,0.0], 'wlevel'      : 150.0,
              'led'      : 0,         'wpump'       : False,
              'fan'      : False,     'camera'      : None,
-             'ping'	: False,     'weight'      : 0 }
+             'ping'	: False,     'weight'      : 0,
+             'enabled_behaviors' : set() }
     baseline_file = None
     interf_file = None
     delay_time = None
