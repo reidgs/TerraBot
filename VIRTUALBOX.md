@@ -25,7 +25,7 @@ In VirtualBox
 ###	Installing software ###
 * sudo apt install python3 python3-pip git
 * sudo apt install python-is-python3
-* pip install panda3d transitions sklearn ortools matplotlib
+* pip install panda3d transitions sklearn ortools matplotlib pandas
 * sudo apt install python3-opencv
 * **Optional:** sudo apt install xemacs21 (or your favorite text editor)
 * **Optional:** in the applications box, search for and install PyCharm CE
