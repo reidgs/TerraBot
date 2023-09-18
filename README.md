@@ -31,7 +31,7 @@
       + [ENSURE](#ensure)
       + [SET](#set)
       + [PRINT](#print)
-      + [VARIABLES](#variables)
+  - [Variables](#variables)
 
 ## Overview ##
 Welcome to the Autonomous Agents TerraBot project! For this project you and your partners
@@ -395,9 +395,9 @@ The PRINT constraint enables you to print out information, useful for debugging 
 ```
 PRINT "W1: %s %s %s" %(wlevel, (wlevel_start - wlevel), wpump_today)
 PRINT "Current temperature at %s: %d %d" %(clock_time(time), temperature[0], temperature[1])
+```
 
-## VARIABLES ##
+# VARIABLES #
 You can use any of the sensor or actuator values (light, humidity, temperature, smoist, wlevel, weight, camera, fan, pump, led).  'fan' and 'pump' are Booleans, 'camera' is a string (the location of the image file), 'wlevel' (water level in reservoir) is a number, and the rest are pairs of numbers (one for each sensor of that type).  You can make use of the dicts 'limits' and 'optimal', which are defined in agents/limits.py.
 
 Finally, you can use the function 'enabled' to determine whether a behavior has been enabled (assuming your agent publishes that information).  For instance 'enabled("LowerHumidBehavior")' is True when the behavior is running and False otherwise.
-```
