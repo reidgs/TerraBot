@@ -31,6 +31,7 @@
       + [ENSURE](#ensure)
       + [SET](#set)
       + [PRINT](#print)
+      + [VARIABLES](#variables)
 
 ## Overview ##
 Welcome to the Autonomous Agents TerraBot project! For this project you and your partners
@@ -328,7 +329,7 @@ DELAY UNTIL day-HH:MM:SS # Wait until the given time (measured from the start of
 ```  
 So, for instance, "DELAY UNTIL 1-03:30:00" would wait for 3.5 hours before starting to apply the test constraints.  As above, the last DELAY constraint in the file is used.
 
-#### STOP or QUIT ####
+### STOP or QUIT ###
 Third, one can specify how long to test for.  The STOP constraint just ends testing, the QUIT constraint stops testing and causes the TerraBot program to quit.  For both variants, the time until ending can be specified either using seconds or date-time:
 ```
 STOP AFTER 36000 # Stop testing after 10 hours
@@ -336,7 +337,7 @@ QUIT AT 3-23:59:59 # Run testing for 3 full days, and then quit the simulator
 ```
 Note again that comments can be place at the end of lines
 
-#### WHENEVER ####
+### WHENEVER ###
 The bulk of test files consist of WHENEVER constraints.  These are subtests that are activiated whenever a particular condition is met.  WHENEVER constraints consist of a trigger and a body, which is a sequence of WAIT, ENSURE, SET, and PRINT subconstraints that specify what behavior is expected of the system.
 
 The triggers for WHENEVER constraints can be a Boolean relation or a date-time. The Boolean relations can consist of numbers, sensor values, and actuator states (**light, temperature, humidity, smoist, weight, current, wlevel, led, wpump, fan, camera, ping, time, mtime**).  **time** is the clock time, in seconds; **mtime** is the number of seconds past midnight -- you can get the hour of the day using (mtime//3600).  The date-time trigger is specified in terms of the first occurrence, and every time it finishes, another 24 hours are added on to the trigger time. Examples include:
@@ -350,7 +351,7 @@ Note that at most one instance of a given WHENEVER constraint will be active at 
 
 The body of a WHENEVER constraint indicates a sequence of subconstraints that must hold for the WHENEVER constraint to be successful.  If one of the subconstraints fails to hold, then the WHENEVER constraint fails and a failure message is printed out.  If all of the subconstraints hold, then the WHENEVER constraint succeeds and a success message is printed out.  In either case, the constraint is deactivated (awaiting to be triggered again).  The subconstraints are described below, along with several examples.
 
-##### WAIT #####
+#### WAIT ####
 The WAIT subconstraint will wait a certain amount of time for a condition to evaluate to true. If the condition is true then this subconstraint succeeds and control is passed to the next one (if any or, if not, the whole WHENEVER constraint succeeds).  If the amount of time passes without the condition being true, then the subconstraint (and the whole WHENEVER constraint) fails.  As with other constraints, the time can be specified as a number of seconds or as a date-time:
 ```
 WAIT temperature[0] < 25 FOR 3600 # Wait an hour for the temperature to come below 25 C
@@ -362,14 +363,14 @@ WAIT FOR 60 # Wait a minute before going on to the next subconstraint.
 ```
 This variant always succeeds, after the given amount of time has passed.
 
-##### ENSURE #####
+#### ENSURE ####
 The ENSURE subconstraint will ensure that some condition is true throughout the whole time period. If the condition is ever false then this subconstraint fails (as does the whole WHENEVER constraint).  If the amount of time passes and the condition remains true during the whole time period, control is passed to the next subconstraint (if any or, if not, the whole WHENEVER constraint succeeds).  As with other constraints, the time can be specified as a number of seconds or as a date-time:
 ```
 ENSURE smoist[0] < 600 and smoist[1] < 600 FOR 3600 # Don't let things get too wet
 ENSURE not led UNTIL 2-06:59:59 # Lights must be off until just before 7am the next day 
 ```
 
-##### SET #####
+#### SET ####
 The SET constraint enables you to specify local variables that can be included in the constraint conditions.  This provides the ability, for instance, to count the number of camera images taken during the day, or how much the soil moisture has changed since the last time the constraint was run.  The general form is "SET <variable> = <value>", where "value" can be a combination of numbers, sensor values, and other variables. The constraint always succeeds.
 ```
 SET last_humid = (humidity[0] + humidity[1])/2
@@ -389,13 +390,13 @@ WHENEVER wpump
   ENSURE smoist[0] < 600 and smoist[1] < 600 FOR 3600
 ```
 
-##### PRINT #####
+#### PRINT ####
 The PRINT constraint enables you to print out information, useful for debugging the testing constraints.  The syntax is like the **print** statement in Python, except without parentheses.  You can use any of the variables that are allowable in WHENEVER, WAIT, and ENSURE statements (including local variables defined using SET).  You can print out the time in string form using **clock_time(time)**.
 ```
 PRINT "W1: %s %s %s" %(wlevel, (wlevel_start - wlevel), wpump_today)
 PRINT "Current temperature at %s: %d %d" %(clock_time(time), temperature[0], temperature[1])
 
-##### VARIABLES #####
+## VARIABLES ##
 You can use any of the sensor or actuator values (light, humidity, temperature, smoist, wlevel, weight, camera, fan, pump, led).  'fan' and 'pump' are Booleans, 'camera' is a string (the location of the image file), 'wlevel' (water level in reservoir) is a number, and the rest are pairs of numbers (one for each sensor of that type).  You can make use of the dicts 'limits' and 'optimal', which are defined in agents/limits.py.
 
 Finally, you can use the function 'enabled' to determine whether a behavior has been enabled (assuming your agent publishes that information).  For instance 'enabled("LowerHumidBehavior")' is True when the behavior is running and False otherwise.
