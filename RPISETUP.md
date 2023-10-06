@@ -32,8 +32,8 @@ Do as robotanist-admin
 * sudo apt update
 * sudo apt install python3 python3-pip git
 * sudo apt install python-is-python3
-* pip3 install transitions sklearn 
 * sudo apt install vlc opencv-python matplotlib tmux
+* pip3 install transitions sklearn opencv-python
 * Optional: sudo apt install xemacs21 (or your favorite text editor)
 
 ### Installing ROS ###
