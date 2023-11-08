@@ -51,8 +51,7 @@ The greenhouse also has three actuators - fans, LEDs, and a water pump.  The LED
 | Light (light)                | Light intesnity in the greenhouse                           | Int32Array        | 0-1000     | 
 | Soil Moisture (smoist)       | The moisture of the "soil"  (higher is wetter)              | Int32Array        | 280-600    | 
 | Weight (weight)              | Weighs soil and plants (in grams); Total weight is average of the 2 sensors | Float32Array      |            |
-| Water level (level)          | Height of the water in the reservoir (in mm)                | Float32           | 3300=15cm  | 
-| Current (cur)                | The current draw (index 0) and total energy usage (index 1) | Float32Array      |            |
+| Water level (level)          | Height of the water in the reservoir (in mm)                | Float32           | 0-180  | 
 | Camera                       | Captures a photograph of stystem's state                    |   —               |   —        | 
 | **_Actuators_**              |**_Use these to adjust the system's state_**                 | **_—_**           |  **_—_**   | 
 | Fan (fan)                    | Toggle whether the fans are on or off                       | Bool              | True-False | 
