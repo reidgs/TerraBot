@@ -1,7 +1,8 @@
 import rospy, rosnode, rosgraph
-import sys, select, time
+import sys, select, time, socket
 from os.path import exists
 from lib.terrabot_utils import clock_time
+import send_email as semail
 
 tracker_file = "tracker.txt"
 period = 1
@@ -14,8 +15,6 @@ parser.add_argument('-p', '--period', type=int, default=period,
                     help="How often to check for processes; default is %d" %period)
 parser.add_argument('-s', '--sim', action = 'store_true', help="use simulator")
 args = parser.parse_args()
-
-period = args.period
 
 def init_ros ():
     if args.sim: rospy.set_param("use_sim_time", True)
@@ -50,30 +49,41 @@ def process_current_procs():
     procs = [process_procname(proc) for proc in rosnode.get_node_names()]
     return set(procs)
 
-def check_for_quit():
+def check_for_quit(period):
     if sys.stdin in select.select([sys.stdin],[],[],period)[0]:
         input = sys.stdin.readline()
         if input[0] == 'q': exit()
     
-def run_tracker(tf, previous_procs):
+def notify_change(previous_procs, current_procs):
+    notification = "Change in processes for %s:\n" %(socket.gethostname(),)
+    added = current_procs.difference(previous_procs)
+    if (len(added) > 0):
+        notification += "   Added: %s\n" %(' '.join(list(added)),)
+    removed = previous_procs.difference(current_procs)
+    if (len(removed) > 0): 
+        notification += "   Removed: %s\n" %(' '.join(list(removed)),)
+    print(notification)
+    semail.send('terrabot0@outlook.com', 'Simmons482',
+                'reids@cs.cmu.edu', "TerraBot Processes", notification)
+
+def run_tracker(tf, previous_procs, period):
     init_ros()
+    last_time = rospy.get_time()
     while rosgraph.is_master_online():
         current_procs = process_current_procs()
         if (previous_procs != current_procs):
-            sorted_procs = sorted(list(current_procs), key=lambda s: s.casefold())
+            sorted_procs = sorted(list(current_procs),
+                                  key=lambda s: s.casefold())
+            '''
             print("%s %s" %(clock_time(rospy.get_time()),
                             ' '.join(sorted_procs)))
+            '''
             tf.write("%s %s\n" %(clock_time(rospy.get_time()),
                                  ' '.join(sorted_procs)))
             tf.flush()
+            notify_change(previous_procs, current_procs)    
             previous_procs = current_procs
-        check_for_quit()
-    return previous_procs
+        check_for_quit(period)
 
-previous_procs = process_tracker_file(args.trackerfile)
 with open(args.trackerfile, "a") as tf:
-    while True:
-        if rosgraph.is_master_online():
-            previous_procs = run_tracker(tf, previous_procs)
-        check_for_quit()
-    tf.close()
+    run_tracker(tf, process_tracker_file(args.trackerfile), args.period)
