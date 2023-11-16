@@ -87,5 +87,9 @@ def run_tracker(tf, previous_procs, period):
             previous_procs = current_procs
         check_for_quit(period)
 
-with open(args.trackerfile, "a") as tf:
-    run_tracker(tf, process_tracker_file(args.trackerfile), args.period)
+while True:
+    with open(args.trackerfile, "a") as tf:
+        run_tracker(tf, process_tracker_file(args.trackerfile), args.period)
+    semail.send('terrabot0@outlook.com', 'Simmons482',
+                'reids@cs.cmu.edu', "Roscore died on %s" %hostname,
+                "Waiting to reconnect")
