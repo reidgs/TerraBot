@@ -55,7 +55,8 @@ def check_for_quit(period):
         if input[0] == 'q': exit()
     
 def notify_change(previous_procs, current_procs):
-    notification = "Change in processes for %s:\n" %(socket.gethostname(),)
+    hostname = socket.gethostname()
+    notification = "Change in processes for %s:\n" %hostname
     added = current_procs.difference(previous_procs)
     if (len(added) > 0):
         notification += "   Added: %s\n" %(' '.join(list(added)),)
@@ -64,7 +65,8 @@ def notify_change(previous_procs, current_procs):
         notification += "   Removed: %s\n" %(' '.join(list(removed)),)
     print(notification)
     semail.send('terrabot0@outlook.com', 'Simmons482',
-                'reids@cs.cmu.edu', "TerraBot Processes", notification)
+                'reids@cs.cmu.edu', "Changes in %s processes" %hostname,
+                notification)
 
 def run_tracker(tf, previous_procs, period):
     init_ros()
