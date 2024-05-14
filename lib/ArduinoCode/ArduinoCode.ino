@@ -90,7 +90,7 @@ HX711 weight1, weight2;
 // All of these should be recalibrated on a per-sensor basis
 float weight_scale1 = 1;
 float weight_offset1 = 0;
-float weight_scale2 = -1;
+float weight_scale2 = 1;
 float weight_offset2 = 0;
 struct Timing {
   unsigned long next = 0;
