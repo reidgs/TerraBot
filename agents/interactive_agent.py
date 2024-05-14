@@ -90,7 +90,7 @@ def humid_reaction(data, sensorsG):
 
 def weight_reaction(data, sensorsG):
     # Each weight sensor holds half the weight of the pan
-    sensorsG.weight = (data.data[0] + data.data[1])/2
+    sensorsG.weight = (data.data[0] + data.data[1])
     sensorsG.weight_raw = data.data
     if is_logging: print("    Weight: %d %d" %(data.data[0], data.data[1]))
 
