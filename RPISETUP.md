@@ -1,14 +1,20 @@
 ## Installing Software on Raspberry Pi and Arduino ##
 
 ## Install Ubunu ##
-* Download Ubuntu (ubuntu-mate-20.04.1-desktop-amd64.iso from https://releases.ubuntu.com)
-* Use balenaEtcher to write to the SD card (desktop is not 100% needed, but makes setup a little easier)
+* Get rpi imager (rasberrypi.com/software - choose general-purpose OS -> Ubuntu -> Ubuntu Server 20.04.5 (64 bit)
+* Flash to SD card
+* Desktop is not 100% needed, but makes setup a little easier
+- sudo apt update & sudo apt upgrade
+- sudo apt install ubuntu-desktop
+- sudo reboot
 
 ###  Set up Logins on the Raspberry Pi ###
 * Name computer terrabot1 (or whichever number)
 * Make user name be robotanist-admin, with passphrase: [GET ADMIN PASSWORD FROM REID]
-* Menu -> Users + Groups
-* Add user robotanist, password TerraBot; log in automatically
+* Settings -> Users
+* Add user robotanist, password TerraBot!; log in automatically
+* sudo usermod -a -G dialout,robotanist robotanist-admin
+* sudo usermod -a -G dialout robotanist
 
 ### Creating Swap File ###
 Do as robotanist-admin;
@@ -17,6 +23,10 @@ Check whether already have a swap file: cat /proc/swaps; if not:
 * edit /etc/dphys-swapfile and uncomment CONF_SWAPFILE line
 * sudo dphys-swapfile setup
 * sudo dphys-swapfile swapon
+
+### Connect to Wired Network ###
+* netreg.net.cmu.edu - Register a New Machine
+* Hostname: same as computer name; Address: use ifconfig
 
 ### Enabling SSH ###
 * sudo systemctl enable ssh  
@@ -32,8 +42,8 @@ Do as robotanist-admin
 * sudo apt update
 * sudo apt install python3 python3-pip git
 * sudo apt install python-is-python3
-* sudo apt install vlc opencv-python matplotlib tmux
-* pip3 install transitions sklearn opencv-python
+* sudo apt install vlc python3-opencv python3-matplotlib tmux
+* pip3 install transitions scikit-learn opencv-python
 * Optional: sudo apt install xemacs21 (or your favorite text editor)
 
 ### Installing ROS ###
@@ -41,8 +51,9 @@ Do as robotanist-admin
 * sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 * sudo apt install curl
 * curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+* sudo apt update
 * sudo apt install build-essential arduino arduino-mk 
-* sudo apt install ros-noetic-rosserial ros-noetic- rosserial-arduino
+* sudo apt install ros-noetic-rosserial ros-noetic-rosserial-arduino
 * add the line to the end of the .bashrc file
     - source /opt/ros/noetic/setup.bash
 
@@ -50,12 +61,12 @@ Do as robotanist-admin
 Do as robotanist
 * cd Desktop; git clone https://github.com/reidgs/TerraBot (use your git name and password)
 * cd $HOME; ln -s Desktop/TerraBot .
-* add the line “source /opt/ros/noetic/setup.bash” to the end of the .bashrc file; source ~/.bashrc
+* add the line “source /opt/ros/noetic/setup.bash” to the end of the .bashrc file
 * add the lines to bashrc (for both robotanist and robotanist-admin):
     - export TB_DIR=${HOME}/Desktop/TerraBot 
-    - export PYTHONPATH=${PYTHONPATH}:${ TB_DIR}:${ TB_DIR}/lib:${ TB_DIR}:${ TB_DIR}/agents
-* invoke raspi-config and enable camera and SSH
-
+    - export PYTHONPATH=${PYTHONPATH}:${TB_DIR}:${TB_DIR}/lib:${TB_DIR}/agents
+* source ~/.bashrc
+  
 ### Installing Arduino ###
 Do as robotanist-admin
 * cd Desktop; ln -s /home/robotanist/Desktop/Terrabot .
@@ -70,22 +81,14 @@ Do as robotanist-admin
 
 ### Installing ortools ###
 Do as robotanist-admin
-* sudo apt install swig
-* cd /usr/lib/python3.8
-* sudo git https://github.com/google/or-tools.git
-* cd or-tools
-* sudo make third_party > $HOME/make_third_party.txt
-    - I had to update config.guess and config.sub repeatedly – couldn’t find where they were being taken from, but they were old versions.
-* sudo make python
-* sudo make test
-* cd ortools; sudo cp init.p* /usr/lib/python3.8; sudo cp init.p* /usr/lib/python3.8/or-tools
-* add the line to .bashrc (both for robotanist and robotanist-admin) :
-    - export PYTHONPATH=${PYTHONPATH}:/usr/lib/python3.8:/usr/lib/python3.8/or-tools
+* download cmake-3.2.6 from cmake.org and make it
+* python -m pip install ortools
 
-### Set up Python Libraries ###
+<!---### Set up Python Libraries ###
 * cd /home/robotanist-admin/.local/lib/
 * sudo cp -r python3.8/site-packages/*  /usr/lib/python3/dist-packages/.
 * sudo rm -rf python3.8
+--->
 
 ### Copy Setup to Other SD Cards ###
 * https://computers.tutsplus.com/articles/how-to-clone-your-raspberry-pi-sd-cards-with-windows--mac-59294
