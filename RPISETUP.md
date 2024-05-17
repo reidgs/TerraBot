@@ -46,6 +46,7 @@ Do as robotanist-admin
 * `sudo apt install python3 python3-pip git`
 * `sudo apt install python-is-python3`
 * `sudo apt install vlc python3-opencv python3-matplotlib tmux`
+* `sudo apt install libraspberrypi-bin`
 * `pip3 install transitions scikit-learn opencv-python`
 * Optional: `sudo apt install xemacs21` (or your favorite text editor)
 
