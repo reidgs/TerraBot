@@ -85,6 +85,7 @@ Do as robotanist-admin
 ### Installing ortools ###
 Do as robotanist-admin
 <!-- * download cmake-3.2.6 from cmake.org and make it -->
+* `python -m pip install numpy==1.21`
 * `python -m pip install ortools`
 
 <!---### Set up Python Libraries ###
