@@ -16,7 +16,7 @@ from sys import exit
 import random
 import plant
 import math
-from time import sleep
+from time import sleep, time
 from terrabot_utils import clock_time
 from environment import max_daylight, day_fraction, airwater_to_humid
 
@@ -49,7 +49,8 @@ class Terrarium(ShowBase):
         self.pic = False
         self.loc = None
         self.shown = shown
-        self.renderCount = -1
+        self.lastRender = time()
+        self.minRenderRate = 0.5 # frequency, in seconds
 
         self.start_time = t0
             
@@ -341,6 +342,9 @@ class Terrarium(ShowBase):
         sunlight = max(0.2, day_fraction(time))
         ambientLight.setColor((sunlight, sunlight, sunlight, 1))
 
+    def setUpdates(updates):
+        self.updates = updates
+
     def fansound(self, fan):
         if not self.shown:
             self.fanonSound.stop()
@@ -361,8 +365,11 @@ class Terrarium(ShowBase):
             
     def reRenderPlants(self):
         # I think panda was occasionally dying b/c it was rendering too often
-        self.renderCount += 1
-        if (self.renderCount%5 != 0): return
+        # (it actually was a multi-threading issue, but still reasonable to
+        #  limit the rendering rate).
+        now = time()
+        if (now - self.lastRender < self.minRenderRate): return
+        self.lastRender = now
 
         for testPlant in self.plants:
             baseStem = testPlant.stemModel
@@ -422,7 +429,7 @@ class Terrarium(ShowBase):
         
         if not self.shown: return
         
-        self.reRenderPlants()
+        #self.reRenderPlants() # Do this only within the render loop!
         
         #Stats panel :
         healths = [p.health for p in self.plants]
@@ -474,6 +481,8 @@ class Terrarium(ShowBase):
             self.pitch += (delta * 30 * self.keys['arrow_up'] +
                            delta * 30 * -self.keys['arrow_down'])
             self.camera.setHpr(self.heading, self.pitch, 0)
+
+            self.reRenderPlants()
             
         if(self.picNextFrame):
             if self.loc == None:
