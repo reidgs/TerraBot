@@ -15,7 +15,7 @@ from os.path import abspath
 import environment as env
 from render import Terrarium
 from freqmsg import frommsg
-import threading
+from direct.stdpy import threading
 import sys
 from datetime import datetime
 from terrabot_utils import clock_time
@@ -129,8 +129,8 @@ def sense_humid():
 
 def sense_weight():
     w_array = Float32MultiArray()
-    # The average of the two sensors is the weight; Make it slightly uneven
-    weight = env.get_weight()
+    # The sum of the two sensors is the weight; Make it slightly uneven
+    weight = env.get_weight()/2
     w_array.data = [weight*0.9, weight*1.1]
     publishers['weight'].publish(w_array)
               
