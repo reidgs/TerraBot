@@ -2,19 +2,19 @@
 
 ## Install Ubunu ##
 * Get rpi imager (rasberrypi.com/software - choose general-purpose OS -> Ubuntu -> Ubuntu Server 20.04.5 (64 bit)
+* Choose "Edit Settings" and set hostname (terrabot<x>), user name (robotanist-admin), and passphrase [GET ADMIN PASSWORD FROM REID]
 * Flash to SD card
-* Desktop is not 100% needed, but makes setup a little easier
-- `sudo apt update & sudo apt upgrade`
-- `sudo apt install ubuntu-desktop`
-- `sudo reboot`
+* Set up wifi via command line (use these instructions: https://linuxconfig.org/ubuntu-20-04-connect-to-wifi-from-command-line)
+* Install desktop (not 100% needed, but makes setup a lot easier)
+   - `sudo apt update & sudo apt upgrade`
+   - `sudo apt install ubuntu-desktop`
+   - `sudo reboot`
 
 ###  Set up Logins on the Raspberry Pi ###
-* Name computer terrabot1 (or whichever number)
-* Make user name be robotanist-admin, with passphrase: [GET ADMIN PASSWORD FROM REID]
-* Settings -> Users
-* Add user robotanist, password TerraBot!; log in automatically
-* `sudo usermod -a -G dialout,robotanist robotanist-admin`
-* `sudo usermod -a -G dialout robotanist`
+* `sudo useradd -m robotanist`
+* `sudo passwd robotanist` (password is: TerraBot)
+* `sudo usermod -a -G dialout,video,audio,robotanist robotanist-admin`
+* `sudo usermod -a -G dialout,video,audio robotanist`
 
 ### Creating Swap File ###
 Do as robotanist-admin;
@@ -43,11 +43,11 @@ Check whether already have a swap file: cat /proc/swaps; if not:
 ### Installing software ###
 Do as robotanist-admin
 * `sudo apt update`
-* `sudo apt install python3 python3-pip git`
-* `sudo apt install python-is-python3`
-* `sudo apt install vlc python3-opencv python3-matplotlib tmux`
+* `sudo apt install git vlc curl`
+* `sudo apt install python3 python3-pip python-is-python3`
+* `sudo apt install python3-opencv python3-matplotlib tmux`
+* `sudo apt install python3-transitions python3-sklearn`
 * `sudo apt install libraspberrypi-bin`
-* `pip3 install transitions scikit-learn opencv-python`
 * Optional: `sudo apt install xemacs21` (or your favorite text editor)
 
 ### Installing ROS ###
@@ -62,7 +62,7 @@ Do as robotanist-admin
     - `source /opt/ros/noetic/setup.bash`
 
 ### Installing TerraBot Software ###
-Do as robotanist
+Switch user to robotanist
 * `cd Desktop; git clone https://github.com/reidgs/TerraBot` (use your git name and password)
 * `cd $HOME; ln -s Desktop/TerraBot .`
 * add the line `source /opt/ros/noetic/setup.bash` to the end of the .bashrc file
@@ -79,14 +79,13 @@ Do as robotanist-admin
 * `rosrun rosserial_arduino make_libraries.py .`
 * `git clone https://github.com/RobTillaart/dhtnew.git`
 * `git clone https://github.com/RobTillaart/HX711.git`
-* `sudo usermod -a -G dialout,robotanist $USER`
-* `sudo usermod -a -G dialout robotanist`
 * `cd ~/TerraBot/lib/ArduinoCode`
 * `make clean; make upload` [note: may have to change the permissions on ArduinoCode to make them available to robotanist-admin)
 
 ### Installing ortools ###
 Do as robotanist-admin
-* download cmake-3.2.6 from cmake.org and make it
+<!-- * download cmake-3.2.6 from cmake.org and make it -->
+* `python -m pip install numpy==1.21`
 * `python -m pip install ortools`
 
 <!---### Set up Python Libraries ###
@@ -94,6 +93,14 @@ Do as robotanist-admin
 * sudo cp -r python3.8/site-packages/*  /usr/lib/python3/dist-packages/.
 * sudo rm -rf python3.8
 --->
+
+### Set up Camera ###
+* `df | grep firmware` => use this device name below
+* `sudo mount /dev/mmcblk0p1 /boot`
+* Edit /boot/firmware/config.txt to add the following lines:
+    - `start_x=1`
+    - `gpu_mem=128`
+* Reboot (and check using raspivid -t 1000)
 
 ### Copy Setup to Other SD Cards ###
 * https://computers.tutsplus.com/articles/how-to-clone-your-raspberry-pi-sd-cards-with-windows--mac-59294
