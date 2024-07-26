@@ -177,9 +177,9 @@ def get_cur():
            (fan_current if params['fan'] else 0))
      
 def get_weight():
-    # Water weighs about 1 g per 1 ml, add some for plants
+    # Water weighs about 1 g per 1 ml, add some for plants and "soil"
     return (base_weight + params['soilwater'] + params['panwater'] +
-            + params['tankwater'] + estimated_plant_area())
+            params['tankwater'] + estimated_plant_area())
 
 # Environment Runtime Functions
  
