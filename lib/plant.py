@@ -136,9 +136,11 @@ temp_health_rate = .01 / 3600       #health/degree*second the rate at which heal
                                     #or increases if inside it.
 
 optimal_soilwater = [500 / 2, 650 / 2]      #ml " "
-sw_health_rate = .1 / (100 * 3600)  #health/ml*second
+sw_health_dry_rate = .1 / (100 * 3600)  #too dry - health/ml*second
+sw_health_wet_rate = .01 / (100 * 3600)  #too wet - health/ml*second
+sw_health_rate = .05 / (100 * 3600)  #good - health/ml*second
 
-optimal_humidity = [60, 80]         # Percentage
+optimal_humidity = [60, 85]         # Percentage
 humidity_health_rate = .01 / (5 * day)  #health/ml*sec
 
 minimum_light = 250                 #Again, very ballpark. less light will be detrimental.
@@ -282,33 +284,37 @@ class Plant(object):
 
         #Update health based on env
 
-        health_delta = 0
+        temp = env_params['temperature']
+        min_temp = optimal_temperature[0]; max_temp = optimal_temperature[1]
+        temp_health_delta = (duration * temp_health_rate *
+                             ((temp - min_temp) if (temp < min_temp) else
+                              (max_temp - temp) if (temp > max_temp) else 1))
 
-        if env_params['temperature'] < optimal_temperature[0]:
-            health_delta -= duration * temp_health_rate * (optimal_temperature[0] - env_params['temperature'])
-        elif env_params['temperature'] > optimal_temperature[1]:
-            health_delta -= duration * temp_health_rate * (env_params['temperature'] - optimal_temperature[1])
-        else:
-            health_delta += temp_health_rate * duration
+        sw = env_params['soilwater']
+        min_sw = optimal_soilwater[0]; max_sw = optimal_soilwater[1]
+        sw_health_delta = (duration *
+                           (sw_health_dry_rate * (sw - min_sw)
+                            if  sw < min_sw else
+                            sw_health_wet_rate * (max_sw - sw)
+                            if sw > max_sw else sw_health_rate))
 
-        if env_params['soilwater'] < optimal_soilwater[0]:
-            health_delta -= duration * sw_health_rate * (optimal_soilwater[0] - env_params['soilwater'])
-        elif env_params['soilwater'] > optimal_soilwater[1]:
-            health_delta -= duration * sw_health_rate * (env_params['soilwater'] - optimal_soilwater[1])
-        else:
-            health_delta += sw_health_rate * duration
+        humid = env_params['humidity']
+        min_humid = optimal_humidity[0]; max_humid = optimal_humidity[1]
+        humid_health_delta = (duration * humidity_health_rate *
+                              ((humid - min_humid) if humid < min_humid else
+                               (max_humid - humid) if humid > max_humid else 1))
+        light_health_delta = (duration *
+                              (light_health_up_rate if light < minimum_light else
+                               light_health_down_rate * (light - minimum_light)))
 
-        if env_params['humidity'] < optimal_humidity[0]:
-            health_delta -= duration * humidity_health_rate * (optimal_humidity[0] - env_params['humidity'])
-        elif env_params['humidity'] > optimal_humidity[1]:
-            health_delta -= duration * humidity_health_rate * (env_params['humidity'] - optimal_humidity[1])
-        else:
-            health_delta += sw_health_rate * duration
-
-        if light > minimum_light:
-            health_delta += duration * light_health_up_rate
-        else:
-            health_delta -= duration * light_health_down_rate * (minimum_light - light)
+        health_delta = (temp_health_delta + sw_health_delta +
+                        humid_health_delta + light_health_delta)
+        if (health_delta < -0.0001):
+            print("HD: %.4f, T: %.4f, SW: %.4f, H: %.4f, L: %.4f"
+                  %(health_delta, temp_health_delta, sw_health_delta, humid_health_delta, light_health_delta))
+            print("   T: %.2f, SW: %.2f, H: %.2f, L: %.2f"
+                  %(env_params['temperature'], env_params['soilwater'],
+                    env_params['humidity'], light))
 
         self.change_health(health_delta)
 
