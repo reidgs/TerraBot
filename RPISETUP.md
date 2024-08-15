@@ -4,11 +4,16 @@
 * Get rpi imager (rasberrypi.com/software - choose general-purpose OS -> Ubuntu -> Ubuntu Server 20.04.5 (64 bit)
 * Choose "Edit Settings" and set hostname (terrabot<x>), user name (robotanist-admin), and passphrase [GET ADMIN PASSWORD FROM REID]
 * Flash to SD card
-* Set up wifi via command line (use these instructions: https://linuxconfig.org/ubuntu-20-04-connect-to-wifi-from-command-line)
-* Install desktop (not 100% needed, but makes setup a lot easier)
-   - `sudo apt update & sudo apt upgrade`
-   - `sudo apt install ubuntu-desktop`
-   - `sudo reboot`
+
+### Connect to Network ###
+* Hostname: same as computer name; Address: use `cat /sys/class/net/eth0/address`
+* __Wired:__ https://computing.cs.cmu.edu/help-support/equip-registration - Register a New Machine *__or__* Search, Update and Remove Equipment Support
+* __Wifi:__ use these instructions: https://linuxconfig.org/ubuntu-20-04-connect-to-wifi-from-command-line to set up via command line
+
+### Install desktop (not 100% needed, but makes setup a lot easier) ###
+* `sudo apt update & sudo apt upgrade`
+* `sudo apt install ubuntu-desktop`
+* `sudo reboot`
 
 ###  Set up Logins on the Raspberry Pi ###
 * `sudo useradd -m robotanist`
@@ -24,9 +29,6 @@ Check whether already have a swap file: cat /proc/swaps; if not:
 * `sudo dphys-swapfile setup`
 * `sudo dphys-swapfile swapon`
 
-### Connect to Wired Network ###
-* netreg.net.cmu.edu - Register a New Machine
-* Hostname: same as computer name; Address: use ifconfig
 
 ### Enabling SSH ###
 * `sudo systemctl enable ssh`
@@ -53,7 +55,6 @@ Do as robotanist-admin
 ### Installing ROS ###
 Do as robotanist-admin
 * `sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'`
-* `sudo apt install curl`
 * `curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -`
 * `sudo apt update`
 * `sudo apt install build-essential arduino arduino-mk`
