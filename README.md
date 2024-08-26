@@ -24,14 +24,14 @@
   - [Time Series](#time-series)
 - [Testing](#testing)
   - [Test File](#test-file)
-    + [DELAY](#delay)
-    + [STOP/QUIT](#stop-or-quit)
-    + [WHENEVER](#whenever)
-      + [WAIT](#wait)
-      + [ENSURE](#ensure)
-      + [SET](#set)
-      + [PRINT](#print)
-  - [Variables](#variables)
+   + [DELAY](#delay)
+   + [STOP/QUIT](#stop-or-quit)
+   + [Variables](#variables)
+   + [WHENEVER](#whenever)
+   + [WAIT](#wait)
+   + [ENSURE](#ensure)
+   + [SET](#set)
+   + [PRINT](#print)
 
 ## Overview ##
 Welcome to the Autonomous Agents TerraBot project! For this project you and your partners
@@ -318,7 +318,7 @@ Test files consist of several parts.  First, one can specify a baseline and/or i
 BASELINE = smoist_up.bsl
 INTERFERENCE = smoist_up.inf
 ```
-If multiple baseline or interference lines are included, only the last one in the file is used.  Also, the specifications in the test file override any command line specifications.
+**NOTE: All the keywords (such as WHENEVER, WAIT, FOR) must be in all CAPS**
 
 #### DELAY ####
 Next, one can specify how long to wait before applying any of the test constraints (see below).  It is useful to delay starting to test for a period of time to give the agent a chance to initialize (for instance, if it takes a while to produce an initial schedule).  This constraint can be specified in one of two ways:
@@ -336,15 +336,20 @@ QUIT AT 3-23:59:59 # Run testing for 3 full days, and then quit the simulator
 ```
 Note again that comments can be place at the end of lines
 
+### VARIABLES ###
+You can use any of the sensor or actuator values (light, humidity, temperature, smoist, wlevel, weight, camera, fan, pump, led).  'fan' and 'pump' are Booleans, 'camera' is a string (the location of the image file), and the rest are numbers.  For sensors that are in pairs (light, humidity, temperature, smoist, weight) you can access each value separately using *sensor*_raw[n], where 'n' is 0 or 1 (for instance, smoist_raw[0]).  You can also make use of the dicts 'limits' and 'optimal', which are defined in agents/limits.py.
+
+Finally, you can use the function 'enabled' to determine whether a behavior has been enabled (assuming your agent publishes that information).  For instance 'enabled("LowerHumidBehavior")' is True when the behavior is running and False otherwise.
+
 ### WHENEVER ###
 The bulk of test files consist of WHENEVER constraints.  These are subtests that are activiated whenever a particular condition is met.  WHENEVER constraints consist of a trigger and a body, which is a sequence of WAIT, ENSURE, SET, and PRINT subconstraints that specify what behavior is expected of the system.
 
 The triggers for WHENEVER constraints can be a Boolean relation or a date-time. The Boolean relations can consist of numbers, sensor values, and actuator states (**light, temperature, humidity, smoist, weight, current, wlevel, led, wpump, fan, camera, ping, time, mtime**).  **time** is the clock time, in seconds; **mtime** is the number of seconds past midnight -- you can get the hour of the day using (mtime//3600).  The date-time trigger is specified in terms of the first occurrence, and every time it finishes, another 24 hours are added on to the trigger time. Examples include:
 ```
-WHENVER smoist[0] < 450 or smoist[1] < 450 # Every time either soil moisture sensor gets below 450
 WHENEVER wpump # Every time the pump is turned on
 WHENEVER 1-00:00:00 # Every midnight
-WHENEVER temperature[0] < 22 and (mtime//3600) >= 6 # Every time the temperature is below 22 after 6am
+WHENEVER temperature < 22 and (mtime//3600) >= 6 # Every time the temperature is below 22 after 6am
+WHENVER smoist_raw[0] < 450 or smoist_raw[1] < 450 # Every time either soil moisture sensor gets below 450
 ```
 Note that at most one instance of a given WHENEVER constraint will be active at a given time.
 
@@ -353,7 +358,7 @@ The body of a WHENEVER constraint indicates a sequence of subconstraints that mu
 #### WAIT ####
 The WAIT subconstraint will wait a certain amount of time for a condition to evaluate to true. If the condition is true then this subconstraint succeeds and control is passed to the next one (if any or, if not, the whole WHENEVER constraint succeeds).  If the amount of time passes without the condition being true, then the subconstraint (and the whole WHENEVER constraint) fails.  As with other constraints, the time can be specified as a number of seconds or as a date-time:
 ```
-WAIT temperature[0] < 25 FOR 3600 # Wait an hour for the temperature to come below 25 C
+WAIT temperature < 25 FOR 3600 # Wait an hour for the temperature to come below 25 C
 WAIT not led UNTIL 1-23:00:00 # Wait until 11pm for the LEDs to be turned off
 ```
 In addition, a variant of the WAIT constraint can be used without a condition:
@@ -365,38 +370,34 @@ This variant always succeeds, after the given amount of time has passed.
 #### ENSURE ####
 The ENSURE subconstraint will ensure that some condition is true throughout the whole time period. If the condition is ever false then this subconstraint fails (as does the whole WHENEVER constraint).  If the amount of time passes and the condition remains true during the whole time period, control is passed to the next subconstraint (if any or, if not, the whole WHENEVER constraint succeeds).  As with other constraints, the time can be specified as a number of seconds or as a date-time:
 ```
-ENSURE smoist[0] < 600 and smoist[1] < 600 FOR 3600 # Don't let things get too wet
+ENSURE smoist < 700 FOR 3600 # Don't let things get too wet
 ENSURE not led UNTIL 2-06:59:59 # Lights must be off until just before 7am the next day 
 ```
 
 #### SET ####
 The SET constraint enables you to specify local variables that can be included in the constraint conditions.  This provides the ability, for instance, to count the number of camera images taken during the day, or how much the soil moisture has changed since the last time the constraint was run.  The general form is "SET <variable> = <value>", where "value" can be a combination of numbers, sensor values, and other variables. The constraint always succeeds.
 ```
-SET last_humid = (humidity[0] + humidity[1])/2
-SET dhumid = last_humid - (humidity[0] + humidity[1])/2
+SET last_humid = humidity
+SET dhumid = last_humid - humidity
 SET num_pics = num_pics + 1
 ```
 
 Simple test examples are provided in the TerraBot/param directory.  Here is a test, consisting of two WHENEVER constraints, for the behavior expected of the pump - that it should turn on soon after the soil moisture falls below some threshold and should not overwater the plants: 
 ```
-WHENEVER smoist[0] < 450 or smoist[1] < 450
+WHENEVER enabled('RaiseMoistBehavior') and smoist < 450
   WAIT wpump FOR 60 # Wait one minute for water pump to be on
   WAIT not wpump FOR 360 # Turn pump off before 6 minutes have elapsed
-  WAIT smoist[0] > 450 and smoist[1] > 450 FOR 3600 # Wait an hour for both moisture sensors to be above threshold
+  WAIT smoist_raw[0] > 450 and smoist_raw[1] > 450 FOR 3600 # Wait an hour for both moisture sensors to be above threshold
 
 # Don't let pump overwater things
 WHENEVER wpump 
-  ENSURE smoist[0] < 600 and smoist[1] < 600 FOR 3600
+  ENSURE smoist < 700 FOR 3600
 ```
 
 #### PRINT ####
 The PRINT constraint enables you to print out information, useful for debugging the testing constraints.  The syntax is like the **print** statement in Python, except without parentheses.  You can use any of the variables that are allowable in WHENEVER, WAIT, and ENSURE statements (including local variables defined using SET).  You can print out the time in string form using **clock_time(time)**.
 ```
 PRINT "W1: %s %s %s" %(wlevel, (wlevel_start - wlevel), wpump_today)
-PRINT "Current temperature at %s: %d %d" %(clock_time(time), temperature[0], temperature[1])
+PRINT "Current temperature at %s: %d %d" %(clock_time(time), temperature_raw[0], temperature_raw[1])
 ```
 
-### VARIABLES ###
-You can use any of the sensor or actuator values (light, humidity, temperature, smoist, wlevel, weight, camera, fan, pump, led).  'fan' and 'pump' are Booleans, 'camera' is a string (the location of the image file), 'wlevel' (water level in reservoir) is a number, and the rest are pairs of numbers (one for each sensor of that type).  You can make use of the dicts 'limits' and 'optimal', which are defined in agents/limits.py.
-
-Finally, you can use the function 'enabled' to determine whether a behavior has been enabled (assuming your agent publishes that information).  For instance 'enabled("LowerHumidBehavior")' is True when the behavior is running and False otherwise.
