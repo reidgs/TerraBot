@@ -34,17 +34,23 @@ publishers = {}
 subscribers = {}
 
 ### Update tester variables, if necessary
-var_translations = {'smoist' : 'smoist',      'cur' : 'current',
-                    'light'  : 'light',       'level' : 'wlevel',
-                    'temp'   : 'temperature', 'humid' : 'humidity',
-                    'led'    : 'led',         'wpump' : 'wpump',
+var_translations = {'smoist' : 'smoist',      'light'  : 'light',
+                    'level' : 'wlevel',       'weight' : 'weight',
+                    'temp'   : 'temperature', 'humid'  : 'humidity',
+                    'led'    : 'led',         'wpump'  : 'wpump',
                     'fan'    : 'fan',         'camera' : 'camera',
-                    'ping'   : 'ping',        'insolation' : 'insolation',
-                    'weight' : 'weight'}
+                    'ping'   : 'ping',        'cur'    : 'current',
+                    'insolation' : 'insolation'}
 def tester_update_var(var, value):
     global tester, var_translations
     if (tester):
-        tester.vars[var_translations[var]] = value
+        trans = var_translations[var]
+        if (isinstance(value, tuple)):
+            svalue = sum(value) if var == 'weight' else sum(value)/2
+            tester.vars[trans+'_raw'] = value
+            tester.vars[trans] = svalue
+        else:
+            tester.vars[trans] = value
         #print(var, value, tester.vars)
 
 def tester_update_behaviors(behavior, enabled_p):

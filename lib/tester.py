@@ -3,7 +3,6 @@ import copy, os, sys
 from datetime import datetime
 from terrabot_utils import clock_time, time_since_midnight, dtime_to_seconds
 from terrabot_utils import Agenda
-#from limits import optimal, limits
 
 def parse_error(line):
     raise Exception("Unknown syntax: %s" % line)
@@ -190,13 +189,15 @@ def enabled(behavior):
     return behavior in enabled_behaviors
 
 class Tester:
-    vars = { 'light'    : [10,100],  'temperature' : [20,20],
-             'humidity' : [40,50],   'smoist'      : [350,350],
-             'current'  : [0.0,0.0], 'wlevel'      : 150.0,
-             'led'      : 0,         'wpump'       : False,
-             'fan'      : False,     'camera'      : None,
-             'ping'	: False,     'weight'      : 0,
-             'enabled_behaviors' : set() }
+    vars = { 'light_raw'       : [100,100], 'light'       : 100,
+             'temperature_raw' : [20,20],   'temperature' : 20,
+             'humidity_raw'    : [80,80],   'humidity'    : 80,
+             'smoist_raw'      : [500,500], 'smoist'      : 500,
+             'weight_raw'      : [800,800], 'weight'      : 800,
+             'wlevel'          : 150.0,     'led'         : 0,
+             'insolation'      : 0,         'wpump'       : False,
+             'fan'             : False,     'camera'      : None,
+             'ping'            : False,     'enabled_behaviors' : set() }
     baseline_file = None
     interf_file = None
     delay_time = None
