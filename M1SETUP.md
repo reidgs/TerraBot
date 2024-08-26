@@ -1,7 +1,6 @@
 # Installing TerraBot on Apple Silicon (M1)
 
 ## Convert the OVA to QCow2
-- **Note:** If you have the Autonomous Agents USB stick, this part has already been done for you
 - On Ubuntu: 
   ```
   tar -xvf TerraBot\ 2023.ova
@@ -10,7 +9,7 @@
   ```
   (For Mac, use `brew install qemu`)
 
-  To check for consistency: `qemu-img check TerraBot\ 2023.qcow2`
+  To check for consistency: `qemu-img check TerraBot\ 2024.qcow2`
   
 ## Create the Virtual Machine using UTM
 Download UTM from ```https://mac.getutm.app```
