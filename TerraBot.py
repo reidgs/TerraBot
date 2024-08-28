@@ -57,7 +57,7 @@ def tester_update_behaviors(behavior, enabled_p):
     global tester
     if (tester):
         if (enabled_p): tester.vars['enabled_behaviors'].add(behavior)
-        else: tester.vars['enabled_behaviors'].remove(behavior)
+        else: tester.vars['enabled_behaviors'].discard(behavior)
 
 def gen_log_files():
     global log_files
