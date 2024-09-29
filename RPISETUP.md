@@ -107,6 +107,7 @@ Do as robotanist-admin
 * https://computers.tutsplus.com/articles/how-to-clone-your-raspberry-pi-sd-cards-with-windows--mac-59294
 * Change the machine name accordingly:
     - `sudo hostnamectl set-hostname newNameHere`
+    - `sudo xemacs /etc/hostname` – replace occurrence of existing computer name
     - `sudo xemacs /etc/hosts` – replace all occurrences of existing computer name
 * Regenerate ssh server keys
     - `sudo rm -v /etc/ssh/ssh_host_*`
