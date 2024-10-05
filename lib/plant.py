@@ -309,13 +309,14 @@ class Plant(object):
 
         health_delta = (temp_health_delta + sw_health_delta +
                         humid_health_delta + light_health_delta)
+        '''
         if (health_delta < -0.0001):
             print("HD: %.4f, T: %.4f, SW: %.4f, H: %.4f, L: %.4f"
                   %(health_delta, temp_health_delta, sw_health_delta, humid_health_delta, light_health_delta))
             print("   T: %.2f, SW: %.2f, H: %.2f, L: %.2f"
                   %(env_params['temperature'], env_params['soilwater'],
                     env_params['humidity'], light))
-
+        '''
         self.change_health(health_delta)
 
         #Update plant based on health, env
