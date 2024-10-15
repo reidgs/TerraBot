@@ -5,57 +5,51 @@ Created 10/24
 @author: Reid Simmons
 
 Prior outlook email stoppoed working - needs oauth2
-This is a stopgap measure using gmail
+Tried gmail - tokens needed to be refreshed regularly; now trying Twillo
+  (which previous TerraBot team used successfully)
 """
-import httplib2, os, oauth2client, base64, apiclient
-from oauth2client import client, tools, file
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.image import MIMEImage
-from email.mime.base import MIMEBase
-from email.message import EmailMessage
-
-def get_credentials():
-    scopes = "https://www.googleapis.com/auth/gmail.send"
-    home_dir = os.path.expanduser('~')
-    secret_file = os.path.join(home_dir, "client_secret.json")
-    app_name = "TerraBot"
-
-    credential_dir = os.path.join(home_dir, '.credentials')
-    if not os.path.exists(credential_dir): os.makedirs(credential_dir)
-    credential_path = os.path.join(credential_dir,
-                                   "gmail-python-email-send.json")
-    store = oauth2client.file.Storage(credential_path)
-    credentials = store.get()
-    if not credentials or credentials.invalid:
-        flow = client.flow_from_clientsecrets(secret_file, scopes)
-        flow.user_agent = app_name
-        credentials = tools.run_flow(flow, store)
-        print('Storing credentials to', credential_path)
-    return credentials
+import os, base64
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail, Attachment
 
 def init():
-    http = get_credentials().authorize(httplib2.Http())
-    return apiclient.discovery.build('gmail', 'v1', http=http)
-    
-def send(from_address, password, to_address, subject, text, images=[]):
     try:
-        service = init()
+        credential_path = os.path.join(os.path.expanduser('~'),
+                                       '.credentials/twillo.key')
+        with open(credential_path, "r") as f:
+            api_key = f.readline()
     except Exception as e:
-        print("Failed to connect to server:", e)
-        return False
+        print("Failed to find api-key:", e)
+        api_key = None
+    return api_key
 
-    msg = EmailMessage()
-    msg['Subject'] = subject
-    msg['From'] = from_address
-    msg['To'] = to_address
-    msg.set_content(text, 'plain')
-    for image in images:
-        msg.add_attachment(image, maintype='image', subtype='jpeg')
-    email = {'raw': base64.urlsafe_b64encode(msg.as_bytes()).decode()}
+def add_attachments(msg, images):
+    attachments = []
+    for i, image in enumerate(images):
+        encoded_image = base64.b64encode(image).decode()
+        attachment = Attachment(file_content=encoded_image,
+                                file_type='image/jpeg',
+                                file_name='image %d' %(i+1),
+                                disposition='attachment')
+        attachments.append(attachment)
+    attachments.reverse()
+    msg.attachment = attachments
+    
+def send(from_address, password, to_addresses, subject, text, images=[]):
     try:
-        message = service.users().messages().send(userId=from_address,
-                                                  body=email).execute()
-        return message
-    except apiclient.errors.HttpError as error:
-        print('Failed to send:', error)
+        api_key = init()
+        if (not api_key): return False
+        to_addresses = [address.strip() for address in to_addresses.split(',')]
+        text_content = html_content = None
+        if  ('<' in text and '>' in text): html_content = text
+        else: text_content = text
+        msg = Mail(from_email=from_address, to_emails=to_addresses,
+                   subject=subject,
+                   plain_text_content=text_content, html_content=html_content)
+        if (len(images) > 0): add_attachments(msg, images)
+        sg = SendGridAPIClient(api_key)
+        response = sg.send(msg)
+        return response.status_code == 202
+    except Exception as e:
+        print('Failed to send:', e)
+        return False
