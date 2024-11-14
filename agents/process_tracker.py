@@ -2,7 +2,7 @@ import rospy, rosnode, rosgraph
 import sys, select, time, socket
 from os.path import exists
 from lib.terrabot_utils import clock_time
-import send_email as semail
+#import send_email as semail
 
 tracker_file = "tracker.txt"
 period = 1
@@ -63,10 +63,12 @@ def notify_change(previous_procs, current_procs):
     removed = previous_procs.difference(current_procs)
     if (len(removed) > 0): 
         notification += "   Removed: %s\n" %(' '.join(list(removed)),)
-    print(notification)
+    print(notification, end="")
+    '''
     semail.send('terrabot0@outlook.com', 'Simmons482',
                 'reids@cs.cmu.edu', "Changes in %s processes" %hostname,
                 notification)
+    '''
 
 def run_tracker(tf, previous_procs, period):
     init_ros()
@@ -87,10 +89,18 @@ def run_tracker(tf, previous_procs, period):
             previous_procs = current_procs
         check_for_quit(period)
 
+def wait_for_ros():
+    print("%s Roscore died; Waiting to reconnect" %clock_time(rospy.get_time()))
+    while not rosgraph.is_master_online():
+        check_for_quit(1)
+
 while True:
     with open(args.trackerfile, "a") as tf:
         run_tracker(tf, process_tracker_file(args.trackerfile), args.period)
+    wait_for_ros()
+    '''
     hostname = socket.gethostname()
     semail.send('terrabot0@outlook.com', 'Simmons482',
                 'reids@cs.cmu.edu', "Roscore died on %s" %hostname,
                 "Waiting to reconnect")
+    '''
