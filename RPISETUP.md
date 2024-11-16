@@ -47,7 +47,7 @@ Do as robotanist-admin
 * `sudo apt update`
 * `sudo apt install git vlc curl`
 * `sudo apt install python3 python3-pip python-is-python3`
-* `sudo apt install python3-opencv python3-matplotlib tmux`
+* `sudo apt install python3-opencv python3-matplotlib tmux dill`
 * `sudo apt install python3-transitions python3-sklearn`
 * `sudo apt install libraspberrypi-bin`
 * Optional: `sudo apt install xemacs21` (or your favorite text editor)
