@@ -7,21 +7,18 @@ RUN apt-get update && \
     pip install opencv-python panda3d transitions scikit-learn ortools \
     		matplotlib pandas dill sendgrid
 
-RUN apt-get install -y x11vnc xvfb mesa-utils
+RUN apt-get install -y x11vnc xvfb openbox tint2 mesa-utils
 EXPOSE 5900
 ENV DISPLAY=:1 XRES=1280x800x24
 
 # install ros apt-get deps
-RUN apt-get install -y ros-noetic-ros-base && \
+RUN apt-get install -y ros-noetic-ros-base && apt-get clean && \
     rosdep update
 
-# I like to use this editor
-RUN apt-get -y install xemacs21 && apt-get clean
-
 # Create user id
-ARG PASSWD=TerraBot
+ARG FOOBAR
 RUN useradd robotanist -m -s /bin/bash -G sudo && \
-    echo "robotanist:$PASSWD" | chpasswd
+    echo "robotanist:$FOOBAR" | chpasswd
 RUN sudo mkdir /tmp/.X11-unix && \
     sudo chown root:robotanist /tmp/.X11-unix && \
     sudo chmod 1777 /tmp/.X11-unix
@@ -37,9 +34,16 @@ RUN cd /home/robotanist && \
 
 ENV LIBGL_ALWAYS_SOFTWARE=1 PYOPENGL_PLATFORM=null
 RUN echo '#!/bin/sh\n Xvfb $DISPLAY -screen 0 $XRES &\n sleep 1\n \
-          x11vnc -display $DISPLAY -N -forever -unixpw > /dev/null 2>&1 &\n \
+    	  openbox > /dev/null 2>&1 &\n \
+    	  tint2 > /dev/null 2>&1 &\n \
+          x11vnc -display $DISPLAY -N -rfbport 5901 -forever -nopw -noxdamage > /dev/null 2>&1 &\n \
           exec bash' > ~/.start.sh && \
     chmod a+x ~/.start.sh
+
+# I like to use this editor; uncomment out for my personal image
+#USER root
+#RUN apt-get -y install xemacs21 && apt-get clean
+#USER robotanist
 
 # add launcher
 CMD ~/.start.sh

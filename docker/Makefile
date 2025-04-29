@@ -1,39 +1,20 @@
-# Clang is a good compiler to use during development due to its faster compile
-# times and more readable output.
-# C_compiler=/usr/bin/clang
-# CXX_compiler=/usr/bin/clang++
+build:
+	docker build --build-arg FOOBAR="TerraBot" -t terrabot_image .
 
-# GCC is better for release mode due to the speed of its output, and its support
-# for OpenMP.
-C_compiler=/usr/bin/gcc
-CXX_compiler=/usr/bin/g++
+# Need to be able to connect to already running container (exec)
 
-#acceptable build_types: Release/Debug/Profile
-build_type=Release
-# build_type=Debug
-
-run: docker_build
-	docker run -it --rm --name robotanist_container --volume "$(shell pwd)":/home/robotanist -p 8000:8000
-
-save:
-	docker terrabot_2025 save -o terrabot_2025.tar
-
-load:
-	docker load -i terrabot_2025.tar
+run:
+	docker run -it --name terrabot_container --volume .:/home/robotanist/User -p 5901:5901 terrabot_image
 
 stop:
-	docker container stop robotanist_container
-	docker container rm robotanist_container
+	docker container stop terrabot_container
+	docker container rm terrabot_container
 
-build:
-	docker build --build-arg HOST_UID=$(shell id -u) -t terrabot_2025 -f ./terrabot.docker .
+run_once:
+	docker run -it --rm --name terrabot_container --volume .:/home/robotanist/User -p 5901:5901 terrabot_image
 
-# Sets the build type to Debug.
-set_debug:
-	$(eval build_type=Debug)
+save:
+	docker save -o terrabot_image.tar terrabot_image
 
-# Ensures that the build type is debug before running all target.
-debug_all: | set_debug all
-
-clean:
-	rm -rf build bin lib
+load:
+	docker load -i terrabot_image.tar

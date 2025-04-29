@@ -1,5 +1,3 @@
-* extend Makefile to handle the ways to build, start, stop, etc container
-* try to get VNC working with showing simulator graphics
 * get things working with vscode
 * test all the hw assignments
-
+* get vnc viewer to work remotely
