@@ -41,7 +41,7 @@ def send(from_address, password, to_addresses, subject, text, images=[]):
         if (not api_key): return False
         to_addresses = [address.strip() for address in to_addresses.split(',')]
         text_content = html_content = None
-        if  ('<' in text and '>' in text): html_content = text
+        if  ('<' in text and '/>' in text): html_content = text
         else: text_content = text
         msg = Mail(from_email=from_address, to_emails=to_addresses,
                    subject=subject,
