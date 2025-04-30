@@ -1,5 +1,6 @@
+
 #!/usr/bin/env python
-import os, sys, glob, select, signal
+import os, os.path as op, sys, select
 import subprocess as sp
 from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray, String
 import argparse, time, getpass
@@ -12,8 +13,8 @@ from lib import send_email
 from lib import sim_camera as cam
 from lib.terrabot_utils import clock_time, time_since_midnight
 from lib.baseline import Baseline
-from os.path import abspath
 from math import exp
+from os import makedirs
 
 ### Default values for the optional variables
 verbose = False
@@ -32,6 +33,10 @@ tester = None
 log_files = {}
 publishers = {}
 subscribers = {}
+
+terrabot_dir = op.dirname(op.abspath(__file__))
+log_dir = op.join(terrabot_dir, "Log")
+lib_dir = op.join(terrabot_dir, "lib")
 
 ### Update tester variables, if necessary
 var_translations = {'smoist' : 'smoist',      'light'  : 'light',
@@ -63,10 +68,10 @@ def gen_log_files():
     global log_files
 
     prefix = time.strftime("%Y%m%d_%H%M%S") + ("_sim" if simulate else "")
-    os.makedirs("Log/Log_%s" % prefix)
+    makedirs(op.join(log_dir, "Log_%s" %prefix))
 
     for name in tdef.sensor_names + tdef.actuator_names:
-        file_name = "Log/Log_%s/%s_log.csv" % (prefix, name)
+        file_name = op.join(log_dir, "Log_%s/%s_log.csv" % (prefix, name))
         log_files[name] = open(file_name, 'w+', 0)
 
 def log_print(string):
@@ -239,7 +244,7 @@ if log:
     gen_log_files()
 
 ### Open log file for roscore
-core_log = open("Log/roscore.log", "a+")
+core_log = open(op.join(og_dir, "roscore.log"), "a+")
 
 ### Start up roscore, redirecting output to logging files
 core_p = sp.Popen("roscore", stdout = core_log, stderr = core_log)
@@ -311,24 +316,24 @@ serial_log = None
 ### Initiates the Simulator and redirects output
 def start_simulator():
     global sim_p, sim_log, args
-    if (sim_log == None): sim_log = open("Log/simulator.log", "a+")
+    if (sim_log == None): sim_log = open(op.join(log_dir, "simulator.log"), "a+")
     fard_args = ["--speedup", str(args.speedup)]
     if args.graphics: fard_args += ["--graphics"]
     if args.baseline: 
         try: # In case of syntax errors, try parsing here first
-            Baseline(abspath(args.baseline))
+            Baseline(op.abspath(args.baseline))
         except Exception as inst:
             print("start_simulator: %s" %str(inst.args))
             terminate_gracefully()
         fard_args += ["--baseline", args.baseline]
     if log: fard_args = fard_args + ["-l"]
-    sim_p = sp.Popen(["python", "lib/farduino.py"] + fard_args,
+    sim_p = sp.Popen(["python", op.join(lib_dir, "farduino.py")] + fard_args,
                      stdout = sim_log, stderr = sim_log)
     time.sleep(1) # chance to get started
     
 def start_agent():
     global agent_p, agent_log, args
-    if (agent_log == None): agent_log = open("Log/agent.log", "a+")
+    if (agent_log == None): agent_log = open(op.join(log_dir, "agent.log"), "a+")
     agent_p = sp.Popen(["python", args.agent], bufsize=0,
                        stdout = agent_log, stderr = agent_log)
     time.sleep(1) # chance to get started
@@ -337,7 +342,7 @@ def start_agent():
 ### Initiates the Arduino and redirects output
 def start_serial():
     global serial_p, serial_log
-    if (serial_log == None): serial_log = open("Log/rosserial.log", "a+")
+    if (serial_log == None): serial_log = open(op.join(log_dir, "rosserial.log"), "a+")
     serial_p = sp.Popen(["rosrun", "rosserial_arduino",
                          "serial_node.py", "/dev/ttyACM0"],
                         stdout = serial_log, stderr = serial_log)
@@ -345,8 +350,8 @@ def start_serial():
     print("started serial")
 
 def adjust_path(pathname, dirname):
-    return (pathname if os.path.isabs(pathname) else
-            abspath(dirname + pathname))
+    return (pathname if op.isabs(pathname) else
+            op.abspath(dirname + pathname))
     
 if tester_file:
     tester = tester_mod.Tester()
@@ -356,7 +361,7 @@ if tester_file:
         print("Tester parse: %s" %str(inst.args))
         terminate_gracefully()
     #tester.display()
-    dirname = os.path.dirname(tester_file) + "/"
+    dirname = op.dirname(tester_file) + "/"
     # Command line option overrides test file
     if (not args.baseline and tester.baseline_file):
         args.baseline = adjust_path(tester.baseline_file, dirname)
