@@ -198,7 +198,7 @@ class Tester:
              'wlevel'          : 150.0,     'led'         : 0,
              'insolation'      : 0,         'wpump'       : False,
              'fan'             : False,     'camera'      : None,
-             'ping'            : False,     'enabled_behaviors' : set() }
+             'enabled_behaviors' : set() }
     baseline_file = None
     interf_file = None
     delay_time = None

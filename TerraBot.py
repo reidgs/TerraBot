@@ -22,10 +22,7 @@ grade = False
 log = False
 simulate = False
 still_running = True
-run_agent = True
-#tick_interval = 0.01
 tick_interval = 0.5
-#clock_time = rospy.Time(0)
 interference = None
 tester = None
 
@@ -44,7 +41,6 @@ var_translations = {'smoist' : 'smoist',      'light'  : 'light',
                     'temp'   : 'temperature', 'humid'  : 'humidity',
                     'led'    : 'led',         'wpump'  : 'wpump',
                     'fan'    : 'fan',         'camera' : 'camera',
-                    'ping'   : 'ping',        'cur'    : 'current',
                     'insolation' : 'insolation'}
 def tester_update_var(var, value):
     global tester, var_translations
@@ -156,8 +152,6 @@ parser.add_argument('-b', '--baseline', default = None)
 parser.add_argument('-i', '--interference', default = None)
 parser.add_argument('-t','--test', default = None,
         help = "test execution using given tester file")
-parser.add_argument('-a', '--agent', default = 'none',
-        help = "if agent is 'none', agent must be run externally")
 parser.add_argument('-e', '--email', default = None,
         help = "email address to notify if restarting frequently")
 parser.add_argument('-p', '--password', default = None,
@@ -173,26 +167,12 @@ log = args.log
 mode = args.mode
 tester_file = args.test
 simulate = mode == "sim"
-run_agent = (args.agent != "None") and (args.agent != "none")
 password = args.password
 fixed_shutter = (args.fixedshutter if args.fixedshutter == None else
                  int(args.fixedshutter))
 
 num_restarts = 0
 max_restarts = 5
-
-### Notify user when agent crashes or hangs multiple times
-def notify_user():
-    global args, password, num_restarts
-    if (args.email != None):
-        print("Sending email regarding restarts to " + args.email)
-        send_email.send("autoterrabot@gmail.com", password, args.email,
-                        "Problem with your TerraBot agent",
-                        ("Your autonomous agent has had to be restarted %d times.  The current Terrabot time is %s.\r\n\r\nYou should probably contact the instructors to upload a new version.\r\n\r\nSincerely,\r\nTerraBot\r\n"
-                         %(num_restarts, clock_time(rospy.get_time()))))
-
-if (args.email != None and password == None):
-    password = getpass.getpass("Password please for autoterrabot@gmail.com: ")
 
 def terminate (process, log_file):
     if (log_file != None): log_file.close()
@@ -226,15 +206,8 @@ def terminate_serial():
         terminate(serial_p, serial_log)
         serial_p = None; serial_log = None
 
-def terminate_agent():
-    global agent_p, agent_log
-    if (agent_p != None):
-        print("Terminating agent")
-        terminate(agent_p, agent_log)
-        agent_p = None; agent_log = None
 
 def terminate_gracefully():
-    terminate_agent()
     terminate_sim()
     terminate_serial()
     terminate_core()
@@ -258,16 +231,6 @@ rospy.init_node('TerraBot', anonymous = True)
 
 generate_publishers()
 generate_subscribers()
-
-### Health Ping callback function
-### Records the most recent ping
-def ping_cb(data):
-    global last_ping
-    last_ping = rospy.get_time()
-    if verbose: print("  PING! %s" %clock_time(last_ping))
-    tester_update_var('ping', True)
-
-ping_sub = rospy.Subscriber('ping', Bool, ping_cb)
 
 images = None
 image_start_time = 1735000 # Should be in baseline
@@ -308,8 +271,6 @@ disable_sub = rospy.Subscriber('disable', String, disable_cb)
 
 sim_p = None
 sim_log = None
-agent_p = None
-agent_log = None
 serial_p = None
 serial_log = None
 
@@ -330,14 +291,6 @@ def start_simulator():
     sim_p = sp.Popen(["python", op.join(lib_dir, "farduino.py")] + fard_args,
                      stdout = sim_log, stderr = sim_log)
     time.sleep(1) # chance to get started
-    
-def start_agent():
-    global agent_p, agent_log, args
-    if (agent_log == None): agent_log = open(op.join(log_dir, "agent.log"), "a+")
-    agent_p = sp.Popen(["python", args.agent], bufsize=0,
-                       stdout = agent_log, stderr = agent_log)
-    time.sleep(1) # chance to get started
-    last_ping = rospy.get_time()
 
 ### Initiates the Arduino and redirects output
 def start_serial():
@@ -382,10 +335,6 @@ else:
 while rospy.get_time() == 0: rospy.sleep(0.1)
 now = rospy.get_time()
 
-### Initiates the Agent file and redirects output
-if run_agent: 
-    print("  Starting agent")
-    start_agent()
 print("System started")
 
 if (tester != None):
@@ -393,9 +342,6 @@ if (tester != None):
 
 if (args.interference):
     interference = interf_mod.Interference(args.interference, now)
-
-### We must begin health ping
-last_ping = now
 
 ### Main loop
 while not rospy.core.is_shutdown():
@@ -415,39 +361,11 @@ while not rospy.core.is_shutdown():
         tester.vars['time'] = now
         tester.vars['mtime'] = time_since_midnight(now)
         tester.process_constraints(now)
-        tester_update_var('ping', False) # Ping should not be latched
         tester_update_var('camera', None) # Camera should not be latched
         if tester.finished(now):
             print("Done testing!")
             if (tester.end_status() == 'QUIT'): terminate_gracefully()
             else: tester = None
-
-    # Ping at least once every 6 minutes, but need to adjust if speedup
-    if  run_agent and ((now - last_ping) > max(360, 2*args.speedup)):
-        log_print("no ping since %d (%d seconds), terminating..."
-                  %(last_ping, now - last_ping))
-        last_ping = now
-        num_restarts += 1
-        # For safety, make sure the pump is off
-        publishers['wpump'].publish(False)
-        if (num_restarts < max_restarts): # Send just once
-            terminate(agent_p, None); agent_p = None
-        else:
-            notify_user()
-            terminate_gracefully()
-
-    if (run_agent and agent_p != None and agent_p.poll() != None):
-        log_print("agent died")
-        num_restarts += 1
-        # For safety, make sure the pump is off
-        publishers['wpump'].publish(False)
-        if (num_restarts >= max_restarts): # Send just once
-            notify_user()
-            terminate_gracefully()
-
-    if (run_agent and (agent_p == None or agent_p.poll() != None)):
-        log_print("agent restarting...")
-        start_agent()
 
     rospy.sleep(tick_interval)
     # End while loop

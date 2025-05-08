@@ -45,7 +45,7 @@ def update_actuator(name, actuator):
     ax.text(0, 0, actuator, ha='center', va='center', color='Blue')
 
 def init_ros (use_simulator):
-    global led_pub, wpump_pub, fan_pub, ping_pub, camera_pub
+    global led_pub, wpump_pub, fan_pub, camera_pub
     global sensor_values, actuator_labels
 
     if use_simulator: rospy.set_param("use_sim_time", True)

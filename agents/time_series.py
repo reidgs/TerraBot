@@ -54,7 +54,7 @@ nrowsG = 0
 ncolsG = 0
 
 def init_ros (use_simulator):
-    global led_pub, wpump_pub, fan_pub, ping_pub, camera_pub, subplotsG
+    global led_pub, wpump_pub, fan_pub, camera_pub, subplotsG
 
     if use_simulator: rospy.set_param("use_sim_time", True)
     rospy.init_node("time_series_grapher", anonymous = True)

@@ -44,7 +44,7 @@ def init_sensors():
 ### Set up publishers, subscribers, and message handlers
 
 def init_ros ():
-    global led_pub, wpump_pub, fan_pub, ping_pub, camera_pub, speedup_pub, freq_pub, sensorsG
+    global led_pub, wpump_pub, fan_pub, camera_pub, speedup_pub, freq_pub, sensorsG
 
     if use_simulator: rospy.set_param("use_sim_time", True)
     rospy.init_node("interactive_agent", anonymous = True)
@@ -56,7 +56,6 @@ def init_ros ():
     fan_pub = rospy.Publisher("fan_input", actuator_types['fan'],
                               latch = True, queue_size = 1)
 
-    ping_pub = rospy.Publisher("ping", Bool, latch = True, queue_size = 1)
     camera_pub = rospy.Publisher("camera", actuator_types['cam'],
                                  latch = True, queue_size = 1)
     speedup_pub = rospy.Publisher("speedup", Int32, latch = True, queue_size = 1)
@@ -117,13 +116,6 @@ def power_reaction(data, sensorsG):
 def cam_reaction(data):
     print ("picture taken\t" + data.data)
 
-last_ping = 0
-def ping():
-    global last_ping
-    #print("PING! %s" %clock_time(sensorsG.time))
-    last_ping = sensorsG.time
-    ping_pub.publish(True)
-
 init_ros()
 init_sensors()
 rospy.sleep(2) # Give a chance for the initial sensor values to be read
@@ -132,9 +124,6 @@ print("Connected and ready for interaction")
 
 while not rospy.core.is_shutdown():
     sensorsG.time = rospy.get_time()
-
-    # Ping every 3 minutes, twice as frequently as timeout in TerraBot
-    if (sensorsG.time - last_ping) >= 180: ping()
 
     ### Check for input
     if sys.stdin in select.select([sys.stdin],[],[],0)[0]:
