@@ -244,7 +244,7 @@ if log:
     gen_log_files()
 
 ### Open log file for roscore
-core_log = open(op.join(og_dir, "roscore.log"), "a+")
+core_log = open(op.join(log_dir, "roscore.log"), "a+")
 
 ### Start up roscore, redirecting output to logging files
 core_p = sp.Popen("roscore", stdout = core_log, stderr = core_log)
