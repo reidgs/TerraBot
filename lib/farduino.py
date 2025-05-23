@@ -69,7 +69,7 @@ def generate_subscribers():
     global subscribers
     rospy.Subscriber('speedup', Int32, speedup_cb)
     for name in actuator_names: 
-        if name != 'cam':    
+        if name != 'camera':    
             subscribers[name] = rospy.Subscriber(name + '_raw', 
                                              actuator_types[name],  
                                              actuator_cbs[name])
@@ -237,13 +237,13 @@ env.params['time'] = age
 renderer.update_env_params(env.params, default_speedup, env.light_average(),
                            env.get_weight())
 
-def cam_cb(data):
+def camera_cb(data):
     global renderer
     renderer.takeAndStorePic(data.data)
 
-#Steup cam subscriber
-subscribers['cam'] = rospy.Subscriber('cam_raw', actuator_types['cam'],  
-                                      cam_cb)
+#Steup camera subscriber
+subscribers['camera'] = rospy.Subscriber('camera_raw', actuator_types['camera'],  
+                                         camera_cb)
 
 #Start sim loop THEN panda
 

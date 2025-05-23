@@ -241,7 +241,7 @@ def camera_cb(data):
     print("Taking an image at %s, storing it in %s"
           %(clock_time(rospy.get_time()), data.data))
     if simulate:
-        publishers['cam'].publish(data.data)
+        publishers['camera'].publish(data.data)
     else:
         # Shutter speed in microseconds, 2.8 aperture
         shutter_speed = ((fixed_shutter if fixed_shutter != None else
