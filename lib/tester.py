@@ -1,4 +1,3 @@
-#import rospy
 import copy, os, sys
 from datetime import datetime
 from terrabot_utils import clock_time, time_since_midnight, dtime_to_seconds

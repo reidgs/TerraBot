@@ -28,8 +28,8 @@ class Baseline:
                 elif key in ['leaf_droop', 'lankiness', 'plant_health']:
                     self.params[key] = min(1, max(0, float(val)))
                 elif key == 'start':
-                    self.params['start'] = (int(val) if (val.find('-') < 0) else
-                                            dtime_to_seconds(val))
+                    self.params['start'] = int(val if (val.find('-') < 0) else
+                                               dtime_to_seconds(val))
                 elif key not in self.params.keys():
                     print("invalid parameter name: {}".format(key))
                     return

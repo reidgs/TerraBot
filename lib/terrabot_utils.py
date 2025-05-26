@@ -22,3 +22,13 @@ def time_since_midnight(time):
     dtime = datetime.fromtimestamp(time)
     return (dtime.hour*3600 + dtime.minute*60 + dtime.second +
             dtime.microsecond/1e6)
+
+import rclpy
+def get_ros_time(node):
+    return node.get_clock().now().nanoseconds / 1e9
+
+def set_use_sim_time(node, use_sim_time):
+    sim_time = rclpy.parameter.Parameter('use_sim_time',
+                                         rclpy.Parameter.Type.BOOL,
+                                         use_sim_time)
+    node.set_parameters([sim_time])

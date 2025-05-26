@@ -3,10 +3,11 @@
 #David Buffkin
 
 ### Import used files
-import rospy
+import rclpy, rclpy.node
 from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray
 from topic_def import *
 from rosgraph_msgs.msg import Clock
+from rclpy.time import Time
 import time
 import argparse                                                    
 from baseline import Baseline
@@ -18,7 +19,11 @@ from freqmsg import frommsg
 from direct.stdpy import threading
 import sys
 from datetime import datetime
-from terrabot_utils import clock_time
+from terrabot_utils import clock_time, get_ros_time, set_use_sim_time
+
+class Simulator(rclpy.node.Node):
+    def __init__(self):
+        super().__init__("Simulator")
 
 ### Parse arguments
 
@@ -29,7 +34,7 @@ parser.add_argument('--graphics', default = False, action = 'store_true')
 parser.add_argument('-l', '--log', action = 'store_true')
 args = parser.parse_args()
 
-
+rclpy.init()
 
 ### Important Variables
 
@@ -67,23 +72,23 @@ actuator_cbs = { 'led' : (lambda data : env.params.update({'led' : data.data})),
 
 def generate_subscribers():
     global subscribers
-    rospy.Subscriber('speedup', Int32, speedup_cb)
+    simulator.create_subscription(Int32, 'speedup', speedup_cb, 1)
     for name in actuator_names: 
         if name != 'camera':    
-            subscribers[name] = rospy.Subscriber(name + '_raw', 
+            subscribers[name] = simulator.create_subscription(
                                              actuator_types[name],  
-                                             actuator_cbs[name])
+                name + '_raw', 
+                                             actuator_cbs[name], 1)
 
 ## Sensor Setup
 
 def generate_publishers():
     global publishers, clock_pub
-    clock_pub = rospy.Publisher("clock", Clock, latch = True, queue_size = 1)
+    clock_pub = simulator.create_publisher(Clock, "/clock", 1)
     for name in sensor_names:
-        publishers[name] = rospy.Publisher(name + '_raw', sensor_types[name],
-                                           latch = True, queue_size = 100)
+        publishers[name] = simulator.create_publisher(sensor_types[name],
+                                                      name+'_raw', 100)
     
-
 ### SENSORS ###
 
 # The first element is the current time till resensing, and the second is the chosen frequency
@@ -115,7 +120,9 @@ def sense_light():
     publishers['light'].publish(l_array)
     
 def sense_level():
-    publishers['level'].publish(env.params['volume'] / env.volume_rate)
+    float = Float32()
+    float.data = env.params['volume'] / env.volume_rate
+    publishers['level'].publish(float)
     
 def sense_temp():
     t_array = Int32MultiArray()
@@ -163,8 +170,8 @@ max_speedup_fan = 100
 
 ## handle ROS init stuff
 
-rospy.set_param("use_sim_time", True)
-rospy.init_node('Simulator', anonymous=True)
+simulator = Simulator()
+set_use_sim_time(simulator, True)
 
 generate_publishers()
 generate_subscribers()
@@ -184,28 +191,34 @@ def sim_loop():
     now = t0
     if bl is not None:
         now += bl.params['start']
-    clock_pub.publish(rospy.Time.from_sec(now)) #Publish initial time
+    clock = Clock()
+    clock.clock.sec = now; clock.clock.nanosec = 0
+    clock_pub.publish(clock) #Publish initial time
+    while get_ros_time(simulator) == 0:
+        rclpy.spin_once(simulator, timeout_sec=0.1)
 
-    time.sleep(1) #give a sec
-     
-
-    while not rospy.core.is_shutdown() and doloop:
+    while doloop:
         
-        time.sleep(tick_time) # Wait for next tick
+        rclpy.spin_once(simulator, timeout_sec=0.01)
+        time.sleep(tick_time-0.01) # Wait for next tick
         
         speedup = min(default_speedup, #speedup should be maxed if pumping/fanning
                       (max_speedup_pump if env.params['wpump'] else default_speedup),
                       (max_speedup_fan if env.params['fan'] else default_speedup))
 
-        now = rospy.get_time()
+        now = get_ros_time(simulator)
         if (pump_last_on and not env.params['wpump']):
             pump_last_on = False
             pump_last_off_time = now
         elif (env.params['wpump']):
             pump_last_on = True
         if (now - pump_last_off_time < 10): speedup = 1
-        clock_pub.publish(rospy.Time.from_sec(now + (tick_time * speedup)))
-        
+        clock = Clock()
+        now += tick_time * speedup
+        clock.clock.sec = int(now)
+        clock.clock.nanosec = int((now - clock.clock.sec) * 1e9)
+        clock_pub.publish(clock)
+
         #DO STUFF 
         #move env forward
         duration = env.forward_time(tick_time * speedup)
@@ -242,8 +255,8 @@ def camera_cb(data):
     renderer.takeAndStorePic(data.data)
 
 #Steup camera subscriber
-subscribers['camera'] = rospy.Subscriber('camera_raw', actuator_types['camera'],  
-                                         camera_cb)
+subscribers['camera'] = simulator.create_subscription( actuator_types['camera'],
+                                                       'camera_raw', camera_cb, 1)
 
 #Start sim loop THEN panda
 

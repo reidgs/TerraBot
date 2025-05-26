@@ -1,5 +1,5 @@
-import rospy
 from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray
+from array import array
 from numpy.random import normal
 from datetime import datetime
 from terrabot_utils import clock_to_seconds, clock_time, time_since_midnight
@@ -25,44 +25,44 @@ types = {
 
     #type for each sensor value
     'smoist' : int,
-    'cur'    : float,
     'light'  : int,
     'level'  : float,
     'temp'   : int,
     'humid'  : int,
+    'weight' : float,
 }
 
 std_dev = { 'led'   : 0,
             'wpump' : 0,
             'fan'   : 0,
             'smoist' : 10,
-            'cur'    : 1,
             'light'  : 5,
             'level'  : 2,
             'temp'   : 1,
             'humid'  : 2,
+            'weight' : 25,
             }
 
 proportionality = { 'led'   : 1.0,
             'wpump' : 1.0,
             'fan'   : 1.0,
             'smoist' : 1.0,
-            'cur'    : 1.0,
             'light'  : 1.0,
             'level'  : 1.0,
             'temp'   : 1.0,
             'humid'  : 1.0,
+            'weight' : 1.0,
             }
 
 name_translations = { 'led' : 'led',
                       'wpump' : 'wpump',
                       'fan' : 'fan',
                       'smoist' : 'smoist',
-                      'current' : 'cur',
                       'light' : 'light',
                       'wlevel' : 'level',
                       'temperature' : 'temp',
-                      'humidity' : 'humid'}
+                      'humidity' : 'humid',
+                      'weight' : 'weight',}
 
 ###interference functions###
 
@@ -155,7 +155,7 @@ class Interference(Agenda):
 
     # Get the interference functions
     def edit(self, name, value):
-        if (type(value) is list or type(value) is tuple):
+        if (type(value) in [list, tuple, array]):
             return (self.interf_funcs[name][0](name, value[0]),
                     self.interf_funcs[name][1](name, value[1]))
         else:
@@ -187,7 +187,7 @@ if __name__ == '__main__':
                 p('smoist', [450, 450], t)
                 p('light', [350, 350], t)
                 p('level', 125.3, t)
-                p('cur', [52.0, 1000], t)
+                p('weight', [600, 650], t)
                 p('fan', True, t)
                 p('wpump', True, t)
                 p('led', 200, t)

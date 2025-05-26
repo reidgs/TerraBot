@@ -5,16 +5,21 @@ import subprocess as sp
 from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray, String
 import argparse, time, getpass
 from shutil import copyfile
-import rospy, rosgraph
+import rclpy, rclpy.node
 from lib import topic_def as tdef
 from lib import interference as interf_mod
 from lib import tester as tester_mod
 from lib import send_email
 from lib import sim_camera as cam
-from lib.terrabot_utils import clock_time, time_since_midnight
+from lib.terrabot_utils import clock_time, time_since_midnight, \
+                               get_ros_time, set_use_sim_time
 from lib.baseline import Baseline
 from math import exp
 from os import makedirs
+
+class TerraBot(rclpy.node.Node):
+    def __init__(self):
+        super().__init__("TerraBot")
 
 ### Default values for the optional variables
 verbose = False
@@ -78,15 +83,13 @@ def generate_publishers():
 
     for name in tdef.sensor_names:
         pub_name = name + "_output"
-        publishers[name] = rospy.Publisher(
-                            pub_name, tdef.sensor_types[name],
-                            latch = True, queue_size = 1)
+        publishers[name] = terrabot.create_publisher(
+                            tdef.sensor_types[name], pub_name, 1)
 
     for name in tdef.actuator_names:
         pub_name = name + "_raw"
-        publishers[name] = rospy.Publisher(
-                            pub_name, tdef.actuator_types[name],
-                            latch = True, queue_size = 1)
+        publishers[name] = terrabot.create_publisher(
+                            tdef.actuator_types[name], pub_name, 1)
 
 insolation = 0
 last_light_reading = 0
@@ -103,7 +106,7 @@ def cb_generic(name, data):
 
     if (name == 'light'): # Integrate light levels
         global last_light_reading, insolation
-        now = rospy.get_time()
+        now = get_ros_time(terrabot)        
         if (last_light_reading > 0):
             light_level = (original[0] + original[1])/2.0
             dt = now - last_light_reading
@@ -111,7 +114,7 @@ def cb_generic(name, data):
             #print("INSOLATION: %.2f %d %.2f" %(insolation, light_level, dt))
             tester_update_var('insolation', insolation)
         if (time_since_midnight(now) < time_since_midnight(last_light_reading)):
-            #print("INSOLATION TODAY: %.1f" %insolation)
+            print("INSOLATION TODAY: %.1f" %insolation)
             insolation = 0 # Reset daily
         last_light_reading = now
 
@@ -132,12 +135,14 @@ def generate_subscribers():
     for name in tdef.sensor_names:
         sub_name = name + "_raw"
         cb = generate_cb(name)
-        subscribers[name] = rospy.Subscriber(sub_name, tdef.sensor_types[name], cb)
+        subscribers[name] = terrabot.create_subscription(
+                                tdef.sensor_types[name], sub_name, cb, 10)
 
     for name in tdef.actuator_names:
         sub_name = name + "_input"
         cb = generate_cb(name)
-        subscribers[name] = rospy.Subscriber(sub_name, tdef.actuator_types[name], cb)
+        subscribers[name] = terrabot.create_subscription(
+                               tdef.actuator_types[name], sub_name, cb, 10)
 
 ###Start of program
 parser = argparse.ArgumentParser(description = "TerraBot arg parser")
@@ -180,12 +185,14 @@ def terminate (process, log_file):
         process.terminate()
         process.wait()
 
+"""
 def terminate_core():
     global core_p, core_log
     if (core_p != None):
         print("Terminating roscore")
         terminate(core_p, core_log)
         core_p = None; core_log = None
+"""
 
 def terminate_sim():
     global sim_p, sim_log
@@ -198,9 +205,9 @@ def terminate_serial():
     global serial_p, serial_log
     if (serial_p != None):
         print("Turning off actuators")
-        publishers['led'].publish(0)
-        publishers['wpump'].publish(0)
-        publishers['fan'].publish(0)
+        publishers['led'].publish(Int32(data=0))
+        publishers['wpump'].publish(Bool(data=False))
+        publishers['fan'].publish(Bool(data=False))
 
         print("Terminating serial")
         terminate(serial_p, serial_log)
@@ -210,24 +217,23 @@ def terminate_serial():
 def terminate_gracefully():
     terminate_sim()
     terminate_serial()
-    terminate_core()
+    #terminate_core()
     sys.exit()
 
 if log:
     gen_log_files()
 
+### Start up ros
+rclpy.init()
+
 ### Open log file for roscore
-core_log = open(op.join(log_dir, "roscore.log"), "a+")
+#core_log = open(op.join(log_dir, "roscore.log"), "a+")
 
 ### Start up roscore, redirecting output to logging files
-core_p = sp.Popen("roscore", stdout = core_log, stderr = core_log)
+#core_p = sp.Popen("roscore", stdout = core_log, stderr = core_log)
 
-### Begin relay node
-if simulate: # Use simulated time if starting simulator
-    while not rosgraph.is_master_online():
-        rospy.sleep(1) # Wait for roscore to start up
-    rospy.set_param("use_sim_time", True)
-rospy.init_node('TerraBot', anonymous = True)
+terrabot = TerraBot()
+set_use_sim_time(terrabot, simulate)
 
 generate_publishers()
 generate_subscribers()
@@ -239,7 +245,7 @@ def camera_cb(data):
     global simulate, images, fixed_shutter
     
     print("Taking an image at %s, storing it in %s"
-          %(clock_time(rospy.get_time()), data.data))
+          %(clock_time(rclpy.get_ros_time()), data.data))
     if simulate:
         publishers['camera'].publish(data.data)
     else:
@@ -254,7 +260,7 @@ def camera_cb(data):
                 %(shutter_speed, data.data), shell = True)
     tester_update_var('camera', data.data)
 
-camera_sub = rospy.Subscriber('camera', String, camera_cb)
+camera_sub = terrabot.create_subscription(String, 'camera', camera_cb, 10)
 
 def enable_cb (data):
     #print("Enabling behavior:", data.data)
@@ -264,8 +270,8 @@ def disable_cb (data):
     #print("Disabling behavior:", data.data)
     tester_update_behaviors(data.data, False)
 
-enable_sub = rospy.Subscriber('enable', String, enable_cb)
-disable_sub = rospy.Subscriber('disable', String, disable_cb)
+enable_sub = terrabot.create_subscription(String, 'enable', enable_cb, 10)
+disable_sub = terrabot.create_subscription(String, 'disable', disable_cb, 10)
 
 ### Spawn subprocesses
 
@@ -296,7 +302,7 @@ def start_simulator():
 def start_serial():
     global serial_p, serial_log
     if (serial_log == None): serial_log = open(op.join(log_dir, "rosserial.log"), "a+")
-    serial_p = sp.Popen(["rosrun", "rosserial_arduino",
+    serial_p = sp.Popen(["ros2", "run", "rosserial_arduino",
                          "serial_node.py", "/dev/ttyACM0"],
                         stdout = serial_log, stderr = serial_log)
     time.sleep(1) # chance to get started
@@ -332,8 +338,9 @@ else:
     print("  Starting hardware")
     start_serial()
 # Wait for clock to start up correctly
-while rospy.get_time() == 0: rospy.sleep(0.1)
-now = rospy.get_time()
+    while get_ros_time(terrabot) == 0:
+        rclpy.spin_once(terrabot, timeout_sec=0.1)
+now = get_ros_time(terrabot)
 
 print("System started")
 
@@ -344,7 +351,7 @@ if (args.interference):
     interference = interf_mod.Interference(args.interference, now)
 
 ### Main loop
-while not rospy.core.is_shutdown():
+while rclpy.ok():
     ### Check for input
     if sys.stdin in select.select([sys.stdin],[],[],0)[0]:
         input = sys.stdin.readline()
@@ -355,7 +362,7 @@ while not rospy.core.is_shutdown():
         else:
             print("Usage: q (quit); t (current time)")
 
-    now = rospy.get_time()
+    now = get_ros_time(terrabot)
     if (interference): interference.update(now)
     if tester:
         tester.vars['time'] = now
@@ -367,7 +374,7 @@ while not rospy.core.is_shutdown():
             if (tester.end_status() == 'QUIT'): terminate_gracefully()
             else: tester = None
 
-    rospy.sleep(tick_interval)
+    rclpy.spin_once(terrabot, timeout_sec=tick_interval)
     # End while loop
 
 
