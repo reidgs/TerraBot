@@ -21,7 +21,6 @@ class Sensors:
     temperature = 0
     weight = 0
     water_level = 0
-    current = 0
     energy = 0
     light_level_raw = [0,0]
     moisture_raw = [0,0]
@@ -45,7 +44,8 @@ class Agent(rclpy.node.Node):
     def init_ros (self):
         self.pubs = {}
         for name in actuator_names:
-            self.pubs[name] = self.create_publisher(actuator_types[name], name, 1)
+            self.pubs[name] = self.create_publisher(actuator_types[name],
+                                                    name+"_input", 1)
         self.pubs['speedup'] = self.create_publisher(Int32, "speedup", 1)
             
         cbs = {'smoist': self.moisture_reaction, 'humid': self.humid_reaction,
@@ -172,11 +172,11 @@ while rclpy.ok():
                               %(sensor, period, 1/float(period)))
                         agent.publish('freq', msg)
                 elif input[0] == 's':
-                    agent.publish('speedup', int(input[1:]))
+                    agent.pubs['speedup'].publish(Int32(data=int(input[1:])))
                 elif input[0] == 'v':
                     agent.print_sensor_values()
                 else:
-                    print("Usage: q (quit)\n\tf [on|off] (fan on/off)\n\tp [on|off] (pump on/off)\n\tl [<level>|on|off] (led set to level ('on'=255; 'off'=0)\n\tr [smoist|cur|light|level|temp|humid][weight] [<frequency>] (update sensor to frequency)\n\te [smoist|cur|light|level|temp|humid][weight] [<period>] (update sensor to every <period> seconds)\n\tc <file> (take a picture, store in 'file')\n\ts [<speedup>] (change current speedup)\n\tv (print sensor values)")
+                    print("Usage: q (quit)\n\tf [on|off] (fan on/off)\n\tp [on|off] (pump on/off)\n\tl [<level>|on|off] (led set to level ('on'=255; 'off'=0)\n\tr [smoist|light|level|temp|humid][weight] [<frequency>] (update sensor to frequency)\n\te [smoist|cur|light|level|temp|humid][weight] [<period>] (update sensor to every <period> seconds)\n\tc <file> (take a picture, store in 'file')\n\ts [<speedup>] (change current speedup)\n\tv (print sensor values)")
             #except:
             #    print("An error occurred and the action could not be executed")
 

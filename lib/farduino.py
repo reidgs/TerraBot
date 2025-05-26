@@ -77,7 +77,7 @@ def generate_subscribers():
         if name != 'camera':    
             subscribers[name] = simulator.create_subscription(
                                              actuator_types[name],  
-                name + '_raw', 
+                                             name + '_raw', 
                                              actuator_cbs[name], 1)
 
 ## Sensor Setup
