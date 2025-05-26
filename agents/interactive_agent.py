@@ -9,7 +9,7 @@ from datetime import datetime
 sys.path.insert(0, os.getcwd()[:os.getcwd().find('TerraBot')]+'TerraBot/lib')
 from terrabot_utils import clock_time, get_ros_time, set_use_sim_time
 from freqmsg import tomsg
-from topic_def import sensor_types, actuator_types
+from topic_def import sensor_names, sensor_types, actuator_names, actuator_types
 
 rclpy.init()
 
@@ -30,68 +30,38 @@ class Sensors:
     weight_raw = [0, 0]
 
 
-def moisture_reaction(data, sensors):
-    sensors.moisture = (data.data[0] + data.data[1])/2.0
-    sensors.moisture_raw = data.data
-    if is_logging: print("    Moisture: %d %d" %(data.data[0], data.data[1]))
-
-def humid_reaction(data, sensors):
-    sensors.humidity = (data.data[0] + data.data[1])/2.0
-    sensors.humidity_raw = data.data
-    if is_logging: print("    Humidity: %d %d" %(data.data[0], data.data[1]))
-
-def weight_reaction(data, sensors):
-    # Each weight sensor holds half the weight of the pan
-    sensors.weight = (data.data[0] + data.data[1])
-    sensors.weight_raw = data.data
-    if is_logging: print("    Weight: %d %d" %(data.data[0], data.data[1]))
-
-def temp_reaction(data, sensors):
-    sensors.temperature = (data.data[0] + data.data[1])/2.0
-    sensors.temperature_raw = data.data
-    if is_logging: print("    Temperature: %d %d" %(data.data[0], data.data[1]))
-
-def light_reaction(data, sensors):
-    sensors.light_level = (data.data[0] + data.data[1])/2.0
-    sensors.light_level_raw = data.data
-    if is_logging: print("    Lights: %d %d" %(data.data[0], data.data[1]))
-
-def level_reaction(data, sensors):
-    sensors.water_level = data.data
-    if is_logging: print("    Level: %.2f" %data.data)
-
-def cam_reaction(data):
-    print ("picture taken\t" + data.data)
-
 class Agent(rclpy.node.Node):
-    def __init__(self, use_simulator):
+    def __init__(self, use_simulator, is_logging):
         super().__init__("Interactive_Agent")
         set_use_sim_time(self, use_simulator)
+        self.logging = is_logging
         self.sensors = Sensors()
         self.update_time()
+        self.init_ros()
 
     def update_time (self):
         self.sensors.time = get_ros_time(self)
             
     def init_ros (self):
         self.pubs = {}
-        for name in tdef.actuator_names:
-            self.pubs[name] = self.create_publisher(
-                                      tdef.actuator_types[name], name, 1)
-        self.pubs['speedup'] = self.create_publisher(
-                                      Int32, "speedup", 1)
+        for name in actuator_names:
+            self.pubs[name] = self.create_publisher(actuator_types[name], name, 1)
+        self.pubs['speedup'] = self.create_publisher(Int32, "speedup", 1)
             
-        cbs = {'smoist': moisture_reaction, 'light': light_reaction,
-               'level': level_reaction, 'temp': temp_reaction, 
-               'humid': humid_reaction, 'weight': weight_reaction,}
-        for name in tdef.sensor_names:
-            self.subscription(sensor_types[name], name+"_output", cbs[name], 1)
+        cbs = {'smoist': self.moisture_reaction, 'humid': self.humid_reaction,
+               'weight': self.weight_reaction,   'temp': self.temp_reaction, 
+               'light': self.light_reaction,     'level': self.level_reaction, 
+               'camera': self.cam_reaction,}
+        for name in sensor_names:
+            self.create_subscription(sensor_types[name], name+"_output",
+                                     cbs[name], 1)
 
     def publish (self, name, value):
-        self.pubs[name].publish(value)
+        msg = actuator_types[name](data=value)
+        self.pubs[name].publish(msg)
 
     def print_sensor_values (self):
-        print("Sensor values at %s" % clock_time(sensors.time))
+        print("Sensor values at %s" % clock_time(self.sensors.time))
         print("  Light level: %.1f (%.1f, %.1f)"
               %(self.sensors.light_level, self.sensors.light_level_raw[0],
                 self.sensors.light_level_raw[1]))
@@ -109,15 +79,46 @@ class Agent(rclpy.node.Node):
                 self.sensors.weight_raw[1]))
         print("  Reservoir level: %.1f" %self.sensors.water_level)
 
+    def moisture_reaction(self, data):
+        self.sensors.moisture = (data.data[0] + data.data[1])/2.0
+        self.sensors.moisture_raw = data.data
+        if self.logging: print(" Moisture: %d %d" %(data.data[0],data.data[1]))
+
+    def humid_reaction(self, data):
+        self.sensors.humidity = (data.data[0] + data.data[1])/2.0
+        self.sensors.humidity_raw = data.data
+        if self.logging: print(" Humidity: %d %d" %(data.data[0],data.data[1]))
+
+    def weight_reaction(self, data):
+        # Each weight sensor holds half the weight of the pan
+        self.sensors.weight = (data.data[0] + data.data[1])
+        self.sensors.weight_raw = data.data
+        if self.logging: print(" Weight: %d %d" %(data.data[0], data.data[1]))
+
+    def temp_reaction(self, data):
+        self.sensors.temperature = (data.data[0] + data.data[1])/2.0
+        self.sensors.temperature_raw = data.data
+        if self.logging: print(" Temperature: %d %d" %(data.data[0], data.data[1]))
+
+    def light_reaction(self, data):
+        self.sensors.light_level = (data.data[0] + data.data[1])/2.0
+        self.sensors.light_level_raw = data.data
+        if self.logging: print(" Lights: %d %d" %(data.data[0], data.data[1]))
+
+    def level_reaction(self, data):
+        self.sensors.water_level = data.data
+        if self.logging: print(" Level: %.2f" %data.data)
+
+    def cam_reaction(self, data):
+        print ("Picture taken\t" + data.data)
+
 parser = argparse.ArgumentParser(description = "Interactive Agent")
 parser.add_argument('-l', '--log', action = 'store_true',
                     help="print sensor values")
 parser.add_argument('-s', '--sim', action = 'store_true', help="use simulator")
 args = parser.parse_args()
 
-is_logging = args.log
-
-agent = Agent(args.sim)
+agent = Agent(args.sim, args.log)
 
 # Wait for clock to start up correctly
 while get_ros_time(agent) == 0:
@@ -137,9 +138,11 @@ while rclpy.ok():
     if sys.stdin in select.select([sys.stdin],[],[],0)[0]:
         input = sys.stdin.readline()
         if input[0] == 'q':
+            agent.destroy_node()
+            rclpy.shutdown()
             quit()
         else:
-            try:
+            if (True): #try:
                 if input[0] == 'f':
                     print("Turning fans %s" %("on" if (input.find("on") > 0) else "off"))
                     agent.publish('fan', input.find("on") > 0)
@@ -174,7 +177,7 @@ while rclpy.ok():
                     agent.print_sensor_values()
                 else:
                     print("Usage: q (quit)\n\tf [on|off] (fan on/off)\n\tp [on|off] (pump on/off)\n\tl [<level>|on|off] (led set to level ('on'=255; 'off'=0)\n\tr [smoist|cur|light|level|temp|humid][weight] [<frequency>] (update sensor to frequency)\n\te [smoist|cur|light|level|temp|humid][weight] [<period>] (update sensor to every <period> seconds)\n\tc <file> (take a picture, store in 'file')\n\ts [<speedup>] (change current speedup)\n\tv (print sensor values)")
-            except:
-                print("An error occurred and the action could not be executed")
+            #except:
+            #    print("An error occurred and the action could not be executed")
 
-    rclpy.sleep(1)
+    #rclpy.sleep(1)

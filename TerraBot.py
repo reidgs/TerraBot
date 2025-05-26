@@ -245,9 +245,9 @@ def camera_cb(data):
     global simulate, images, fixed_shutter
     
     print("Taking an image at %s, storing it in %s"
-          %(clock_time(rclpy.get_ros_time()), data.data))
+          %(clock_time(get_ros_time(terrabot)), data.data))
     if simulate:
-        publishers['camera'].publish(data.data)
+        publishers['camera'].publish(String(data=data.data))
     else:
         # Shutter speed in microseconds, 2.8 aperture
         shutter_speed = ((fixed_shutter if fixed_shutter != None else
