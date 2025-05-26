@@ -11,8 +11,6 @@ from terrabot_utils import clock_time, get_ros_time, set_use_sim_time
 from freqmsg import tomsg
 from topic_def import sensor_names, sensor_types, actuator_names, actuator_types
 
-rclpy.init()
-
 class Sensors:
     time = 0
     light_level = 0
@@ -157,6 +155,7 @@ parser.add_argument('-l', '--log', action = 'store_true',
 parser.add_argument('-s', '--sim', action = 'store_true', help="use simulator")
 args = parser.parse_args()
 
+rclpy.init()
 agent = Agent(args.sim, args.log)
 
 # Wait for clock to start up correctly

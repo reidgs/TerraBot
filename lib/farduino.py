@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 #David Buffkin
+# Updated to ROS2 by Reid Simmons, May/June 2025
 
 ### Import used files
 import rclpy, rclpy.node
@@ -22,8 +23,98 @@ from datetime import datetime
 from terrabot_utils import clock_time, get_ros_time, set_use_sim_time
 
 class Simulator(rclpy.node.Node):
-    def __init__(self):
+    def __init__(self, speedup):
         super().__init__("Simulator")
+        self.default_speedup = self.speedup = speedup
+        set_use_sim_time(self, True)
+        self.clock_pub = None
+        self.generate_publishers()
+        self.generate_subscribers()
+
+    ### Handle Sub/Pub
+
+    ## Actuator Callbacks
+
+    def freq_cb(self, data):
+        # Parse and update sensor frequency
+        name, freq = frommsg(data.data)
+        sensor_timing[name][1] = (99999999 if freq == 0 else 1/freq)
+    
+    def speedup_cb(self, data):
+        self.default_speedup = self.speedup = data.data
+
+    def camera_cb(self, data):
+        global renderer
+        renderer.takeAndStorePic(data.data)
+
+    def generate_subscribers(self):
+        actuator_cbs = \
+          { 'led' : (lambda data : env.params.update({'led' : data.data})),
+            'wpump' : (lambda data : env.params.update({'wpump' : data.data})),
+            'fan' : (lambda data : env.params.update({'fan' : data.data})),
+            'freq' : self.freq_cb,
+            'camera': self.camera_cb,}
+
+        for name in actuator_names: 
+            self.create_subscription(actuator_types[name], name+'_raw',
+                                     actuator_cbs[name], 1)
+        self.create_subscription(Int32, 'speedup', self.speedup_cb, 1)
+
+    ## Sensor Setup
+
+    def generate_publishers(self):
+        self.clock_pub = self.create_publisher(Clock, "/clock", 1)
+        self.pubs = {}
+        for name in sensor_names:
+            self.pubs[name] = self.create_publisher(sensor_types[name],
+                                                    name+'_raw', 100)
+    
+    ### Handling Sensors ###
+
+    # The first element is the current time till resensing,
+    #   and the second is the chosen frequency
+    sensor_timing = { 'smoist' : [0.0, 1.0],
+                      'cur' : [0.0, 1.0],
+                      'light' : [0.0, 1.0],
+                      'level' : [0.0, 1.0],
+                      'temp' : [0.0, 1.0],
+                      'humid' : [0.0, 1.0],
+                      'weight' : [0.0, 1.0]}
+    
+    def publish (self, name, value):
+        msg = sensor_types[name](data=value)
+        self.pubs[name].publish(msg)
+
+    # These functions sense from the environment and publish to their topic
+
+    def sense_smoist(self):
+        # should be ~2 * soil water content?
+        self.publish('smoist', [int(env.params['soilwater'] * 2)] * 2)
+
+    def sense_light(self):
+        self.publish('light', [int(env.light_level(env.tank_width / 2))] * 2)
+    
+    def sense_level(self):
+        self.publish('level', env.params['volume'] / env.volume_rate)
+    
+    def sense_temp(self):
+        self.publish('temp', [int(env.params['temperature'])] * 2)
+
+    def sense_humid(self):
+        self.publish('humid', [round(env.params['humidity'])] * 2)
+
+    def sense_weight(self):
+        # The sum of the two sensors is the weight; Make it slightly uneven
+        weight = env.get_weight()/2
+        self.publish('weight', [weight*0.9, weight*1.1])
+              
+    def sensor_forward_time(self, duration):
+        for name in sensor_names:
+            self.sensor_timing[name][0] += duration #Update cooldown
+            # Check to see if cooldown is over
+            if self.sensor_timing[name][0] >= self.sensor_timing[name][1] :
+                self.sensor_timing[name][0] = 0 #Reset cooldown
+                eval("self.sense_%s()" % name) #Call the sensor function
 
 ### Parse arguments
 
@@ -33,122 +124,6 @@ parser.add_argument('--speedup', type = float, default = 1, nargs = "?")
 parser.add_argument('--graphics', default = False, action = 'store_true')
 parser.add_argument('-l', '--log', action = 'store_true')
 args = parser.parse_args()
-
-rclpy.init()
-
-### Important Variables
-
-default_speedup = args.speedup
-publishers = {}
-subscribers = {}
-clock_pub = None
-
-
-
-### Handle Sub/Pub
-
-## Actuator Callbacks
-
-def freq_cb(data):
-    #Parse and update sensor frequency
-    name, freq = frommsg(data.data)
-    if freq == 0:
-        sensor_timing[name][1] = 99999999
-    else:
-        sensor_timing[name][1] = 1 / freq
-    
-    
-def speedup_cb(data):
-    global speedup, default_speedup
-    default_speedup = data.data
-    speedup = default_speedup
-    
-actuator_cbs = { 'led' : (lambda data : env.params.update({'led' : data.data})),
-                 'wpump' : (lambda data : env.params.update({'wpump' : data.data})),
-                 'fan' : (lambda data : env.params.update({'fan' : data.data})),
-                 'freq' : freq_cb}
-                 
-## Actuator Setup
-
-def generate_subscribers():
-    global subscribers
-    simulator.create_subscription(Int32, 'speedup', speedup_cb, 1)
-    for name in actuator_names: 
-        if name != 'camera':    
-            subscribers[name] = simulator.create_subscription(
-                                             actuator_types[name],  
-                                             name + '_raw', 
-                                             actuator_cbs[name], 1)
-
-## Sensor Setup
-
-def generate_publishers():
-    global publishers, clock_pub
-    clock_pub = simulator.create_publisher(Clock, "/clock", 1)
-    for name in sensor_names:
-        publishers[name] = simulator.create_publisher(sensor_types[name],
-                                                      name+'_raw', 100)
-    
-### SENSORS ###
-
-# The first element is the current time till resensing, and the second is the chosen frequency
-sensor_timing = { 'smoist' : [0.0, 1.0],
-                  'cur' : [0.0, 1.0],
-                  'light' : [0.0, 1.0],
-                  'level' : [0.0, 1.0],
-                  'temp' : [0.0, 1.0],
-                  'humid' : [0.0, 1.0],
-                  'weight' : [0.0, 1.0]}
-    
-## Sensor functions
-#These functions sense from the environment and publish to their topic
-
-def sense_smoist():
-    #should be ~2 * soil water content?
-    s_array = Int32MultiArray()
-    s_array.data = [int(env.params['soilwater'] * 2)] * 2
-    publishers['smoist'].publish(s_array)
-    
-def sense_cur():
-    c_array = Float32MultiArray()
-    c_array.data = [env.get_cur(), env.params['energy']]
-    publishers['cur'].publish(c_array)
-
-def sense_light():
-    l_array = Int32MultiArray()
-    l_array.data = [int(env.light_level(env.tank_width / 2))] * 2
-    publishers['light'].publish(l_array)
-    
-def sense_level():
-    float = Float32()
-    float.data = env.params['volume'] / env.volume_rate
-    publishers['level'].publish(float)
-    
-def sense_temp():
-    t_array = Int32MultiArray()
-    t_array.data = [int(env.params['temperature'])] * 2
-    publishers['temp'].publish(t_array)
-
-def sense_humid():
-    h_array = Int32MultiArray()
-    h_array.data = [round(env.params['humidity'])] * 2
-    publishers['humid'].publish(h_array)
-
-def sense_weight():
-    w_array = Float32MultiArray()
-    # The sum of the two sensors is the weight; Make it slightly uneven
-    weight = env.get_weight()/2
-    w_array.data = [weight*0.9, weight*1.1]
-    publishers['weight'].publish(w_array)
-              
-def sensor_forward_time(duration):
-    for name in sensor_names:
-        sensor_timing[name][0] += duration #Update cooldown
-        if sensor_timing[name][0] >= sensor_timing[name][1] : #Check to see if cooldown is over
-            sensor_timing[name][0] = 0 #Reset cooldown
-            eval("sense_%s()" % name) #Call the sensor function
-
-
 
 ### RUNTIME ###
 
@@ -169,94 +144,87 @@ max_speedup_pump = 1
 max_speedup_fan = 100
 
 ## handle ROS init stuff
-
-simulator = Simulator()
-set_use_sim_time(simulator, True)
-
-generate_publishers()
-generate_subscribers()
-
+rclpy.init()
+simulator = Simulator(args.speedup)
 
 ### Sim loop (Put here for threading purposes)
 doloop = True
 
 t0 = int(datetime(2000, 1, 1).strftime('%s')) # Initialize to 01-00:00:00, for display purposes
 
-def sim_loop():   
-    global doloop
+def publish_clock(sim, now):
+    clock = Clock()
+    clock.clock.sec = int(now)
+    clock.clock.nanosec = int((now - clock.clock.sec) * 1e9)
+    sim.clock_pub.publish(clock)
+
+def sim_loop():
+    global doloop, simulator, renderer
     tick_time = .25  # This is how long between runs of the below loop in seconds
-    speedup = default_speedup                
+    simulator.speedup = simulator.default_speedup
     pump_last_on = False
     pump_last_off_time = 0
     now = t0
     if bl is not None:
         now += bl.params['start']
-    clock = Clock()
-    clock.clock.sec = now; clock.clock.nanosec = 0
-    clock_pub.publish(clock) #Publish initial time
-    while get_ros_time(simulator) == 0:
-        rclpy.spin_once(simulator, timeout_sec=0.1)
+    publish_clock(sim, now) # Publish initial time
+    while get_ros_time(sim) == 0:
+        rclpy.spin_once(sim, timeout_sec=0.1)
 
     while doloop:
         
-        rclpy.spin_once(simulator, timeout_sec=0.01)
+        rclpy.spin_once(sim, timeout_sec=0.01)
         time.sleep(tick_time-0.01) # Wait for next tick
         
-        speedup = min(default_speedup, #speedup should be maxed if pumping/fanning
-                      (max_speedup_pump if env.params['wpump'] else default_speedup),
-                      (max_speedup_fan if env.params['fan'] else default_speedup))
+        # speedup should be maxed if pumping/fanning
+        simulator.speedup = min(simulator.default_speedup,
+                                (max_speedup_pump if env.params['wpump'] else
+                                 simulator.default_speedup),
+                                (max_speedup_fan if env.params['fan'] else
+                                 simulator.default_speedup))
 
-        now = get_ros_time(simulator)
+        now = get_ros_time(sim)
         if (pump_last_on and not env.params['wpump']):
             pump_last_on = False
             pump_last_off_time = now
         elif (env.params['wpump']):
             pump_last_on = True
-        if (now - pump_last_off_time < 10): speedup = 1
-        clock = Clock()
-        now += tick_time * speedup
-        clock.clock.sec = int(now)
-        clock.clock.nanosec = int((now - clock.clock.sec) * 1e9)
-        clock_pub.publish(clock)
+        if (now - pump_last_off_time < 10): simulator.speedup = 1
+        now += tick_time * simulator.speedup
+        publish_clock(sim, now)
 
         #DO STUFF 
         #move env forward
-        duration = env.forward_time(tick_time * speedup)
+        duration = env.forward_time(tick_time * simulator.speedup)
         #move sensor time forward
-        sensor_forward_time(duration)
+        simulator.sensor_forward_time(duration)
         
         #rerender to the viewing window
-        renderer.update_env_params(env.params, speedup, env.light_average(),
-                                   env.get_weight())
+        renderer.update_env_params(env.params, simulator.speedup,
+                                   env.light_average(), env.get_weight())
     #Stop panda window
-    if args.graphics:
+    if renderer is not None:
         renderer.userExit()
     
     
 #Init graphics
-    
-droop = 0
-lankiness = 0
-plant_health = 1
-age = 0
-if bl is not None:
-    age = bl.params['start'] 
-    droop = bl.params['leaf_droop']
-    lankiness = bl.params['lankiness']
-    plant_health = bl.params['plant_health']
+def init_graphics(sim, use_graphics):
+    droop = 0
+    lankiness = 0
+    plant_health = 1
+    age = 0
+    if bl is not None:
+        age = bl.params['start'] 
+        droop = bl.params['leaf_droop']
+        lankiness = bl.params['lankiness']
+        plant_health = bl.params['plant_health']
 
-renderer = Terrarium(args.graphics, t0, age, droop, lankiness, plant_health)
-env.params['time'] = age
-renderer.update_env_params(env.params, default_speedup, env.light_average(),
-                           env.get_weight())
+    renderer = Terrarium(use_graphics, t0, age, droop, lankiness, plant_health)
+    env.params['time'] = age
+    renderer.update_env_params(env.params, sim.default_speedup,
+                               env.light_average(), env.get_weight())
+    return renderer
 
-def camera_cb(data):
-    global renderer
-    renderer.takeAndStorePic(data.data)
-
-#Steup camera subscriber
-subscribers['camera'] = simulator.create_subscription( actuator_types['camera'],
-                                                       'camera_raw', camera_cb, 1)
 
 #Start sim loop THEN panda
 
@@ -269,6 +237,7 @@ def handler(signum, frame):
     
 signal.signal(signal.SIGTERM, handler)
 
+renderer = init_graphics(simulator, args.graphics)
 thread = threading.Thread(target=sim_loop)
 thread.start()
 
