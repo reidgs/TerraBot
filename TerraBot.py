@@ -239,7 +239,6 @@ generate_publishers()
 generate_subscribers()
 
 images = None
-image_start_time = 1735000 # Should be in baseline
 ### Camera callback - take a picture and store in the given location
 def camera_cb(data):
     global simulate, images, fixed_shutter

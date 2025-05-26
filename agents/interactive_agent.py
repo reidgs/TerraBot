@@ -44,8 +44,9 @@ class Agent(rclpy.node.Node):
     def init_ros (self):
         self.pubs = {}
         for name in actuator_names:
+            msg_name = name if name=='camera' else name+"_input"
             self.pubs[name] = self.create_publisher(actuator_types[name],
-                                                    name+"_input", 1)
+                                                    msg_name, 1)
         self.pubs['speedup'] = self.create_publisher(Int32, "speedup", 1)
             
         cbs = {'smoist': self.moisture_reaction, 'humid': self.humid_reaction,
@@ -112,6 +113,44 @@ class Agent(rclpy.node.Node):
     def cam_reaction(self, data):
         print ("Picture taken\t" + data.data)
 
+def handle_input(agent, input):
+    if input[0] == 'f':
+        print("Turning fans %s" %("on" if (input.find("on") > 0) else "off"))
+        agent.publish('fan', input.find("on") > 0)
+    elif input[0] == 'p':
+        print("Turning pump %s" %("on" if (input.find("on") > 0) else "off"))
+        agent.publish('wpump', input.find("on") > 0)
+    elif input[0] == 'l':
+        level = (0 if (input.find("off") > 0) else
+                 255 if (input.find("on") > 0) else int(input[1:]))
+        print("Adjusting light level to %d" %level)
+        agent.publish('led', level)
+    elif input[0] == 'c':
+        location = input[2:-1].strip()
+        if (len(location) == 0): raise Exception("Need to specify file")
+        print("Taking a picture, storing in %s" %location)
+        agent.publish('camera', location)
+    elif input[0] == 'r':
+        sensor, freq = input[2:-1].split(" ")
+        msg = tomsg(sensor, float(freq))
+        if msg is not None:
+            print("Updating %s to frequency %s (every %.1f seconds)"
+                  %(sensor, freq, 1/float(freq)))
+            agent.publish('freq', msg)
+    elif input[0] == 'e':
+        sensor, period = input[2:-1].split(" ")
+        msg = tomsg(sensor, 1/float(period))
+        if msg is not None:
+            print("Updating %s to period of %s seconds (frequency of %.1f)"
+                  %(sensor, period, 1/float(period)))
+            agent.publish('freq', msg)
+    elif input[0] == 's':
+        agent.pubs['speedup'].publish(Int32(data=int(input[1:])))
+    elif input[0] == 'v':
+        agent.print_sensor_values()
+    else:
+        print("Usage: q (quit)\n\tf [on|off] (fan on/off)\n\tp [on|off] (pump on/off)\n\tl [<level>|on|off] (led set to level ('on'=255; 'off'=0)\n\tr [smoist|light|level|temp|humid][weight] [<frequency>] (update sensor to frequency)\n\te [smoist|cur|light|level|temp|humid][weight] [<period>] (update sensor to every <period> seconds)\n\tc <file> (take a picture, store in 'file')\n\ts [<speedup>] (change current speedup)\n\tv (print sensor values)")
+
 parser = argparse.ArgumentParser(description = "Interactive Agent")
 parser.add_argument('-l', '--log', action = 'store_true',
                     help="print sensor values")
@@ -142,42 +181,8 @@ while rclpy.ok():
             rclpy.shutdown()
             quit()
         else:
-            if (True): #try:
-                if input[0] == 'f':
-                    print("Turning fans %s" %("on" if (input.find("on") > 0) else "off"))
-                    agent.publish('fan', input.find("on") > 0)
-                elif input[0] == 'p':
-                    print("Turning pump %s" %("on" if (input.find("on") > 0) else "off"))
-                    agent.publish('wpump', input.find("on") > 0)
-                elif input[0] == 'l':
-                    level = (0 if (input.find("off") > 0) else
-                             255 if (input.find("on") > 0) else int(input[1:]))
-                    print("Adjusting light level to %d" %level)
-                    agent.publish('led', level)
-                elif input[0] == 'c':
-                    print("Taking a picture, storing in %s" %input[2:-1])
-                    agent.publish('camera', input[2:-1])
-                elif input[0] == 'r':
-                    sensor, freq = input[2:-1].split(" ")
-                    msg = tomsg(sensor, float(freq))
-                    if msg is not None:
-                        print("Updating %s to frequency %s (every %.1f seconds)"
-                              %(sensor, freq, 1/float(freq)))
-                        agent.publish('freq', msg)
-                elif input[0] == 'e':
-                    sensor, period = input[2:-1].split(" ")
-                    msg = tomsg(sensor, 1/float(period))
-                    if msg is not None:
-                        print("Updating %s to period of %s seconds (frequency of %f)"
-                              %(sensor, period, 1/float(period)))
-                        agent.publish('freq', msg)
-                elif input[0] == 's':
-                    agent.pubs['speedup'].publish(Int32(data=int(input[1:])))
-                elif input[0] == 'v':
-                    agent.print_sensor_values()
-                else:
-                    print("Usage: q (quit)\n\tf [on|off] (fan on/off)\n\tp [on|off] (pump on/off)\n\tl [<level>|on|off] (led set to level ('on'=255; 'off'=0)\n\tr [smoist|light|level|temp|humid][weight] [<frequency>] (update sensor to frequency)\n\te [smoist|cur|light|level|temp|humid][weight] [<period>] (update sensor to every <period> seconds)\n\tc <file> (take a picture, store in 'file')\n\ts [<speedup>] (change current speedup)\n\tv (print sensor values)")
-            #except:
-            #    print("An error occurred and the action could not be executed")
+            try:
+                handle_input(agent, input)
+            except Exception as inst:
+                print("ERROR: action could not be executed: %s" %str(inst.args))
 
-    #rclpy.sleep(1)
