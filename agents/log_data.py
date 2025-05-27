@@ -1,17 +1,21 @@
 #!/usr/bin/env python
-import rospy
 
-def write_log_data_line(log_file, name, data):
+import rclpy
+from terrabot_utils import get_ros_time
+
+def write_log_data_line(log_file, name, data, node):
     if (log_file):
+        now = get_ros_time(node)
+
         if (isinstance(data, tuple)):
             log_file.write("%f '%s' %.1f %.1f\n"
-                           %(rospy.get_time(), name, data[0], data[1]))
+                           %(now, name, data[0], data[1]))
         elif (isinstance(data, int)):
-            log_file.write("%f '%s' %d\n" %(rospy.get_time(), name, data))
+            log_file.write("%f '%s' %d\n" %(now, name, data))
         elif (isinstance(data, float)):
-            log_file.write("%f '%s' %.1f\n" %(rospy.get_time(), name, data))
+            log_file.write("%f '%s' %.1f\n" %(now, name, data))
         else:
-            log_file.write("%f '%s' %s\n" %(rospy.get_time(), name, data))
+            log_file.write("%f '%s' %s\n" %(now, name, data))
 
 def process_log_data_line(line):
     sline = line.split("'")

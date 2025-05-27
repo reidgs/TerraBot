@@ -167,13 +167,13 @@ def sim_loop():
     now = t0
     if bl is not None:
         now += bl.params['start']
-    publish_clock(sim, now) # Publish initial time
-    while get_ros_time(sim) == 0:
-        rclpy.spin_once(sim, timeout_sec=0.1)
+    publish_clock(simulator, now) # Publish initial time
+    while get_ros_time(simulator) == 0:
+        rclpy.spin_once(simulator, timeout_sec=0.1)
 
     while doloop:
         
-        rclpy.spin_once(sim, timeout_sec=0.01)
+        rclpy.spin_once(simulator, timeout_sec=0.01)
         time.sleep(tick_time-0.01) # Wait for next tick
         
         # speedup should be maxed if pumping/fanning
@@ -183,7 +183,7 @@ def sim_loop():
                                 (max_speedup_fan if env.params['fan'] else
                                  simulator.default_speedup))
 
-        now = get_ros_time(sim)
+        now = get_ros_time(simulator)
         if (pump_last_on and not env.params['wpump']):
             pump_last_on = False
             pump_last_off_time = now
@@ -191,7 +191,7 @@ def sim_loop():
             pump_last_on = True
         if (now - pump_last_off_time < 10): simulator.speedup = 1
         now += tick_time * simulator.speedup
-        publish_clock(sim, now)
+        publish_clock(simulator, now)
 
         #DO STUFF 
         #move env forward
@@ -203,8 +203,8 @@ def sim_loop():
         renderer.update_env_params(env.params, simulator.speedup,
                                    env.light_average(), env.get_weight())
     #Stop panda window
-    if renderer is not None:
-        renderer.userExit()
+    #if renderer is not None:
+    #    renderer.userExit()
     
     
 #Init graphics
