@@ -163,7 +163,7 @@ def handle_stdin ():
             plt.close()
             quit()
         elif input[0] == 'v':
-            print_sensor_values()
+            time_series.print_sensor_values()
         else:
             print("Usage:  q (quit)\n\tv (sensor values)")
 
