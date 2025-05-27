@@ -12,7 +12,7 @@ from lib import tester as tester_mod
 from lib import send_email
 from lib import sim_camera as cam
 from lib.terrabot_utils import clock_time, time_since_midnight, \
-                               get_ros_time, set_use_sim_time
+                               get_ros_time, set_use_sim_time, spin_for
 from lib.baseline import Baseline
 from math import exp
 from os import makedirs
@@ -114,7 +114,7 @@ def cb_generic(name, data):
             #print("INSOLATION: %.2f %d %.2f" %(insolation, light_level, dt))
             tester_update_var('insolation', insolation)
         if (time_since_midnight(now) < time_since_midnight(last_light_reading)):
-            print("INSOLATION TODAY: %.1f" %insolation)
+            #print("INSOLATION TODAY: %.1f" %insolation)
             insolation = 0 # Reset daily
         last_light_reading = now
 
@@ -372,8 +372,6 @@ while rclpy.ok():
             print("Done testing!")
             if (tester.end_status() == 'QUIT'): terminate_gracefully()
             else: tester = None
-
-    rclpy.spin_once(terrabot, timeout_sec=tick_interval)
+    
+    spin_for(terrabot, tick_interval)
     # End while loop
-
-

@@ -183,7 +183,7 @@ def sim_loop():
                                 (max_speedup_fan if env.params['fan'] else
                                  simulator.default_speedup))
 
-        now = get_ros_time(simulator)
+        #now = get_ros_time(simulator)
         if (pump_last_on and not env.params['wpump']):
             pump_last_on = False
             pump_last_off_time = now

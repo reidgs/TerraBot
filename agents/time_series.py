@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 import limits
 from log_data import write_log_data_line, process_log_data_line
-from terrabot_utils import get_ros_time, set_use_sim_time
+from terrabot_utils import get_ros_time, set_use_sim_time, spin_for
 
 plotsG = [('Light Level', limits.scale['light_level'], False, 'g', 1),
           ('Humidity', limits.scale['humidity'], False, 'g', 3),
@@ -221,4 +221,4 @@ else:
         hours_since_start = (get_ros_time(time_series) - start_time)/3600.0
         time_series.update_plots(hours_since_start)
         handle_stdin()
-        rclpy.spin_once(time_series, timeout_sec=0.1)
+        spin_for(time_series, 0.1)

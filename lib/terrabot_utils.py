@@ -32,3 +32,9 @@ def set_use_sim_time(node, use_sim_time):
                                          rclpy.Parameter.Type.BOOL,
                                          use_sim_time)
     node.set_parameters([sim_time])
+
+def spin_for(node, interval):
+    start = now = get_ros_time(node)
+    while (now - start < interval):
+        rclpy.spin_once(node, timeout_sec=interval/10.0)
+        now = get_ros_time(node)

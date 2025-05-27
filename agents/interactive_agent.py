@@ -7,7 +7,7 @@ import argparse
 import limits
 from datetime import datetime
 sys.path.insert(0, os.getcwd()[:os.getcwd().find('TerraBot')]+'TerraBot/lib')
-from terrabot_utils import clock_time, get_ros_time, set_use_sim_time
+from terrabot_utils import clock_time, get_ros_time, set_use_sim_time, spin_for
 from freqmsg import tomsg
 from topic_def import sensor_names, sensor_types, actuator_names, actuator_types
 
@@ -169,7 +169,6 @@ while agent.sensors.temperature == 0:
 print("Connected and ready for interaction")
 
 while rclpy.ok():
-    rclpy.spin_once(agent, timeout_sec=0.1)
     agent.update_time()
 
     ### Check for input
@@ -184,4 +183,4 @@ while rclpy.ok():
                 handle_input(agent, input)
             except Exception as inst:
                 print("ERROR: action could not be executed: %s" %str(inst.args))
-
+    spin_for(agent, 1)
