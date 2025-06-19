@@ -1,55 +1,115 @@
+
 # -*- coding: utf-8 -*-
 """
-Created 10/24
+Created 6/25
 
 @author: Reid Simmons
 
-Prior outlook email stoppoed working - needs oauth2
-Tried gmail - tokens needed to be refreshed regularly; now trying Twillo
-  (which previous TerraBot team used successfully)
+Extensive use of chatGPT to figure out how to send Outlook emails with oauth2
+
+API: send_email.send(sender, recipients, subject, text, images=[], inline=False)
+     * sender: email address must match that in ../param/token_cache.json
+     * recipients: comma-separated list of email addresses
+     * subject: subject line
+     * text: can be plain text or html
+     * images: optional list of images (byte arrays, not file names)
+     * inline: whether the images are inline, or attachments; if inline, refer to
+               them in the text using, for instance, '<img src="cid:image1" />', 
+               for image1, image2, ...
 """
-import os, base64
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Attachment
+import os, base64, msal, requests
+
+TOKEN_CACHE_FILE = '../param/token_cache.json'
+CLIENT_ID = 'ff1cc03d-5766-430d-b45d-587116b60294'
+AUTHORITY = f"https://login.microsoftonline.com/common"
+SCOPES = ['User.Read', 'Mail.Send']
 
 def init():
     try:
-        credential_path = os.path.join(os.path.expanduser('~'),
-                                       '.credentials/twillo.key')
-        with open(credential_path, "r") as f:
-            api_key = f.readline()
+        cache = msal.SerializableTokenCache()
+        with open(TOKEN_CACHE_FILE, "r") as f:
+            cache.deserialize(f.read())
     except Exception as e:
-        print("Failed to find api-key:", e)
-        api_key = None
-    return api_key
-
-def add_attachments(msg, images):
-    attachments = []
-    for i, image in enumerate(images):
-        encoded_image = base64.b64encode(image).decode()
-        attachment = Attachment(file_content=encoded_image,
-                                file_type='image/jpeg',
-                                file_name='image %d' %(i+1),
-                                disposition='attachment')
-        attachments.append(attachment)
-    attachments.reverse()
-    msg.attachment = attachments
+        print("Failed to find token cache:", e)
+        return None
     
-def send(from_address, password, to_addresses, subject, text, images=[]):
+    app = msal.PublicClientApplication(
+        CLIENT_ID,
+        authority=AUTHORITY,
+        token_cache = cache,
+    )
+    accounts = app.get_accounts()
+    if accounts:
+        token_result = app.acquire_token_silent(SCOPES, account=accounts[0])
+    else:
+        print("No cached token found. Initiating device flow login...")
+        flow = app.initiate_device_flow(scopes=SCOPES)
+        if "user_code" not in flow:
+            raise ValueError("Failed to create device flow")
+
+        print(f"\nGo to {flow['verification_uri']} and enter code: {flow['user_code']}")
+        print("Waiting for authentication...\n")
+
+        token_result = app.acquire_token_by_device_flow(flow)
+
+    # === SAVE TOKEN CACHE ===
+    if cache.has_state_changed:
+        with open(TOKEN_CACHE_FILE, "w") as f:
+            f.write(cache.serialize())
+
+    #print(token_result)
+    if "access_token" in token_result:
+        return token_result["access_token"]
+    else: return None
+
+def msg_attachments(images, inline):
+    return [{"@odata.type": "#microsoft.graph.fileAttachment",
+            "name": "image%d" %(i+1),
+            "contentType": "image/jpeg",
+            "contentBytes": base64.b64encode(image).decode('utf-8'),
+            "isInline": inline,
+            "contentId": "image%d" %(i+1)
+            } for i, image in enumerate(images)]
+
+def send(from_address, to_addresses, subject, text, images=[], inline=False):
     try:
-        api_key = init()
-        if (not api_key): return False
-        to_addresses = [address.strip() for address in to_addresses.split(',')]
-        text_content = html_content = None
-        if  ('<' in text and '/>' in text): html_content = text
-        else: text_content = text
-        msg = Mail(from_email=from_address, to_emails=to_addresses,
-                   subject=subject,
-                   plain_text_content=text_content, html_content=html_content)
-        if (len(images) > 0): add_attachments(msg, images)
-        sg = SendGridAPIClient(api_key)
-        response = sg.send(msg)
+        access_token = init()
+        if (not access_token): return False
+
+        headers = { 'Authorization': f'Bearer {access_token}',
+                    'Content-Type': 'application/json'}
+        user_info = requests.get('https://graph.microsoft.com/v1.0/me', headers=headers).json()
+        token_address = user_info.get("userPrincipalName").lower()
+        if (token_address != from_address.lower()):
+            raise Exception("from address %s does not match token address %s"
+                            %(from_address, token_address))
+
+        to_addresses = [{"emailAddress": {"address": address.strip()}}
+                        for address in to_addresses.split(',')]
+        content_type = "html" if ('<' in text and '</' in text) else "text"
+        message = {
+            "message": {
+                "toRecipients": to_addresses,
+                "subject": subject,
+                "body": {"contentType": content_type, "content": text},
+                "attachments": msg_attachments(images, inline),
+            },
+        "saveToSentItems": "true"
+        }
+        response = requests.post('https://graph.microsoft.com/v1.0/me/sendMail',
+                                  headers=headers, json=message)
         return response.status_code == 202
     except Exception as e:
         print('Failed to send:', e)
         return False
+
+# Here's a simple example (please don't actually use it as is, since it will spam me)
+#'''
+images = []
+for file_name in ["../simulator.JPG", "../system_diagram.jpg"]:
+    with open(file_name, 'rb') as f: images += [f.read()]
+if send("terrabot1@outlook.com", "reidgs@hotmail.com, reids@cs.cmu.edu", 
+        "Hello", '<b>This is a test</b><p><img src="cid:image1" /><p><img src="cid:image2" />', 
+        images, inline=True):
+    print("Successfully sent!")
+#'''

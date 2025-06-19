@@ -3,11 +3,12 @@ FROM registry.hub.docker.com/library/ros:noetic
 
 # install apt-get deps
 RUN apt-get update && \
-    apt-get install -y git python3 python3-pip python-is-python3 tmux && \
-    pip install opencv-python panda3d transitions scikit-learn ortools \
-    		matplotlib pandas dill sendgrid
+    apt-get install -y git python3.8 python3-pip python-is-python3 tmux && \
+    pip install dill opencv-python panda3d transitions scikit-learn ortools \
+                matplotlib pandas msal requests && \
+    pip install --upgrade --force-reinstall numpy>=1.24 python-dateutil>=2.8.2 
 
-RUN apt-get install -y x11vnc xvfb openbox tint2 mesa-utils
+RUN apt-get install -y x11vnc xvfb openbox tint2 mesa-utils python3-tk
 EXPOSE 5900
 ENV DISPLAY=:1 XRES=1280x800x24
 

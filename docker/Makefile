@@ -1,6 +1,9 @@
 build:
 	docker build --build-arg FOOBAR="TerraBot" -t terrabot_image .
 
+rebuild:
+	docker build --no-cache --build-arg FOOBAR="TerraBot" -t terrabot_image .
+
 # Need to be able to connect to already running container (exec)
 
 run:
