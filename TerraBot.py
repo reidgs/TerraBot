@@ -152,13 +152,8 @@ parser.add_argument('-b', '--baseline', default = None)
 parser.add_argument('-i', '--interference', default = None)
 parser.add_argument('-t','--test', default = None,
         help = "test execution using given tester file")
-parser.add_argument('-e', '--email', default = None,
-        help = "email address to notify if restarting frequently")
-parser.add_argument('-p', '--password', default = None,
-        help = "email address password")
 parser.add_argument('-f', '--fixedshutter', default = None,
         help = "use fixed shutter speed")
-
 
 args = parser.parse_args()
 
@@ -167,7 +162,6 @@ log = args.log
 mode = args.mode
 tester_file = args.test
 simulate = mode == "sim"
-password = args.password
 fixed_shutter = (args.fixedshutter if args.fixedshutter == None else
                  int(args.fixedshutter))
 
