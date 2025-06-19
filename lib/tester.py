@@ -211,17 +211,31 @@ class Tester:
             for line in f.readlines():
                 line = line.split('#')[0].strip(' \n\r')
                 if (line.startswith("BASELINE")):
-                    self.baseline_file = line.split('=')[1].strip()
+                    baseline = line.split('=')[1].strip()
+                    if (self.baseline_file and self.baseline_file != baseline):
+                        print("WARNING: Baseline file already specified; ignoring %s (in %s)"
+                              %(baseline, filename))
+                    else: self.baseline_file = baseline
                 elif (line.startswith("INTERFERENCE")):
-                    self.interf_file = line.split('=')[1].strip()
+                    interference = line.split('=')[1].strip()
+                    if (self.interf_file and self.interf_file != interference):
+                        print("WARNING: Interference file already specified; ignoring %s (in %s)"
+                              %(interference, filename))
+                    else: self.interf_file = linterference
+                elif (line.startswith("INCLUDE")):
+                    include = line.split()[1].strip()
+                    print("Including monitors from", include)
+                    self.parse_file(include)
                 elif (line.startswith("QUIT") or line.startswith("STOP")):
                     if (self.end_time):
-                        print("WARNING: Quit/Stop constraint already specified; overriding")
-                    self.end_time = EndConstraint(line)
+                        print("WARNING: Quit/Stop already specified; ignoring %s (in %s)"
+                              %(line, filename))
+                    else: self.end_time = EndConstraint(line)
                 elif (line.startswith("DELAY")):
                     if (self.delay_time):
-                        print("WARNING: Delay constraint already specified; overriding")
-                    self.delay_time = DelayConstraint(line)
+                        print("WARNING: Delay already specified; ignoring %s (in %s)"
+                              %(line, filename))
+                    else: self.delay_time = DelayConstraint(line)
                 elif (line.startswith("WAIT")):
                     self.add_to_whenever(WaitConstraint(line))
                 elif (line.startswith("ENSURE")):
@@ -309,7 +323,7 @@ if __name__ == '__main__':
     if (len(sys.argv) == 2):
         tester = Tester()
         tester.parse_file(sys.argv[1])
-        #tester.display()
+        tester.display(); exit()
         now = time.time()
         time0 =  now - time_since_midnight(now)
         t = time0

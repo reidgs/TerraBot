@@ -18,7 +18,6 @@ class Sensors:
     temperature = 0
     weight = 0
     water_level = 0
-    current = 0
     energy = 0
     light_level_raw = [0,0]
     moisture_raw = [0,0]
@@ -56,7 +55,7 @@ def init_ros ():
     fan_pub = rospy.Publisher("fan_input", actuator_types['fan'],
                               latch = True, queue_size = 1)
 
-    camera_pub = rospy.Publisher("camera", actuator_types['cam'],
+    camera_pub = rospy.Publisher("camera", actuator_types['camera'],
                                  latch = True, queue_size = 1)
     speedup_pub = rospy.Publisher("speedup", Int32, latch = True, queue_size = 1)
     freq_pub = rospy.Publisher("freq_input", actuator_types['freq'],
@@ -74,8 +73,6 @@ def init_ros ():
                      humid_reaction, sensorsG)
     rospy.Subscriber("weight_output", sensor_types['weight'],
                      weight_reaction, sensorsG)
-    rospy.Subscriber("cur_output", sensor_types['cur'],
-                     power_reaction, sensorsG)
 
 def moisture_reaction(data, sensorsG):
     sensorsG.moisture = (data.data[0] + data.data[1])/2.0
@@ -106,12 +103,6 @@ def light_reaction(data, sensorsG):
 def level_reaction(data, sensorsG):
     sensorsG.water_level = data.data
     if is_logging: print("    Level: %.2f" %data.data)
-
-def power_reaction(data, sensorsG):
-    sensorsG.current = -data.data[0]
-    sensorsG.energy = -data.data[1]
-    if is_logging:
-        print("    Current: %f Energy: %f" %(sensorsG.current, sensorsG.energy))
 
 def cam_reaction(data):
     print ("picture taken\t" + data.data)
@@ -181,7 +172,7 @@ while not rospy.core.is_shutdown():
                             sensorsG.weight_raw[1]))
                     print("  Reservoir level: %.1f" %sensorsG.water_level)
                 else:
-                    print("Usage: q (quit)\n\tf [on|off] (fan on/off)\n\tp [on|off] (pump on/off)\n\tl [<level>|on|off] (led set to level ('on'=255; 'off'=0)\n\tr [smoist|cur|light|level|temp|humid][weight] [<frequency>] (update sensor to frequency)\n\te [smoist|cur|light|level|temp|humid][weight] [<period>] (update sensor to every <period> seconds)\n\tc <file> (take a picture, store in 'file')\n\ts [<speedup>] (change current speedup)\n\tv (print sensor values)")
+                    print("Usage: q (quit)\n\tf [on|off] (fan on/off)\n\tp [on|off] (pump on/off)\n\tl [<level>|on|off] (led set to level ('on'=255; 'off'=0)\n\tr [smoist|light|level|temp|humid][weight] [<frequency>] (update sensor to frequency)\n\te [smoist|cur|light|level|temp|humid][weight] [<period>] (update sensor to every <period> seconds)\n\tc <file> (take a picture, store in 'file')\n\ts [<speedup>] (change current speedup)\n\tv (print sensor values)")
             except:
                 print("An error occurred and the action could not be executed")
             
