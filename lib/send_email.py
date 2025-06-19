@@ -104,7 +104,7 @@ def send(from_address, to_addresses, subject, text, images=[], inline=False):
         return False
 
 # Here's a simple example (please don't actually use it as is, since it will spam me)
-#'''
+'''
 images = []
 for file_name in ["../simulator.JPG", "../system_diagram.jpg"]:
     with open(file_name, 'rb') as f: images += [f.read()]
@@ -112,4 +112,4 @@ if send("terrabot1@outlook.com", "reidgs@hotmail.com, reids@cs.cmu.edu",
         "Hello", '<b>This is a test</b><p><img src="cid:image1" /><p><img src="cid:image2" />', 
         images, inline=True):
     print("Successfully sent!")
-#'''
+'''
