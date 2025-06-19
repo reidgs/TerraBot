@@ -3,7 +3,7 @@ from terrabot_utils import dtime_to_seconds
 #TODO add error catching support, used_energy?
 class Baseline:
     def __init__(self, filename):
-        self.params = {'start' : 0, 'temperature' : 20, 'humidity' : 50, \
+        self.params = {'start' : 0, 'temperature' : 22, 'humidity' : 50, \
                         'smoist' : 400, 'wlevel' : 140, 'tankwater' : 0, \
                         'wpump' : False, 'fan' : False, 'led' : 0, \
                         'leaf_droop' : 0, 'lankiness' : 0, 'plant_health' : 1}
