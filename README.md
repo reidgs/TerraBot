@@ -17,7 +17,6 @@
   - [Baseline File](#baseline-file)
   - [Speeding up Time](#speeding-up-time)
 - [Additional Items](#additional-items)
-  - [Health Ping](#health-ping)
   - [Frequency](#frequency)
   - [Camera](#camera)
   - [Interference](#interference-file)
@@ -41,7 +40,7 @@ for the plants during a two week grow cycle. Each cycle will come with new chall
 
 Each greenhouse contains two temperature, humidity, light, moisture, and weight sensors, one water-level sensor, one current sensor, and one camera. For the redundant sensors, data values are contained in arrays, where index 0 contains the sensor reading of the first sensor and index 1 contains the sensor reading of the second sensor.  For the current sensor, the first index is the current, the second is the energy usage, to date.  The camera is a bit different - you send a command to take a picture and the image is saved to a given file location. 
 
-The greenhouse also has three actuators - fans, LEDs, and a water pump.  The LED's light level can be set between 0-255.  The fans and pump can be turned on (True) or off (False).  In addition, you can adjust the frequency at which a particular sensor reports data and send a "ping" message periodically to the TerraBot software, to let it know that your agent is still running.
+The greenhouse also has three actuators - fans, LEDs, and a water pump.  The LED's light level can be set between 0-255.  The fans and pump can be turned on (True) or off (False).  In addition, you can adjust the frequency at which a particular sensor reports data.
 
 | Name (topic name)            | Description                                                 | Message Type      | Range      |
 | ---------------------------- | ----------------------------------------------------------- | ----------------- | ---------- |
@@ -59,7 +58,6 @@ The greenhouse also has three actuators - fans, LEDs, and a water pump.  The LED
 | Water Pump (wpump)           | Toggle whether the water pump is on or off                  | Bool              | True-False |
 | **_Additional_**              |**_Use these to adjust the system's state_**                | **_—_**           |  **_—_**   | 
 | Frequency (freq)             | Adjust the sensing frequency of a specific sensor           | See lib/frqmsg.py |  —         |
-| Ping (ping)                  | Let the TerraBot know that your agent is still alive        | Bool              | True       |
 
 Note: The water pump pumps approximately 1cm depth of water (~.93cups) per minute.
 
@@ -232,15 +230,6 @@ There are some additional items that you may need to know about in order to comp
 
 ### Camera ###
 The camera is different from the rest of the sensors, as it is controlled directly by the Pi, and not by the Arduino. You can take a picture using the 'camera' topic; the single argument is the name of the file to store the JPEG image.  **Note that, if you are using relative path name, the path is relative to the directory where you ran TerraBot, not to the directory you ran your agent!**  **Make sure the file path includes a directory that actually exists, otherwise the image will not be saved!**
-  
-### Health Ping ###
-Because of the long lasting nature of this project, it is possible that there may be unforeseen
-errors in your code which will cause it to crash. Crashed code means no control over the system and
-certain doom for your plants! In order to avoid this outcome, we have included restart functionality.  To help handle this, the TerraBot subscribes to the "ping" message (the data, a Boolean, is ignored).
-  
-If the TerraBot runs your agent (i.e., the -a flag is provided) and has not received a ping within
-a set amount of time (default 6 minutes, either real or simulated time), it will assume your program has crashed and restart it automatically.
-After a set number of crashes (currently 5), the TerraBot will quit.  There is a command-line option to send email when this happens, so that the team and the instructors can be notified.  Don't worry about how to do this - it is not necessary for development and testing, and we will use this feature only during the grow cycles, if you request it.
 
 ### Frequency ###
 It is our intention to eventually have you manage how much energy and water you use.  Since reading the sensors takes energy, there is a way to tell the system how frequently for the Arduino will read from the sensors. The more often the sensors are read, the more accurate your data will be, but the more energy you will use as well.
@@ -344,7 +333,7 @@ Finally, you can use the function 'enabled' to determine whether a behavior has 
 ### WHENEVER ###
 The bulk of test files consist of WHENEVER constraints.  These are subtests that are activiated whenever a particular condition is met.  WHENEVER constraints consist of a trigger and a body, which is a sequence of WAIT, ENSURE, SET, and PRINT subconstraints that specify what behavior is expected of the system.
 
-The triggers for WHENEVER constraints can be a Boolean relation or a date-time. The Boolean relations can consist of numbers, sensor values, and actuator states (**light, temperature, humidity, smoist, weight, current, wlevel, led, wpump, fan, camera, ping, time, mtime**).  **time** is the clock time, in seconds; **mtime** is the number of seconds past midnight -- you can get the hour of the day using (mtime//3600).  The date-time trigger is specified in terms of the first occurrence, and every time it finishes, another 24 hours are added on to the trigger time. Examples include:
+The triggers for WHENEVER constraints can be a Boolean relation or a date-time. The Boolean relations can consist of numbers, sensor values, and actuator states (**light, temperature, humidity, smoist, weight, current, wlevel, led, wpump, fan, camera, time, mtime**).  **time** is the clock time, in seconds; **mtime** is the number of seconds past midnight -- you can get the hour of the day using (mtime//3600).  The date-time trigger is specified in terms of the first occurrence, and every time it finishes, another 24 hours are added on to the trigger time. Examples include:
 ```
 WHENEVER wpump # Every time the pump is turned on
 WHENEVER 1-00:00:00 # Every midnight
