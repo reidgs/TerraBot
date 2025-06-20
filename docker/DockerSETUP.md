@@ -36,8 +36,8 @@ For most of the assignments, you will need multiple terminals to be running.  Th
 4. You can open new terminals using `xterm &`, but to be seen you need to follow the instructions in the next section.
 
 ### Visualization ###
-The container runs lightweight versions of X and a window manager and exports the display on port 5901.  To view the display, you need to run a remote viewer.  There are several available, for instance TigerVNC for Windows ([https://tigervnc.org/](https://tigervnc.org/))
+The TerraBot container runs lightweight versions of X (a VNC server) with a window manager, exporting the display on port 5901. To view the display, you need to run a remote viewer.  There are several available options. *TigerVNC* ([https://tigervnc.org/](https://tigervnc.org/)) is available for Windows, Macs, and Linux, but other options include RealVNC, TightVNC, and Remmina (for Linux).  You will need to download and install one of the options.
 
-.  When you run `TerraBot.py` with the `-m sim -g` options, it starts up a graphical simulator that shows all the changes to the (simulated) greenhouse.  
+When you invoke the viewer, connect to `localhost:5901` - you should then be able to see any graphics that have been started in the container.  In particular, when you run `TerraBot.py` with the `-m sim -g` options, it starts up a graphical simulator that shows all the dynamic change to the (simulated) greenhouse.  Similarly, the `agents/plot_sensors.py` and `agents/time_series.py` both display graphics.  And, as mentioned above, you can start xterm terminals and they can be interacted with (e.g., editing and running code).
 
 
