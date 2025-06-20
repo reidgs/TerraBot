@@ -1,6 +1,7 @@
 # Autonomous Agents TerraBot #
 
 - [Overview](#overview)
+  - [Installation](#installation)
   - [Software Architecture](#terrabot-software-architecture)
 - [ROS Communication](#ros-communication)
 - [Understanding the System](#understanding-the-system)
@@ -62,6 +63,10 @@ The greenhouse also has three actuators - fans, LEDs, and a water pump.  The LED
 Note: The water pump pumps approximately 1cm depth of water (~.93cups) per minute.
 
 For optimal growing parameters, see TerraBot/agents/limits.py
+
+### Installation ###
+You can install the TerraBot software to run on your own computer, using Docker, or on the Raspbery Pi of the greenhouse.
+The instructions for using Docker are found [DockerSETUP.md](DockerSETUP.md); the instructions for the Raspbery Pi are in [RPISETUP.md](RPISETUP.md).  Older versions of the software used VirtualBox, and installation instructions can be found [here](VIRTUALBOX.md) for Windows and Linux and [here](M1SETUP.md) for Macs. The Docker version, however, is preferred since it is lighter weight and significantly faster than the VirtualBox (especially on Macs).
 
 ### TerraBot Software Architecture ###
 An Arduino communicates directly with the sensors and actuators, converts the raw data into clean data, and then forwards that data to a Raspberry Pi.
