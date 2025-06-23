@@ -15,7 +15,7 @@ In either case, you will produce a terrabot_image file that can then be run (see
 
 ### Run Docker ###
 The docker image includes Ubuntu, ROS, the TerraBot software, and the packages you will need to run the TerraBot and all the assignments in the course.  To run a docker container:
-* From a shell, if on Linux or Macs, invoke `run_terrabot.sh`; if on Windows, invoke `run_terrabot.bat`
+* From a shell, if on Windows, invoke `run_terrabot.bat`; if on Linux or Macs, invoke `sudo ./run_terrabot.sh` with password `TerraBot`
 * The shell scripts start a container called `terrabot_container`, exposing port 5901 (which is used for graphics visualization).  It also maps a directory on your computer to the `User` directory in the container.  By default, the directory mapped is the one in which you invoked the shell script.  However, you can change that by providing a path to the directory you want to view within the container.  For instance:
   * `run_terrabot.sh "c:\Users\rsimmons\Desktop\ROS_HW"`
   * (note: this is equivalent to cd'ing to the ROS_HW directory and invoking the script from there)
@@ -36,8 +36,8 @@ For most of the assignments, you will need multiple terminals to be running.  Th
 4. You can open new terminals using `xterm &`, but to be seen you need to follow the instructions in the next section.
 
 ### Visualization ###
-The TerraBot container runs lightweight versions of X (a VNC server) with a window manager, exporting the display on port 5901. To view the display, you need to run a remote viewer.  There are several available options. *TigerVNC* ([https://tigervnc.org/](https://tigervnc.org/)) is available for Windows, Macs, and Linux, but other options include RealVNC, TightVNC, and Remmina (for Linux).  You will need to download and install one of the options.
+The TerraBot container runs lightweight versions of X (a VNC server) with a window manager, exporting the display on port 5901. To view the display, you need to run a remote viewer.  There are several available options. TigerVNC ([https://tigervnc.org/](https://tigervnc.org/)) is available for Windows, Macs, and Linux, but other options include RealVNC, TightVNC, and Remmina (for Linux).  You will need to download and install one of the options.
 
-When you invoke the viewer, connect to `localhost:5901` - you should then be able to see any graphics that have been started in the container.  In particular, when you run `TerraBot.py` with the `-m sim -g` options, it starts up a graphical simulator that shows all the dynamic change to the (simulated) greenhouse.  Similarly, the `agents/plot_sensors.py` and `agents/time_series.py` both display graphics.  And, as mentioned above, you can start xterm terminals and they can be interacted with (e.g., editing and running code).
+When you invoke the viewer, connect to `localhost:5901` - you should then be able to see any graphics that have been started in the container.  In particular, when you run `TerraBot.py` with the `-m sim -g` options, it starts up a graphical simulator that shows all the dynamic change to the (simulated) greenhouse.  Similarly, the `agents/plot_sensors.py` and `agents/time_series.py` both display graphics.  And, as mentioned above, you can start xterm windows and they can be interacted with (e.g., editing and running code).
 
 
