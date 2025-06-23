@@ -40,4 +40,6 @@ The TerraBot container runs lightweight versions of X (a VNC server) with a wind
 
 When you invoke the viewer, connect to `localhost:5901` - you should then be able to see any graphics that have been started in the container.  In particular, when you run `TerraBot.py` with the `-m sim -g` options, it starts up a graphical simulator that shows all the dynamic change to the (simulated) greenhouse.  Similarly, the `agents/plot_sensors.py` and `agents/time_series.py` both display graphics.  And, as mentioned above, you can start xterm windows and they can be interacted with (e.g., editing and running code).
 
+**Note:** You can view remotely, from a different computer, by replacing `localhost` with the hostname of the machine that is running the docker container (e.g., `foobar.cs.cmu.edu:5901`).
+
 
