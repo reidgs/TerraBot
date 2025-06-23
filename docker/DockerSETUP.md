@@ -15,7 +15,7 @@ In either case, you will produce a terrabot_image file that can then be run (see
 
 ### Run Docker ###
 The docker image includes Ubuntu, ROS, the TerraBot software, and the packages you will need to run the TerraBot and all the assignments in the course.  To run a docker container:
-* From a shell, if on Windows, invoke `run_terrabot.bat`; if on Linux or Macs, invoke `sudo ./run_terrabot.sh` with password `TerraBot`
+* From a shell, if on Windows, invoke `run_terrabot.bat`; if on Linux or Macs, invoke `sudo ./run_terrabot.sh`, providing the password `TerraBot`, if needed.
 * The shell scripts start a container called `terrabot_container`, exposing port 5901 (which is used for graphics visualization).  It also maps a directory on your computer to the `User` directory in the container.  By default, the directory mapped is the one in which you invoked the shell script.  However, you can change that by providing a path to the directory you want to view within the container.  For instance:
   * `sudo ./run_terrabot.sh "c:\Users\rsimmons\Desktop\ROS_HW"`
   * (note: this is equivalent to cd'ing to the ROS_HW directory and invoking the script from there)
