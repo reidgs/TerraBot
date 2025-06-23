@@ -1,10 +1,10 @@
 USER_DIR ?= "."
 
 build:
-	docker build --build-arg FOOBAR="TerraBot" -t terrabot_image .
+	docker build ${REBUILD} --build-arg FOOBAR="TerraBot" -t terrabot_image .
 
 rebuild:
-	docker build --no-cache --build-arg FOOBAR="TerraBot" -t terrabot_image .
+	make build REBUILD="--no-cache"
 
 # Need to be able to connect to already running container (exec)
 
