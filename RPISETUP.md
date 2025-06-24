@@ -64,18 +64,16 @@ Do as robotanist-admin
 
 ### Installing TerraBot Software ###
 Switch user to robotanist
-* `cd Desktop; git clone https://github.com/reidgs/TerraBot` (use your git name and password)
-* `cd $HOME; ln -s Desktop/TerraBot .`
+* `git clone https://github.com/reidgs/TerraBot` (use your git name and password)
 * add the line `source /opt/ros/noetic/setup.bash` to the end of the .bashrc file
 * add the lines to bashrc (for both robotanist and robotanist-admin):
-    - `export TB_DIR=${HOME}/Desktop/TerraBot`
+    - `export TB_DIR=${HOME}/TerraBot`
     - `export PYTHONPATH=${PYTHONPATH}:${TB_DIR}:${TB_DIR}/lib:${TB_DIR}/agents`
 * `source ~/.bashrc`
   
 ### Installing Arduino ###
 Do as robotanist-admin
-* `cd Desktop; ln -s /home/robotanist/Desktop/Terrabot .`
-* `cd $HOME; ln -s Desktop/TerraBot .`
+* `ln -s /home/robotanist/Terrabot .`
 * `mkdir ~/Sketchbook/libraries; cd ~/Sketchbook/libraries`
 * `rosrun rosserial_arduino make_libraries.py .`
 * `git clone https://github.com/RobTillaart/dhtnew.git`
