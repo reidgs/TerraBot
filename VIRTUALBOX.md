@@ -40,9 +40,9 @@ In VirtualBox
     - source /opt/ros/noetic/setup.bash
 
 ### Installing TerraBot ###
-* cd Desktop; git clone https://github.com/reidgs/TerraBot (use your git name and password)
+* git clone https://github.com/reidgs/TerraBot (use your git name and password)
 * add the lines to bashrc:
-    - export TB_DIR=${HOME}/Desktop/TerraBot 
+    - export TB_DIR=${HOME}/TerraBot 
     - export PYTHONPATH=${PYTHONPATH}:${ TB_DIR}:${ TB_DIR}/lib:${ TB_DIR}:${ TB_DIR}/agents
 
 ### Create OVA ###
