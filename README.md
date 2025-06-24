@@ -12,7 +12,6 @@
   - [Agent Node](#agent-node)
     + [Interactive Agent](#interactive-agent)
 - [Simulator](#simulator)
-  - [Installation](#installation)
   - [Running the Simulator](#running-the-simulator)
   - [Graphics](#graphics)
   - [Baseline File](#baseline-file)
@@ -183,15 +182,6 @@ of your agent node.
 
 We are working to try to get the ranges of the sensors, the nominal values, and the rate of change of the sensors, to match the real world.  The values are approximate, however, so you should not assume that the real world and the simulator will behave exactly the same.
 
-### Installation ###
-The simulator and ROS require Ubuntu distributions. **We suggest installing a VirtualBox VM** on your computer so that you
-can implement your agent. **We will provide you with a virtual machine that already has installed Ubuntu, ROS, the TerraBot code, and various python packages that you will need for your assignments.**
-
-[Instructions are here](https://www.wikihow.com/Install-VirtualBox) for installing VirtualBox.
-If you want to install your own version of the system on an Ubuntu machine, see the instructions in README.virtualbox (and ignore the specific instructions related to VirtualBox).
-
-[Instructions are here](M1SETUP.md) for installing natively on M1 arm64 (Apple Silicon) devices.
-
 ### Running the Simulator ###
 To run the simulator, start TerraBot.py with the simulator mode flag (-m sim), and optionally 1) -g, if you wish to see a graphical representation of the terrarium; 2) -s <speedup>, to specify the multiplier you wish for the speed; and 3) -b <baselinefile>, a file that contains baseline (starting) values for the sensors, actuators, and the time which you would like the simulator to start at (seconds since midnight, day 1 of the simulated run).  
 
@@ -204,7 +194,7 @@ We have included an option to display a graphical representation of the TerraBot
   <img src="https://github.com/reidgs/TerraBot/blob/master/simulator.JPG">
 </p>
 
-The graphics display is enabled using the -g flag when running TerraBot. The graphics window contains a 3D model of the terrarium and the plants within, along with a text panel containing information about the current environment, e.g., whether the pump is on or off, humidity, etc. Sounds are played to represent the pump and fan. The arrow keys and WASD can be used to navigate the scene, and the viewport can be reset by pressing 'r'. The camera will take pictures directly from this scene, from the perspective of the blue camera model, as in the real terrarium. Note that the camera <i>can still be used</i> even when the -g flag is not included, and the images produced will be equivalent to those taken with the graphics on.
+The graphics display is enabled using the -g flag when running TerraBot. The graphics window contains a 3D model of the terrarium and the plants within, along with a text panel containing information about the current environment, e.g., whether the pump is on or off, humidity, etc. Sounds are played to represent the pump and fan. The arrow keys and WASD can be used to navigate the scene, and the viewport can be reset by pressing 'r'. The camera will take pictures directly from this scene, from the perspective of the blue camera model, as in the real terrarium. Note that the camera <i>can still be used</i> even when the -g flag is not included, and the images produced will be equivalent to those taken with the graphics on.  See the instructions in [docker/DockerSETUP.md](docker/DockerSETUP.md) for how to view the graphics when running the software from within Docker.
 
 ### Baseline File ###
 The simulator starts up with default values for the sensors, actuators, and clock.  You can create a 'baseline' (.bsl) text file to specify different initial values. This enables you to set up specific scenarios that you want to test for, rather than waiting for them to arise at some point in time during the simulation. 
@@ -343,11 +333,17 @@ The triggers for WHENEVER constraints can be a Boolean relation or a date-time. 
 WHENEVER wpump # Every time the pump is turned on
 WHENEVER 1-00:00:00 # Every midnight
 WHENEVER temperature < 22 and (mtime//3600) >= 6 # Every time the temperature is below 22 after 6am
-WHENVER smoist_raw[0] < 450 or smoist_raw[1] < 450 # Every time either soil moisture sensor gets below 450
+WHENEVER smoist_raw[0] < 450 or smoist_raw[1] < 450 # Every time either soil moisture sensor gets below 450
 ```
 Note that at most one instance of a given WHENEVER constraint will be active at a given time.
 
 The body of a WHENEVER constraint indicates a sequence of subconstraints that must hold for the WHENEVER constraint to be successful.  If one of the subconstraints fails to hold, then the WHENEVER constraint fails and a failure message is printed out.  If all of the subconstraints hold, then the WHENEVER constraint succeeds and a success message is printed out.  In either case, the constraint is deactivated (awaiting to be triggered again).  The subconstraints are described below, along with several examples.
+
+You can also use the WHILE condition to indicate a condition that must hold while the WHENEVER constraint is active. When the WHILE condition becomes false, the whole WHENEVER constraint ends successfully, no matter where in the list of subconstraints it is currently.  For instance:
+```
+WHENEVER enabled("LowerHumidBehavior") and humidity >= 90 WHILE enabled("LowerHumidBehavior")
+```
+activates when the LowerHumidBehavior is enabled and the humidity is high, but stays active only as long as the behavior is enabled.
 
 #### WAIT ####
 The WAIT subconstraint will wait a certain amount of time for a condition to evaluate to true. If the condition is true then this subconstraint succeeds and control is passed to the next one (if any or, if not, the whole WHENEVER constraint succeeds).  If the amount of time passes without the condition being true, then the subconstraint (and the whole WHENEVER constraint) fails.  As with other constraints, the time can be specified as a number of seconds or as a date-time:
