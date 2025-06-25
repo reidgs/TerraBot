@@ -1,5 +1,5 @@
 # Basic ROS1 download
-FROM registry.hub.docker.com/library/ros:noetic
+FROM ros:noetic
 
 # install apt-get deps
 RUN apt-get update && \
