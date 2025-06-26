@@ -1,9 +1,7 @@
-#import rospy
-import copy, os, sys
+import copy
 from datetime import datetime
 from terrabot_utils import clock_time, time_since_midnight, dtime_to_seconds
 from terrabot_utils import Agenda
-from limits import limits, optimal
 
 def parse_error(line):
     raise Exception("Unknown syntax: %s" % line)
@@ -21,7 +19,7 @@ class Constraint:
     timeout = 0
 
     def __init__(self, line): return None
-    def _str_(self): return "[Generic constraint]"
+    def __str__(self): return "[Generic constraint]"
     # Returns -1 (constraint is false), +1 (constraint is true), 0 (still TBD)
     def evaluate(self, time, vars): return 0
 
@@ -47,7 +45,7 @@ class Constraint:
             self.rel_time = int(line.split(rel_word)[1])
         elif (line.find(abs_word) > 0):
             self.abs_time = line.split(abs_word)[1].strip()
-    def parse_condition_time(self, line):
+    def parse_time_condition(self, line):
         self.parse_time(line, "FOR", "UNTIL")
         self.condition = (line if not self.has_time() else
                           line.split("FOR" if self.rel_time != None else "UNTIL")[0])
@@ -55,7 +53,7 @@ class Constraint:
 
 class WaitConstraint(Constraint):
     def __init__(self, line):
-        self.parse_condition_time(line[len("WAIT"):])
+        self.parse_time_condition(line[len("WAIT"):])
     def __str__(self):
         return "[WAIT %s %s]" % (self.condition, self.time_str("FOR", "UNTIL"))
     def evaluate(self, time, vars):
@@ -65,7 +63,7 @@ class WaitConstraint(Constraint):
 
 class EnsureConstraint(Constraint):
     def __init__(self, line):
-        self.parse_condition_time(line[len("ENSURE"):])
+        self.parse_time_condition(line[len("ENSURE"):])
     def __str__(self):
         return "[ENSURE %s %s]" %(self.condition, self.time_str("FOR", "UNTIL"))
     def evaluate(self, time, vars):
@@ -114,24 +112,41 @@ class EndConstraint(Constraint):
         return "<%s %s>" %(self.type, self.time_str("AFTER", "AT"))
     def evaluate(self, time, vars): return int(self.evaluate_time(time))
 
+class WhileConstraint(Constraint):
+    def __init__(self, line):
+        self.condition = line.strip()
+    def __str__(self):
+        return f"WHILE {self.condition}"
+    def evaluate(self, time, vars):
+        # Return True if the while condition no longer holds
+        return not self.evaluate_condition(vars)
+
 class WheneverConstraint(Constraint):
     agenda = None
     conditionP = False
     parent = None
+    end_cond = None
     def __init__(self, line):
         self.agenda = Agenda()
-        trigger = line[len("WHENEVER"):].strip()
+        trigger = self.parse_while_condition(line[len("WHENEVER"):]).strip()
         if (is_abs_time(trigger)): self.abs_time = trigger
         else: self.condition = trigger
     def __str__(self):
         str = "[WHENEVER %s" %(self.condition if self.condition != None else
                                self.abs_time)
+        if self.end_cond: str += " " + self.end_cond.__str__()
         for constraint in self.agenda.schedule:
             str = str + "\n  " + constraint.__str__()
         return str + "]"
     def brief(self):
         return "[WHENEVER %s ...]" %(self.condition if self.condition != None
                                      else self.abs_time)
+    def parse_while_condition(self, line):
+        if "WHILE" in line:
+            line, end_cond = line.split("WHILE")
+            self.end_cond = WhileConstraint(end_cond)
+        return line
+    
     def evaluate(self, time, vars):
         if (self.condition != None):
             last_eval = self.conditionP
@@ -158,6 +173,10 @@ class WheneverConstraint(Constraint):
         self.parent.conditionP = False
 
     def evaluate_agenda(self, time, vars):
+        if self.end_cond and self.end_cond.evaluate(time, vars):
+            self.agenda.schedule = [] # Force it to finish successfully
+            print("ENDED (%s): %s" %(clock_time(time), self.end_cond.__str__()))
+            return 1
         curr_constraint = self.agenda.schedule[self.agenda.index]
         res = curr_constraint.evaluate(time, vars)
         #print("Test: %s %s: %s: %d" %(curr_constraint, curr_constraint.timeout, time, res))
