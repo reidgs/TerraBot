@@ -6,7 +6,7 @@ from panda3d.core import AmbientLight, DirectionalLight, LightAttrib, PointLight
 from panda3d.core import LVector3
 from panda3d.core import TextNode
 from direct.task import Task
-from panda3d.core import loadPrcFileData 
+from panda3d.core import loadPrcFileData
 from direct.gui.OnscreenText import OnscreenText
 from panda3d.core import ClockObject
 from panda3d.core import AudioSound
@@ -30,7 +30,7 @@ class Terrarium(ShowBase):
     def __init__(self, shown, t0, initTime, leafDroop, lankiness, plant_health):
         loadPrcFileData('', 'win-size 1024 768')
         loadPrcFileData("", "window-type none")
-        
+
         ShowBase.__init__(self)
 
         if shown:
@@ -45,7 +45,7 @@ class Terrarium(ShowBase):
         #camera.setPosHpr(-20, 0, -3, -90, 12, 0) # Under
         camera.setPosHpr(-20, 0, 7, -90, -12, 0) # Normal
         #camera.setPosHpr(0, 0, 30, 0, -90, 0) #TOP
-        
+
         self.pic = False
         self.loc = None
         self.shown = shown
@@ -53,7 +53,7 @@ class Terrarium(ShowBase):
         self.minRenderRate = 0.5 # frequency, in seconds
 
         self.start_time = t0
-            
+
         atexit.register(self.userExit)
         self.BASE_TEXT = '''
         Pump: OFF
@@ -82,14 +82,14 @@ class Terrarium(ShowBase):
         #self.accept('escape', self.userExit)
         self.accept('r', self.resetCam)
 
-        self.loadModels()  
-        self.setupLights() 
-        self.setupText() 
+        self.loadModels()
+        self.setupLights()
+        self.setupText()
         self.setupText2()
         self.setupSensorCam()
         self.setTankWater(0)
         self.setBackgroundColor(.8, .8, .8, 1)
-        
+
         self.keys = {}
         for key in ['arrow_left', 'arrow_right', 'arrow_up', 'arrow_down',
                     'a', 'd', 'w', 's']:
@@ -107,7 +107,7 @@ class Terrarium(ShowBase):
         self.heading = -90.0
         self.pitch = -12.0
         self.camera.setPos(-20, 0, 7)
-        
+
         self.picNextFrame = False
 
         self.taskMgr.add(self.update, 'main loop')
@@ -123,15 +123,15 @@ class Terrarium(ShowBase):
         xsize, ysize = self.getSize()
         #TESTING purposes
         #self.accept("space", self.takeAndStorePic, ["test.png"])
-        
+
         #Create the camera's buffer : GraphicsOutput
         self.camBuffer = GraphicsEngine.makeParasite(self.graphicsEngine, host=self.win, name="camera", sort=0, x_size = xsize, y_size = ysize)
 
         self.sensorCam = self.makeCamera(self.camBuffer, camName="sensorCam")
-        
+
         self.sensorCam.reparentTo(render)
         self.sensorCam.setPos(0, 5.56, 4.17)
-        self.sensorCam.setHpr(180, -14.74, 0)
+        self.sensorCam.setHpr(180, -12.5, 0)
         self.camBuffer.setClearColorActive(True)
         self.camBuffer.setClearColor((.8, .8, .8, 1))
 
@@ -144,7 +144,7 @@ class Terrarium(ShowBase):
             text=self.BASE_TEXT, parent=base.a2dTopLeft,
             style=1, font = loader.loadFont('courier.ttf'), fg=(1, 1, 1, 1), pos=(0.06, -0.06),
             align=TextNode.ALeft, scale=.05)
-    
+
     def setupText2(self):
         self.textpanel2 = OnscreenText(
             text=self.BASE_TEXT2, parent=base.a2dTopRight,
@@ -156,56 +156,55 @@ class Terrarium(ShowBase):
         self.terrarium.reparentTo(render)
         self.terrarium.setScale(2.6)
 
-
-        self.t_rings = loader.loadModel('models/Rings.egg')
+        self.t_rings = loader.loadModel('models/Rings.bam')
         self.t_rings.reparentTo(self.terrarium)
 
-        self.t_pump = loader.loadModel('models/Pump.egg')
+        self.t_pump = loader.loadModel('models/Pump.bam')
         self.t_pump.reparentTo(self.terrarium)
 
-        self.t_table = loader.loadModel('models/Table.egg')
+        self.t_table = loader.loadModel('models/Table.bam')
         self.t_table.reparentTo(self.terrarium)
         self.t_table.setTransparency(True)
 
-        self.t_glass = loader.loadModel('models/Glass.egg')
+        self.t_glass = loader.loadModel('models/Glass.bam')
         self.t_glass.reparentTo(self.terrarium)
         self.t_glass.setTransparency(True)
         self.t_glass.setTwoSided(True)
 
-        self.t_arduino = loader.loadModel('models/Arduino.egg')
+        self.t_arduino = loader.loadModel('models/Arduino.bam')
         self.t_arduino.reparentTo(self.terrarium)
 
-        self.t_boards = loader.loadModel('models/Boards.egg')
+        self.t_boards = loader.loadModel('models/Boards.bam')
         self.t_boards.reparentTo(self.terrarium)
 
-        self.t_raspi = loader.loadModel('models/Raspi.egg')
+        self.t_raspi = loader.loadModel('models/Raspi.bam')
         self.t_raspi.reparentTo(self.terrarium)
 
-        self.t_lights = loader.loadModel('models/Lights.egg')
+        self.t_lights = loader.loadModel('models/Lights.bam')
         self.t_lights.reparentTo(self.terrarium)
         self.t_lights.setTwoSided(True)
 
-        self.t_reservoir = loader.loadModel('models/Reservoir.egg')
+        self.t_reservoir = loader.loadModel('models/Reservoir.bam')
         self.t_reservoir.reparentTo(self.terrarium)
         self.t_reservoir.setTransparency(True)
 
-        self.t_reservoirLid = loader.loadModel('models/ReservoirLid.egg')
+        self.t_reservoirLid = loader.loadModel('models/ReservoirLid.bam')
         self.t_reservoirLid.reparentTo(self.terrarium)
 
-        self.t_reservoirWater = loader.loadModel('models/ReservoirWater.egg')
+        self.t_reservoirWater = loader.loadModel('models/ReservoirWater.bam')
         self.t_reservoirWater.reparentTo(self.terrarium)
         self.t_reservoirWater.setTransparency(True)
 
-        self.t_fanon = loader.loadModel('models/Fans_on.egg')
+        self.t_fanon = loader.loadModel('models/Fans_on.bam')
         self.t_fanon.reparentTo(self.terrarium)
         self.t_fanon.hide()
 
-        self.t_fanonblades = loader.loadModel('models/Fans_on_blades.egg')
+        self.t_fanonblades = loader.loadModel('models/Fans_on_blades.bam')
         self.t_fanonblades.reparentTo(self.terrarium)
         self.t_fanonblades.hide()
         self.t_fanonblades.setTransparency(True)
-        
-        self.t_fanoff = loader.loadModel('models/Fans_off.egg')
+
+        self.t_fanoff = loader.loadModel('models/Fans_off.bam')
         self.t_fanoff.reparentTo(self.terrarium)
 
         self.t_growmat = loader.loadModel('models/Growmat')
@@ -214,7 +213,7 @@ class Terrarium(ShowBase):
         self.t_piping = loader.loadModel('models/Piping')
         self.t_piping.reparentTo(self.terrarium)
 
-        self.t_tankwater = loader.loadModel('models/Tankwater.egg')
+        self.t_tankwater = loader.loadModel('models/Tankwater.bam')
         self.t_tankwater.reparentTo(self.terrarium)
         self.t_tankwater.setTransparency(True)
 
@@ -226,31 +225,38 @@ class Terrarium(ShowBase):
 
         self.t_camera = loader.loadModel('models/Camera')
         self.t_camera.reparentTo(self.terrarium)
-        
-        self.t_colorsBase = loader.loadModel('models/ColorsBase.egg')
+
+        self.t_colorsBase = loader.loadModel('models/ColorsBase.bam')
         self.t_colorsBase.reparentTo(self.terrarium)
+        #self.t_colorsBase.setPos(0.73, 0, 0)
+        self.t_colorsBase.setPos(-0.18, 0, 0.1)
+        self.t_colorsBase.setScale(0.75, 1, 1)
         self.t_colorsBase.setColor(.93, .93, .93, 1)
-        
-        self.t_colorsRed = loader.loadModel('models/ColorsRed.egg')
+
+        self.t_colorsRed = loader.loadModel('models/ColorSquare.bam')
         self.t_colorsRed.reparentTo(self.terrarium)
+        self.t_colorsRed.setPos(0.7-0.91, 0, 0.1)
         self.t_colorsRed.setColor(1, 0, 0, 1)
-        
-        self.t_colorsGreen = loader.loadModel('models/ColorsGreen.egg')
+
+        self.t_colorsGreen = loader.loadModel('models/ColorSquare.bam')
         self.t_colorsGreen.reparentTo(self.terrarium)
+        self.t_colorsGreen.setPos(0.43-0.91, 0, 0.1)
         self.t_colorsGreen.setColor(0, 1, 0, 1)
-        
-        self.t_colorsBlue = loader.loadModel('models/ColorsBlue.egg')
+
+        self.t_colorsBlue = loader.loadModel('models/ColorSquare.bam')
         self.t_colorsBlue.reparentTo(self.terrarium)
+        self.t_colorsBlue.setPos(0.17-0.91, 0, 0.1)
         self.t_colorsBlue.setColor(0, 0, 1, 1)
-        
-        self.t_colorsWhite = loader.loadModel('models/ColorsWhite.egg')
-        self.t_colorsWhite.reparentTo(self.terrarium)
-        self.t_colorsWhite.setColor(.88, .88, .88, 1)
-        
+
         self.plants = []
         self.plantsNode = render.attachNewNode('plants')
         self.plantsNode.reparentTo(self.terrarium)
-        
+
+        self.t_measureStick = loader.loadModel('models/MeasureStick.bam')
+        self.t_measureStick.setScale(0.48)
+        self.t_measureStick.setPos(-0.01, .8, 1.625)
+        self.t_measureStick.reparentTo(self.terrarium)
+
         for i, x in enumerate((-.56, .56)):
             for j, y in enumerate((-1.03, -.7, -.355, -.01, .34, .683, 1.03)):
                 node = render.attachNewNode('lettuce' + str(i) + str(j))
@@ -258,7 +264,7 @@ class Terrarium(ShowBase):
                 node.setPos(x, y, 1.14)
                 node.setScale(.3)
                 self.plants += [plant.Lettuce(node, self.lastTime, self.droop, self.lankiness, self.plant_health, self)]
-                
+
         for i, x in enumerate((-.185, .185)):
             for j, y in enumerate((-1.03, -.7, -.355, -.01, .34, .683, 1.03)):
                 node = render.attachNewNode('radish' + str(i) + str(j))
@@ -266,7 +272,7 @@ class Terrarium(ShowBase):
                 node.setPos(x, y, 1.14)
                 node.setScale(.2)
                 self.plants += [plant.Radish(node, self.lastTime, self.droop, self.lankiness, self.plant_health, self)]
-                
+
         self.reRenderPlants()
 
 
@@ -290,18 +296,18 @@ class Terrarium(ShowBase):
 
 
     def spinCameraTask(self, task):
-        
+
         angleDegrees = task.time * 10.0
         angleRadians = angleDegrees * (pi / 180.0)
         self.camera.setPos(20 * sin(angleRadians), -20 * cos(angleRadians), 7)
         self.camera.setHpr(angleDegrees, -12, 0)
         '''
         temp = int(.5 * task.time)
-        self.setFans(temp % 2 == 1) 
+        self.setFans(temp % 2 == 1)
         '''
         return Task.cont
 
-    
+
     def setWater(self, volume):
         if(volume < .5):
             self.t_reservoirWater.hide()
@@ -313,7 +319,7 @@ class Terrarium(ShowBase):
             self.t_tankwater.hide()
             return
         self.t_tankwater.setScale(1, 1, volume / (170 * 18))
-    
+
 
     def setFans(self, on):
         if on:
@@ -362,7 +368,7 @@ class Terrarium(ShowBase):
             self.pumponSound.play()
         if not pump and self.pumponSound.status() == AudioSound.PLAYING:
             self.pumponSound.stop()
-            
+
     def reRenderPlants(self):
         # I think panda was occasionally dying b/c it was rendering too often
         # (it actually was a multi-threading issue, but still reasonable to
@@ -374,12 +380,12 @@ class Terrarium(ShowBase):
         for testPlant in self.plants:
             baseStem = testPlant.stemModel
             baseStem.reparentTo(testPlant.node)
-            stemFrac = testPlant.stem_height 
+            stemFrac = testPlant.stem_height
             baseStem.setScale(.5 + .5 * stemFrac, .5 + .5 * stemFrac, stemFrac )
             testPlant.node.setHpr(testPlant.rotation)
             sr, sg, sb = testPlant.stemColor
             lr, lg, lb = testPlant.leafColor
-            baseStem.setColor(sr, sg, sb, 1) 
+            baseStem.setColor(sr, sg, sb, 1)
             #to model Leaf leafToModel on plant testPlant
             for leafToModel in testPlant.leaves:
                 leaf = leafToModel.leafModel
@@ -397,21 +403,21 @@ class Terrarium(ShowBase):
                 stem = leafToModel.stemModel
                 stem.reparentTo(testPlant.node)
                 stem.setPos(0, 0, stemFrac)
-                leafStemLength= leafToModel.start_position.length() 
+                leafStemLength= leafToModel.start_position.length()
                 leafStemFrac = leafStemLength / plant.max_leafstem_length
                 stem.setScale(.8 * leafStemFrac, .8 * leafStemFrac, leafStemLength)
-                
+
                 #Annoying to have to get this, but here we go
                 bottom = math.sqrt(leafToModel.start_position.x ** 2 + leafToModel.start_position.y ** 2)
                 angle = 90 if bottom == 0 else 180 / math.pi * math.atan(leafToModel.start_position.z / bottom)
-                
+
                 stem.setHpr(rotation, 0, 90 - angle)
 
                 #testPlant.node.setColor(r, g, b, 1)
                 rm, gm, bm = leafToModel.colorRands
                 #stem.setColor(.8 * sr + .2 * lr, .8 * sg + .2 * lg / 2, .8 * sb + .2 * lb / 2, 1)
                 stem.setColor(.5 * sr + .5 * lr + rm, .5 * sg + .5 * lg + gm, .5 * sb + .5 * lb, 1 + bm)
-                
+
                 leaf.setColor(lr + rm, lg + gm, lb + bm, 1)
 
 
@@ -422,15 +428,15 @@ class Terrarium(ShowBase):
         self.setTankWater(params['tankwater']) #Tankwater update
         self.setSoilColor(params['soilwater'])
         self.setAmbient(params['time'])
-        
+
         for plant in self.plants:
             plant.grow(params, params['time'] - self.lastTime, light)
         self.lastTime = params['time']
-        
+
         if not self.shown: return
-        
+
         #self.reRenderPlants() # Do this only within the render loop!
-        
+
         #Stats panel :
         healths = [p.health for p in self.plants]
         avgH = sum(healths)/len(healths)
@@ -441,7 +447,7 @@ class Terrarium(ShowBase):
         Pump: {}
         Fans: {}
         LEDs: {}
-        
+
         Plant Health: {}%
         '''.format('ON' if params['wpump'] else 'off', \
             'ON' if params['fan'] else 'off', \
@@ -483,18 +489,18 @@ class Terrarium(ShowBase):
             self.camera.setHpr(self.heading, self.pitch, 0)
 
             self.reRenderPlants()
-            
+
         if(self.picNextFrame):
             if self.loc == None:
                 print("No location specified")
             else:
                 self.camBuffer.saveScreenshot(Filename(self.loc))
             self.picNextFrame = False
-        
+
         if self.pic:
             if not self.shown:
                 self.reRenderPlants()
             self.pic = False
             self.picNextFrame = True
         return task.cont
-    
+
