@@ -12,19 +12,20 @@ class ArduinoBridge(rclpy.node.Node):
     def __init__(self):
         super().__init__('arduino_bridge')
         self.init_ros()
+        self.logger = self.get_logger()
         try:
             self.ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
             time.sleep(1)
             self.ser.reset_input_buffer()
-            self.get_logger().info('Serial port opened successfully.')
+            self.logger.info('Serial port opened successfully.')
         except serial.SerialException as e:
-            self.get_logger().error(f'Failed to open serial port: {e}')
+            self.logger.error(f'Failed to open serial port: {e}')
             return
 
         self.timer = self.create_timer(0.1, self.process_serial)
 
     def serial_write(self, msg):
-        print("serial_write:", msg)
+        self.logger.info(f'serial_write: {msg[:-1]}')
         self.ser.write(msg.encode())
 
     def led_cb(self, data):
@@ -37,7 +38,7 @@ class ArduinoBridge(rclpy.node.Node):
         self.serial_write('wpump|%s\n' %(1 if data.data else 0))
 
     def freq_cb(self, data):
-        print("freq_cb:", "NYI")
+        self.logger.error('freq_cb: NYI')
 
     def init_ros (self):
         self.cbs = {"led": self.led_cb, "fan": self.fan_cb,
@@ -60,7 +61,7 @@ class ArduinoBridge(rclpy.node.Node):
                 try:
                     line = self.ser.readline().decode(errors='ignore').strip()
                 except Exception as inst:
-                    print("ERROR: readline failed")
+                    self.logger.error('ERROR: readline failed')
                     self.ser.reset_input_buffer()
                     return
                 if line[0] == '#': return
@@ -73,17 +74,20 @@ class ArduinoBridge(rclpy.node.Node):
                 if len(data) == 1: data = data[0]
                 msg = stype(data=data)
                 self.pubs[name].publish(msg)
-                #self.get_logger().info(f'Published: {msg.data}')
+                #self.logger.info(f'Published: {msg.data}')
             except Exception as inst:
-                print("ERROR: bad input: %s (%s)" %(line, str(inst.args)))
+                self.logger.error(f'ERROR: bad input: {line} ({inst.args})')
                 self.ser.reset_input_buffer()
 
 def main(args=None):
     rclpy.init(args=args)
     node = ArduinoBridge()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+        node.destroy_node()
+        rclpy.shutdown()
+    except Exception as e:
+        pass # Ignore errors from TerraBot termination
 
 if __name__ == "__main__":
     main()

@@ -180,10 +180,10 @@ num_restarts = 0
 max_restarts = 5
 
 def terminate (process, log_file):
-    if (log_file != None): log_file.close()
     if (process.poll() == None):
         process.terminate()
         process.wait()
+    if (log_file != None): log_file.close()
 
 """
 def terminate_core():
@@ -208,6 +208,7 @@ def terminate_serial():
         publishers['led'].publish(Int32(data=0))
         publishers['wpump'].publish(Bool(data=False))
         publishers['fan'].publish(Bool(data=False))
+        time.sleep(1) # Give arduino bridge a chance to process
 
         print("Terminating serial")
         terminate(serial_p, serial_log)
@@ -225,12 +226,6 @@ if log:
 
 ### Start up ros
 rclpy.init()
-
-### Open log file for roscore
-#core_log = open(op.join(log_dir, "roscore.log"), "a+")
-
-### Start up roscore, redirecting output to logging files
-#core_p = sp.Popen("roscore", stdout = core_log, stderr = core_log)
 
 terrabot = TerraBot()
 set_use_sim_time(terrabot, simulate)
@@ -282,7 +277,7 @@ serial_log = None
 ### Initiates the Simulator and redirects output
 def start_simulator():
     global sim_p, sim_log, args
-    if (sim_log == None): sim_log = open(op.join(log_dir, "simulator.log"), "a+")
+    if (sim_log == None): sim_log = open(op.join(log_dir, "simulator.log"), "w")
     fard_args = ["--speedup", str(args.speedup)]
     if args.graphics: fard_args += ["--graphics"]
     if args.baseline: 
@@ -298,11 +293,14 @@ def start_simulator():
     time.sleep(1) # chance to get started
 
 ### Initiates the Arduino and redirects output
+### Since ROS2 does not (easily) support serial IO, use the arduino_bridge
 def start_serial():
     global serial_p, serial_log
-    if (serial_log == None): serial_log = open(op.join(log_dir, "rosserial.log"), "a+")
-    serial_p = sp.Popen(["ros2", "run", "rosserial_arduino",
-                         "serial_node.py", "/dev/ttyACM0"],
+    if (serial_log == None):
+        serial_log = open(op.join(log_dir, "arduino_bridge.log"), "w")
+    bridge_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "lib", "ArduinoCode", "arduino_bridge.py")
+    serial_p = sp.Popen(["python", bridge_file],
                         stdout = serial_log, stderr = serial_log)
     time.sleep(1) # chance to get started
     print("started serial")
