@@ -1,18 +1,18 @@
 # Basic ROS1 download
-FROM ros:jazzy
+FROM ros:humble
 
 # install apt-get deps
 RUN apt-get update && \
     apt-get install -y git python3-pip python-is-python3 tmux && \
     apt-get install -y x11vnc xvfb openbox tint2 mesa-utils python3-tk
-RUN pip install --break-system-packages dill opencv-python panda3d transitions scikit-learn ortools \
+RUN pip install dill opencv-python panda3d transitions scikit-learn ortools \
                 matplotlib pandas sendgrid
 
 EXPOSE 5900
 ENV DISPLAY=:1 XRES=1280x800x24
 
 # install ros apt-get deps
-RUN apt-get install -y ros-jazzy-ros-base && apt-get clean && \
+RUN apt-get install -y ros-humble-ros-base && apt-get clean && \
     rosdep update
 
 # Create user id
@@ -28,7 +28,7 @@ WORKDIR /home/robotanist
 # install TerraBot software
 RUN cd /home/robotanist && \
     git clone --branch ros2 https://github.com/reidgs/TerraBot && \
-    echo 'source /opt/ros/jazzy/setup.bash' >> ~/.bashrc && \
+    echo 'source /opt/ros/humble/setup.bash' >> ~/.bashrc && \
     echo 'export TB_DIR=${HOME}/TerraBot' >> ~/.bashrc && \
     echo 'export PYTHONPATH=${PYTHONPATH}:${TB_DIR}:${TB_DIR}/lib:${TB_DIR}:${TB_DIR}/agents' >> ~/.bashrc
 
