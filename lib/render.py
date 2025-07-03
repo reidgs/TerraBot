@@ -207,23 +207,23 @@ class Terrarium(ShowBase):
         self.t_fanoff = loader.loadModel('models/Fans_off.bam')
         self.t_fanoff.reparentTo(self.terrarium)
 
-        self.t_growmat = loader.loadModel('models/Growmat')
+        self.t_growmat = loader.loadModel('models/Growmat.bam')
         self.t_growmat.reparentTo(self.terrarium)
 
-        self.t_piping = loader.loadModel('models/Piping')
+        self.t_piping = loader.loadModel('models/Piping.bam')
         self.t_piping.reparentTo(self.terrarium)
 
         self.t_tankwater = loader.loadModel('models/Tankwater.bam')
         self.t_tankwater.reparentTo(self.terrarium)
         self.t_tankwater.setTransparency(True)
 
-        self.t_sensors1 = loader.loadModel('models/Sensors1')
+        self.t_sensors1 = loader.loadModel('models/Sensors1.bam')
         self.t_sensors1.reparentTo(self.terrarium)
 
-        self.t_sensors2 = loader.loadModel('models/Sensors2')
+        self.t_sensors2 = loader.loadModel('models/Sensors2.bam')
         self.t_sensors2.reparentTo(self.terrarium)
 
-        self.t_camera = loader.loadModel('models/Camera')
+        self.t_camera = loader.loadModel('models/Camera.bam')
         self.t_camera.reparentTo(self.terrarium)
 
         self.t_colorsBase = loader.loadModel('models/ColorsBase.bam')
