@@ -1,3 +1,8 @@
+/*
+   rosserial went away with ros2, and couldn't get microRos to work,
+   so doing this with simple serial communication and a ROS2 bridge
+*/
+
 //#define USE_DHT20
 //#define USE_TCA
 #define USE_BOTH
@@ -6,14 +11,6 @@
  * Automated Systems TerraBot Arduino File
  */
 
-#include <ros.h>
-#include <std_msgs/Int32.h>
-#include <std_msgs/Float32.h>
-#include <std_msgs/Empty.h>
-#include <std_msgs/Bool.h>
-#include <std_msgs/Float32MultiArray.h>
-#include <std_msgs/Int32MultiArray.h>
-#include <std_msgs/String.h>
 #include <string.h>
 #ifdef USE_DHT20
   #include <Wire.h>
@@ -40,8 +37,6 @@ byte temperature2 = 0;
 byte humidity2 = 0;
 #endif
 int lvl = 0;
-
-ros::NodeHandle  nh;
 
 // Sensor Pins
 int light_pin1 = A4;
@@ -114,49 +109,51 @@ long cur_sum = 0;
 long cur_count = 0;
 #endif
 
-#define SEN_CMP(sensor) (strncmp(cmd_msg.data, sensor, slen) == 0)
+#define SEN_CMP(cmd, sensor) (strncmp(cmd.c_str(), sensor, strlen(sensor)) == 0)
+
+// These macros make it easier to string lines of prints/println
+// Do it so don't have to generate a lot of String instances
+#define S_PR(val) Serial.print(val)
+#define S_PRLN(val) Serial.println(val); delay(100) // try to keep buffer small
 
 //Frequency Adjustment
-void freq_change( const std_msgs::String& cmd_msg){
-  const char *sep = strchr(cmd_msg.data, '|');
-  int slen = sep-cmd_msg.data;
-  double freq = atof(sep+1);
+void freq_change( const String &cmd_msg){
+  int sep = cmd_msg.indexOf('|');
+  String name = cmd_msg.substring(0, sep);
+  float freq = cmd_msg.substring(sep+1).toFloat();
   unsigned long period = (freq == 0 ? 99999999 : round(1000.0/freq));
-  Timing *timingPtr = (SEN_CMP("light")  ? &light_timing :
-		       SEN_CMP("temp")   ? &temp_timing :
-		       SEN_CMP("humid")  ? &humidity_timing :
-		       SEN_CMP("level")  ? &wlevel_timing :
-		       SEN_CMP("smoist") ? &smoist_timing :
-		       SEN_CMP("weight") ? &weight_timing :
-		       SEN_CMP("cur")    ? &current_timing : NULL);
-  if (timingPtr == NULL) printf("Oops\n");
-  else {
+  Timing *timingPtr = (SEN_CMP(name, "light")  ? &light_timing :
+		       SEN_CMP(name, "temp")   ? &temp_timing :
+		       SEN_CMP(name, "humid")  ? &humidity_timing :
+		       SEN_CMP(name, "level")  ? &wlevel_timing :
+		       SEN_CMP(name, "smoist") ? &smoist_timing :
+		       SEN_CMP(name, "weight") ? &weight_timing :
+		       SEN_CMP(name, "cur")    ? &current_timing : NULL);
+  if (timingPtr == NULL) {
+    S_PR("# freq_change: Oops: "); S_PRLN(cmd_msg);
+  } else {
+    S_PR("# freq_change: "); S_PR(name);  S_PR(" "); S_PRLN(period);
     timingPtr->period = period;
     timingPtr->next = time_now + period;
   }
 }
 
-ros::Subscriber<std_msgs::String> freq_sub("freq_raw", &freq_change);
-
 // Functions for Actuators
-void led_activate( const std_msgs::Int32& cmd_msg){
-  analogWrite(led_pin, cmd_msg.data);//toggle led
+void led_activate( const String& cmd_msg){
+  S_PR("# Setting led to : "); S_PRLN(cmd_msg.toInt());
+  analogWrite(led_pin, cmd_msg.toInt());//toggle led
 }
 
-void wpump_activate(const std_msgs::Bool& cmd_msg){
-//  analogWrite(wpump_pin, cmd_msg.data ? 75 : 0);
-  analogWrite(wpump_pin, cmd_msg.data ? 90 : 0);
+void wpump_activate(const String& cmd_msg){
+  S_PR("# Setting pump to : ");  S_PRLN(cmd_msg.toInt() ? 90 : 0);
+//  analogWrite(wpump_pin, cmd_msg ? 75 : 0);
+  analogWrite(wpump_pin, cmd_msg.toInt() ? 90 : 0);
 }
 
-void fan_activate(const std_msgs::Bool& cmd_msg){
-  analogWrite(fan_pin, cmd_msg.data ? 255 : 0);
+void fan_activate(const String& cmd_msg){
+  S_PR("# Setting fan to : "); S_PRLN(cmd_msg.toInt() ? 255 : 0);
+  analogWrite(fan_pin, cmd_msg.toInt() ? 255 : 0);
 }
-
-// Actuator subscriptions
-ros::Subscriber<std_msgs::Int32> led_sub("led_raw", &led_activate);
-ros::Subscriber<std_msgs::Bool> wpump_sub("wpump_raw", &wpump_activate);
-ros::Subscriber<std_msgs::Bool> fan_sub("fan_raw", &fan_activate);
-
 
 // Sensor helpers
 float get_level() {
@@ -170,33 +167,14 @@ float get_level() {
   return duration / 5.82;
 }
 
-// Sensor publishings
-
-std_msgs::Int32MultiArray humid_msg;
-ros::Publisher humid_pub("humid_raw", &humid_msg);
-
-std_msgs::Int32MultiArray temp_msg;
-ros::Publisher temp_pub("temp_raw", &temp_msg);
-
-std_msgs::Int32MultiArray light_msg;
-ros::Publisher light_pub("light_raw", &light_msg);
-
-std_msgs::Float32 level_msg;
-ros::Publisher level_pub("level_raw", &level_msg);
-
-#ifdef USE_CURRENT
-std_msgs::Float32MultiArray cur_msg;
-ros::Publisher cur_pub("cur_raw", &cur_msg);
-#endif
-
-std_msgs::Int32MultiArray smoist_msg;
-ros::Publisher smoist_pub("smoist_raw", &smoist_msg);
-
-std_msgs::Float32MultiArray weight_msg;
-ros::Publisher weight_pub("weight_raw", &weight_msg);
-
 // Code which is run on the Arduino
 void setup(){
+  Serial.begin(115200);
+  while (!Serial) {
+    ;
+  }
+  S_PRLN("# Comm started");
+  return;
   pinMode(led_pin, OUTPUT);
   pinMode(wpump_pin, OUTPUT);
   pinMode(fan_pin, OUTPUT);
@@ -226,29 +204,48 @@ void setup(){
   weight2.begin(weight_dout_pin2, weight_sck_pin2);
   weight2.set_scale(weight_scale2);
   weight2.set_offset(weight_offset2);
-
-  nh.initNode();
-  nh.subscribe(freq_sub);
-
-  nh.subscribe(led_sub);
-  nh.subscribe(wpump_sub);
-  nh.subscribe(fan_sub);
-
-  nh.advertise(temp_pub);
-  nh.advertise(humid_pub);
-  nh.advertise(light_pub);
-  nh.advertise(level_pub);
-  nh.advertise(smoist_pub);
-  nh.advertise(weight_pub);
-#ifdef USE_CURRENT
-  nh.advertise(cur_pub);
-#endif
 }
 
 float to_amp(int analog) {
   return (float(analog) - 512) * .0491;
 }
+
+void actuate(const String &cmd, const String &data) {
+  if (cmd == "led") {
+    led_activate(data);
+  } else if (cmd == "wpump") {
+    wpump_activate(data);
+  } else if (cmd == "fan") {
+    fan_activate(data);
+  } else if (cmd == "freq") {
+    freq_change(data);
+  } else {
+    S_PR("# Unknown command received:"); S_PRLN(cmd);
+  }
+}
+
+void publish1(const String &sensor, long int data) {
+  S_PR(sensor); S_PR("|"); S_PRLN(data);
+}
+
+void publish2(const String &sensor, long int data_array[2]) {
+  S_PR(sensor); S_PR("|"); S_PR(data_array[0]); S_PR(" "); S_PRLN(data_array[1]);
+}
+
+void publish2f(const String &sensor, float data_array[2]) {
+  S_PR(sensor); S_PR("|"); S_PR(data_array[0]); S_PR(" "); S_PRLN(data_array[1]);
+}
+
 void loop(){
+  if (Serial.available() > 0) {
+    String msg = Serial.readStringUntil('\n');
+    int sep = msg.indexOf('|');
+    String cmd = msg.substring(0, sep);
+    String data = msg.substring(sep+1);
+    //S_PR("# Received: "); S_PR(cmd); S_PR(" "); S_PRLN(data);
+    actuate(cmd, data);
+  }
+
   // Keep track of the amount of light
   time_now = millis();
   if (light_timing.next - time_now < 1000) {
@@ -305,36 +302,30 @@ void loop(){
       temp_timing.next = time_now + temp_timing.period;
 
       // Get Temperature
-      temp_msg.data_length = 2;
       long int t_array[2];
       t_array[0] = temperature1;
       t_array[1] = temperature2;
-      temp_msg.data = t_array;
-      temp_pub.publish(&temp_msg);
+      publish2("temp", t_array);
     }
 
   if(time_now >= humidity_timing.next){
       humidity_timing.next = time_now + humidity_timing.period;
 
       // Get Humidity
-      humid_msg.data_length = 2;
       long int h_array[2];
       h_array[0] = humidity1;
       h_array[1] = humidity2;
-      humid_msg.data = h_array;
-      humid_pub.publish(&humid_msg);
+      publish2("humid", h_array);
   }
 
   if(time_now >= light_timing.next){
       light_timing.next = time_now + light_timing.period;
 
       // Get light
-      light_msg.data_length = 2;
       long int l_array[2];
       l_array[0] = light_sum1 / light_count;
       l_array[1] = light_sum2 / light_count;
-      light_msg.data = l_array;
-      light_pub.publish(&light_msg);
+      publish2("light", l_array);
 
       // Reset light values
       light_sum1 = 0;
@@ -346,33 +337,29 @@ void loop(){
       wlevel_timing.next = time_now + wlevel_timing.period;
 
       // Get the level (complicated enough for own function)
-      level_msg.data = get_level();
       // Returns the distance to the water; we want the height of the water.
       // Experimentally, a value of ~180 indicates an empty reservoir
-      level_msg.data = 180 - level_msg.data;
-      level_pub.publish(&level_msg);
+      int level = 180 - get_level();
+      publish1("level", level);
   }
 
   if(time_now >= smoist_timing.next){
       smoist_timing.next = time_now + smoist_timing.period;
 
       // Get the soil moisture
-      smoist_msg.data_length = 2;
       long int s_array[2];
       s_array[0] = analogRead(smoist_pin1);
       s_array[1] = analogRead(smoist_pin2);
       // Invert the reading, so reading increases as moisture increases
       s_array[0] = 1023 - s_array[0];
       s_array[1] = 1023 - s_array[1];
-      smoist_msg.data = s_array;
-      smoist_pub.publish(&smoist_msg);
+      publish2("smoist", s_array);
   }
 
   if(time_now >= weight_timing.next){
       weight_timing.next = time_now + weight_timing.period;
 
       // Get the weight
-      weight_msg.data_length = 2;
       static float w_array[2] = {0,0};
       // The HX711 package sets parameters globally, so rather than
       //   updating the package, need to set parameters for each sensor
@@ -384,8 +371,7 @@ void loop(){
       weight2.set_scale(weight_scale2);
       weight2.set_offset(weight_offset2);
       if (weight2.is_ready()) w_array[1] = weight2.get_units(1);
-      weight_msg.data = w_array;
-      weight_pub.publish(&weight_msg);
+      publish2f("weight", w_array);
   }
 
 #ifdef USE_CURRENT
@@ -397,13 +383,11 @@ void loop(){
       float c_array[2];
       c_array[0] = to_amp(analogRead(cur_pin));
       c_array[1] = to_amp(cur_sum / cur_count);
-      cur_msg.data = c_array;
-      cur_pub.publish(&cur_msg);
+      publish2("cur", c_array);
       
       // Reset current values
       cur_sum = 0;
       cur_count = 0;
   }
 #endif
-  nh.spinOnce();
 }
