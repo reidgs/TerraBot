@@ -17,6 +17,7 @@
 * `sudo usermod -a -G dialout,video,audio robotanist`
 * `sudo usermod -a -G dialout,video,audio,robotanist robotanist-admin`
 * `sudo chsh -s /bin/bash robotanist`
+* You have to logout and back in, or reboot, for the usermod changes to take effect
 
 ### Creating Swap File ###
 Do as robotanist-admin;
@@ -43,7 +44,6 @@ Do as robotanist-admin
 * `sudo systemctl start ssh`
 * Make sure the /etc/ssh/sshd_config has `PasswordAuthentication yes`
 
-
 <!--- if you are finding that you are running into errors, try the following:
 * ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key  
 * ssh-keygen -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key  
@@ -57,21 +57,8 @@ Do as robotanist-admin
 * `export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')`
 * `curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo $VERSION_CODENAME)_all.deb"`
 * `sudo dpkg -i /tmp/ros2-apt-source.deb`
-* `sudo apt update`
-* `sudo apt install ros-humble-ros-base`
-* `sudo apt install ros-humble-micro-ros-agent`
-  - if above package not found, need to compile from scratch
-  - `cd /opt/ros/humble && mkdir -p microROS/src && chown -R $USER microROS`
-  - `cd microROS/src && git clone -b humble https://github.com/micro-ROS/micro-ROS-Agent.git`
-  - `cd .. && sudo apt update`
-  - `sudo apt install python3-colcon-common-extensions`
-  - `source /opt/ros/humble/setup.bash`
-  - `sudo apt install python3-rosdep2`
-  - `rosdep update && rosdep install --from-path src --ignore-src -y`
-  - `colcon build`
 * add these lines to the end of the .bashrc file (for both robotanist and robotanist-admin, using `sudo xemacs`):
     - `source /opt/ros/humble/setup.bash`
-    - `source /opt/ros/humble/micro-ROS/install/setup.bash`
     - `export TB_DIR=${HOME}/TerraBot`
     - `export PYTHONPATH=${PYTHONPATH}:${TB_DIR}:${TB_DIR}/lib:${TB_DIR}/agents`
 
@@ -82,8 +69,9 @@ Switch user to robotanist
 ### Installing Arduino ###
 Do as robotanist-admin
 * `ln -s /home/robotanist/Terrabot .`
-* `mkdir ~/Sketchbook/libraries; cd ~/Sketchbook/libraries`
-* `rosrun rosserial_arduino make_libraries.py .`
+* `sudo apt install build-essential arduino arduino-mk python3-serial`
+* `sudo chmod a+wrx /dev/ttyACM0`
+* `mkdir -p ~/Sketchbook/libraries; cd ~/Sketchbook/libraries`
 * `git clone https://github.com/RobTillaart/dhtnew.git`
 * `git clone https://github.com/RobTillaart/HX711.git`
 * `cd ~/TerraBot/lib/ArduinoCode`
@@ -92,7 +80,7 @@ Do as robotanist-admin
 <!--
 ### Installing ortools ###
 Do as robotanist-admin
-<!-- * download cmake-3.2.6 from cmake.org and make it -->
+* download cmake-3.2.6 from cmake.org and make it
 * `python -m pip install numpy==1.21`
 * `python -m pip install ortools`
 -->
