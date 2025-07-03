@@ -36,8 +36,8 @@ class Leaf:
         self.current_leaf_growth = 0
         self.current_stem_growth = 0
         
-        self.stemModel = showBase.loader.loadModel("plantmodels/ThinStem.bam")
-        self.leafModel = showBase.loader.loadModel("plantmodels/" + ("Baby" if baby else "") + "Leaf.bam")
+        self.stemModel = showBase.loader.loadModel("models/plants/ThinStem.bam")
+        self.leafModel = showBase.loader.loadModel("models/plants/" + ("Baby" if baby else "") + "Leaf.bam")
 
     def grow_leaf(self, growth, soilwater, duration):
         self.current_leaf_growth += growth
@@ -98,8 +98,8 @@ class LettuceLeaf:
         self.current_leaf_growth = 0
         self.current_stem_growth = 0
         
-        self.stemModel = showBase.loader.loadModel("plantmodels/ThinStem.bam")
-        self.leafModel = showBase.loader.loadModel("plantmodels/" + ("Baby" if baby else "") + "LettuceLeaf.bam")
+        self.stemModel = showBase.loader.loadModel("models/plants/ThinStem.bam")
+        self.leafModel = showBase.loader.loadModel("models/plants/" + ("Baby" if baby else "") + "LettuceLeaf.bam")
 
     def grow_leaf(self, growth, soilwater, duration):
         self.current_leaf_growth += growth
@@ -199,7 +199,7 @@ class Plant(object):
         self.leafColor = [0, .3, 0]
         self.colorScale = .6
         self.showBase = showBase
-        self.stemModel = showBase.loader.loadModel("plantmodels/ThickStem.bam")
+        self.stemModel = showBase.loader.loadModel("models/plants/ThickStem.bam")
         self.healthyLeafGreen= [0, .35, .02]
         self.healthyStemGreen= [102/255, 28/255, 64/255]
 
