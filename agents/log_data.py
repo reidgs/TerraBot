@@ -1,17 +1,18 @@
 #!/usr/bin/env python
+
 import rospy
 
-def write_log_data_line(log_file, name, data):
+def write_log_data_line(log_file, name, data, now):
     if (log_file):
         if (isinstance(data, tuple)):
             log_file.write("%f '%s' %.1f %.1f\n"
-                           %(rospy.get_time(), name, data[0], data[1]))
+                           %(now, name, data[0], data[1]))
         elif (isinstance(data, int)):
-            log_file.write("%f '%s' %d\n" %(rospy.get_time(), name, data))
+            log_file.write("%f '%s' %d\n" %(now, name, data))
         elif (isinstance(data, float)):
-            log_file.write("%f '%s' %.1f\n" %(rospy.get_time(), name, data))
+            log_file.write("%f '%s' %.1f\n" %(now, name, data))
         else:
-            log_file.write("%f '%s' %s\n" %(rospy.get_time(), name, data))
+            log_file.write("%f '%s' %s\n" %(now, name, data))
 
 def process_log_data_line(line):
     sline = line.split("'")
@@ -53,7 +54,8 @@ if __name__ == '__main__':
     rospy.init_node("logger", anonymous = True)
 
     def log_data_cb(data, file_and_topic):
-        write_log_data_line(file_and_topic[0], file_and_topic[1], data.data)
+        write_log_data_line(file_and_topic[0], file_and_topic[1], data.data,
+                            rospy.get_time())
 
     with open(args.file, "w") as log_file:
         for topic in td.sensor_names:
