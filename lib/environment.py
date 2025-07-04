@@ -44,7 +44,7 @@ light_diffuse = .7          #The percentage of sunlight that reaches the other s
 max_daylight = 588          #The sunlight right at the window at midday
 tank_width = .4             #m the width of the terrarium
 led_power = 3.725           #units of light per LED level
-room_temp = 20              #degrees C the room temperature out of the greenhouse
+room_temp = 22              #degrees C the room temperature out of the greenhouse
 room_humidity = 40          # Humidity of air outside greenhouse
 fan_cool_rate = .05 / 60    #deg C /min The rate at which temp decreases due to the fan
 

@@ -218,7 +218,6 @@ def terminate_serial():
 def terminate_gracefully():
     terminate_sim()
     terminate_serial()
-    #terminate_core()
     sys.exit()
 
 if log:

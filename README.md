@@ -1,6 +1,7 @@
 # Autonomous Agents TerraBot #
 
 - [Overview](#overview)
+  - [Installation](#installation)
   - [Software Architecture](#terrabot-software-architecture)
 - [ROS Communication](#ros-communication)
 - [Understanding the System](#understanding-the-system)
@@ -11,13 +12,11 @@
   - [Agent Node](#agent-node)
     + [Interactive Agent](#interactive-agent)
 - [Simulator](#simulator)
-  - [Installation](#installation)
   - [Running the Simulator](#running-the-simulator)
   - [Graphics](#graphics)
   - [Baseline File](#baseline-file)
   - [Speeding up Time](#speeding-up-time)
 - [Additional Items](#additional-items)
-  - [Health Ping](#health-ping)
   - [Frequency](#frequency)
   - [Camera](#camera)
   - [Interference](#interference-file)
@@ -41,7 +40,7 @@ for the plants during a two week grow cycle. Each cycle will come with new chall
 
 Each greenhouse contains two temperature, humidity, light, moisture, and weight sensors, one water-level sensor, one current sensor, and one camera. For the redundant sensors, data values are contained in arrays, where index 0 contains the sensor reading of the first sensor and index 1 contains the sensor reading of the second sensor.  For the current sensor, the first index is the current, the second is the energy usage, to date.  The camera is a bit different - you send a command to take a picture and the image is saved to a given file location. 
 
-The greenhouse also has three actuators - fans, LEDs, and a water pump.  The LED's light level can be set between 0-255.  The fans and pump can be turned on (True) or off (False).  In addition, you can adjust the frequency at which a particular sensor reports data and send a "ping" message periodically to the TerraBot software, to let it know that your agent is still running.
+The greenhouse also has three actuators - fans, LEDs, and a water pump.  The LED's light level can be set between 0-255.  The fans and pump can be turned on (True) or off (False).  In addition, you can adjust the frequency at which a particular sensor reports data.
 
 | Name (topic name)            | Description                                                 | Message Type      | Range      |
 | ---------------------------- | ----------------------------------------------------------- | ----------------- | ---------- |
@@ -52,18 +51,21 @@ The greenhouse also has three actuators - fans, LEDs, and a water pump.  The LED
 | Soil Moisture (smoist)       | The moisture of the "soil"  (higher is wetter)              | Int32Array        | 280-600    | 
 | Weight (weight)              | Weighs soil and plants (in grams); Total weight is average of the 2 sensors | Float32Array      |            |
 | Water level (level)          | Height of the water in the reservoir (in mm)                | Float32           | 0-180  | 
-| Camera                       | Captures a photograph of stystem's state                    |   —               |   —        | 
+| Camera                       | Captures a photograph of stystem's state                    | String            |   —        | 
 | **_Actuators_**              |**_Use these to adjust the system's state_**                 | **_—_**           |  **_—_**   | 
 | Fan (fan)                    | Toggle whether the fans are on or off                       | Bool              | True-False | 
 | LED (led)                    | Adjust the power of the system's LED light fixture          | Int32             | 0-255      |
 | Water Pump (wpump)           | Toggle whether the water pump is on or off                  | Bool              | True-False |
 | **_Additional_**              |**_Use these to adjust the system's state_**                | **_—_**           |  **_—_**   | 
 | Frequency (freq)             | Adjust the sensing frequency of a specific sensor           | See lib/frqmsg.py |  —         |
-| Ping (ping)                  | Let the TerraBot know that your agent is still alive        | Bool              | True       |
 
 Note: The water pump pumps approximately 1cm depth of water (~.93cups) per minute.
 
 For optimal growing parameters, see TerraBot/agents/limits.py
+
+### Installation ###
+You can install the TerraBot software to run on your own computer, using Docker, or on the Raspbery Pi of the greenhouse.
+The instructions for using Docker are found [docker/DockerSETUP.md](docker/DockerSETUP.md); the instructions for the Raspbery Pi are in [RPISETUP.md](RPISETUP.md).  Older versions of the software used VirtualBox, and installation instructions can be found [here](VIRTUALBOX.md) for Windows and Linux and [here](M1SETUP.md) for Macs. The Docker version, however, is preferred since it is lighter weight and significantly faster than the VirtualBox (especially on Macs).
 
 ### TerraBot Software Architecture ###
 An Arduino communicates directly with the sensors and actuators, converts the raw data into clean data, and then forwards that data to a Raspberry Pi.
@@ -180,15 +182,6 @@ of your agent node.
 
 We are working to try to get the ranges of the sensors, the nominal values, and the rate of change of the sensors, to match the real world.  The values are approximate, however, so you should not assume that the real world and the simulator will behave exactly the same.
 
-### Installation ###
-The simulator and ROS require Ubuntu distributions. **We suggest installing a VirtualBox VM** on your computer so that you
-can implement your agent. **We will provide you with a virtual machine that already has installed Ubuntu, ROS, the TerraBot code, and various python packages that you will need for your assignments.**
-
-[Instructions are here](https://www.wikihow.com/Install-VirtualBox) for installing VirtualBox.
-If you want to install your own version of the system on an Ubuntu machine, see the instructions in README.virtualbox (and ignore the specific instructions related to VirtualBox).
-
-[Instructions are here](M1SETUP.md) for installing natively on M1 arm64 (Apple Silicon) devices.
-
 ### Running the Simulator ###
 To run the simulator, start TerraBot.py with the simulator mode flag (-m sim), and optionally 1) -g, if you wish to see a graphical representation of the terrarium; 2) -s <speedup>, to specify the multiplier you wish for the speed; and 3) -b <baselinefile>, a file that contains baseline (starting) values for the sensors, actuators, and the time which you would like the simulator to start at (seconds since midnight, day 1 of the simulated run).  
 
@@ -201,7 +194,7 @@ We have included an option to display a graphical representation of the TerraBot
   <img src="https://github.com/reidgs/TerraBot/blob/master/simulator.JPG">
 </p>
 
-The graphics display is enabled using the -g flag when running TerraBot. The graphics window contains a 3D model of the terrarium and the plants within, along with a text panel containing information about the current environment, e.g., whether the pump is on or off, humidity, etc. Sounds are played to represent the pump and fan. The arrow keys and WASD can be used to navigate the scene, and the viewport can be reset by pressing 'r'. The camera will take pictures directly from this scene, from the perspective of the blue camera model, as in the real terrarium. Note that the camera <i>can still be used</i> even when the -g flag is not included, and the images produced will be equivalent to those taken with the graphics on.
+The graphics display is enabled using the -g flag when running TerraBot. The graphics window contains a 3D model of the terrarium and the plants within, along with a text panel containing information about the current environment, e.g., whether the pump is on or off, humidity, etc. Sounds are played to represent the pump and fan. The arrow keys and WASD can be used to navigate the scene, and the viewport can be reset by pressing 'r'. The camera will take pictures directly from this scene, from the perspective of the blue camera model, as in the real terrarium. Note that the camera <i>can still be used</i> even when the -g flag is not included, and the images produced will be equivalent to those taken with the graphics on.  See the instructions in [docker/DockerSETUP.md](docker/DockerSETUP.md) for how to view the graphics when running the software from within Docker.
 
 ### Baseline File ###
 The simulator starts up with default values for the sensors, actuators, and clock.  You can create a 'baseline' (.bsl) text file to specify different initial values. This enables you to set up specific scenarios that you want to test for, rather than waiting for them to arise at some point in time during the simulation. 
@@ -232,15 +225,6 @@ There are some additional items that you may need to know about in order to comp
 
 ### Camera ###
 The camera is different from the rest of the sensors, as it is controlled directly by the Pi, and not by the Arduino. You can take a picture using the 'camera' topic; the single argument is the name of the file to store the JPEG image.  **Note that, if you are using relative path name, the path is relative to the directory where you ran TerraBot, not to the directory you ran your agent!**  **Make sure the file path includes a directory that actually exists, otherwise the image will not be saved!**
-  
-### Health Ping ###
-Because of the long lasting nature of this project, it is possible that there may be unforeseen
-errors in your code which will cause it to crash. Crashed code means no control over the system and
-certain doom for your plants! In order to avoid this outcome, we have included restart functionality.  To help handle this, the TerraBot subscribes to the "ping" message (the data, a Boolean, is ignored).
-  
-If the TerraBot runs your agent (i.e., the -a flag is provided) and has not received a ping within
-a set amount of time (default 6 minutes, either real or simulated time), it will assume your program has crashed and restart it automatically.
-After a set number of crashes (currently 5), the TerraBot will quit.  There is a command-line option to send email when this happens, so that the team and the instructors can be notified.  Don't worry about how to do this - it is not necessary for development and testing, and we will use this feature only during the grow cycles, if you request it.
 
 ### Frequency ###
 It is our intention to eventually have you manage how much energy and water you use.  Since reading the sensors takes energy, there is a way to tell the system how frequently for the Arduino will read from the sensors. The more often the sensors are read, the more accurate your data will be, but the more energy you will use as well.
@@ -344,16 +328,22 @@ Finally, you can use the function 'enabled' to determine whether a behavior has 
 ### WHENEVER ###
 The bulk of test files consist of WHENEVER constraints.  These are subtests that are activiated whenever a particular condition is met.  WHENEVER constraints consist of a trigger and a body, which is a sequence of WAIT, ENSURE, SET, and PRINT subconstraints that specify what behavior is expected of the system.
 
-The triggers for WHENEVER constraints can be a Boolean relation or a date-time. The Boolean relations can consist of numbers, sensor values, and actuator states (**light, temperature, humidity, smoist, weight, current, wlevel, led, wpump, fan, camera, ping, time, mtime**).  **time** is the clock time, in seconds; **mtime** is the number of seconds past midnight -- you can get the hour of the day using (mtime//3600).  The date-time trigger is specified in terms of the first occurrence, and every time it finishes, another 24 hours are added on to the trigger time. Examples include:
+The triggers for WHENEVER constraints can be a Boolean relation or a date-time. The Boolean relations can consist of numbers, sensor values, and actuator states (**light, temperature, humidity, smoist, weight, current, wlevel, led, wpump, fan, camera, time, mtime**).  **time** is the clock time, in seconds; **mtime** is the number of seconds past midnight -- you can get the hour of the day using (mtime//3600).  The date-time trigger is specified in terms of the first occurrence, and every time it finishes, another 24 hours are added on to the trigger time. Examples include:
 ```
 WHENEVER wpump # Every time the pump is turned on
 WHENEVER 1-00:00:00 # Every midnight
 WHENEVER temperature < 22 and (mtime//3600) >= 6 # Every time the temperature is below 22 after 6am
-WHENVER smoist_raw[0] < 450 or smoist_raw[1] < 450 # Every time either soil moisture sensor gets below 450
+WHENEVER smoist_raw[0] < 450 or smoist_raw[1] < 450 # Every time either soil moisture sensor gets below 450
 ```
 Note that at most one instance of a given WHENEVER constraint will be active at a given time.
 
 The body of a WHENEVER constraint indicates a sequence of subconstraints that must hold for the WHENEVER constraint to be successful.  If one of the subconstraints fails to hold, then the WHENEVER constraint fails and a failure message is printed out.  If all of the subconstraints hold, then the WHENEVER constraint succeeds and a success message is printed out.  In either case, the constraint is deactivated (awaiting to be triggered again).  The subconstraints are described below, along with several examples.
+
+You can also use the WHILE condition to indicate a condition that must hold while the WHENEVER constraint is active. When the WHILE condition becomes false, the whole WHENEVER constraint ends successfully, no matter where in the list of subconstraints it is currently.  For instance:
+```
+WHENEVER enabled("LowerHumidBehavior") and humidity >= 90 WHILE enabled("LowerHumidBehavior")
+```
+activates when the LowerHumidBehavior is enabled and the humidity is high, but stays active only as long as the behavior is enabled.
 
 #### WAIT ####
 The WAIT subconstraint will wait a certain amount of time for a condition to evaluate to true. If the condition is true then this subconstraint succeeds and control is passed to the next one (if any or, if not, the whole WHENEVER constraint succeeds).  If the amount of time passes without the condition being true, then the subconstraint (and the whole WHENEVER constraint) fails.  As with other constraints, the time can be specified as a number of seconds or as a date-time:
