@@ -79,15 +79,15 @@ def init_ros (use_simulator):
 
 def update_sensor_multi_data(data, subplot):
     subplot.current = (data.data[0] + data.data[1])/2
-    write_log_data_line(log_file, subplot.name, data.data)
+    write_log_data_line(log_file, subplot.name, data.data, rospy.get_time())
 
 def update_sensor_data(data, subplot):
     subplot.current = data.data
-    write_log_data_line(log_file, subplot.name, data.data)
+    write_log_data_line(log_file, subplot.name, data.data, rospy.get_time())
 
 def update_actuator_data(data, subplot):
     subplot.current = data.data
-    write_log_data_line(log_file, subplot.name, data.data)
+    write_log_data_line(log_file, subplot.name, data.data, rospy.get_time())
 
 def add_time_series(fig, name, limits, force_update, color, pos, plot_width):
     global subplotsG, nrowsG, ncolsG
@@ -138,10 +138,10 @@ parser.add_argument('-p', '--speedup', default = 1, help = 'replay playback spee
 args = parser.parse_args()
 plot_widthG = float(args.width) # in hours
 
-replay_file = (None if not args.replay else open(args.replay, 'r', 0))
+replay_file = (None if not args.replay else open(args.replay, 'r'))
 if (args.log):
     if (replay_file): print("WARNING: Cannot log while replaying")
-    else: log_file = open(args.log, 'w+', 0)
+    else: log_file = open(args.log, 'w')
 else: log_file = None
 
 plotsG = [('Light Level', limits.scale['light_level'], False, 'g', 1),
