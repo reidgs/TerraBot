@@ -7,7 +7,7 @@ AT 1-04:30:0
 humidity = [normal, normal] # Humidity sensors back to normal
 light = [600, normal]       # Left light sensor stuck at 600
 fan = normal                # Fans are back to normal
-weight = [500, 500]         # Weight sensors are stuck
+current = [12.2, normal]    # Current sensor is stuck
 
 AT 1-09:00:00
 fan = on    # Fans are stuck on
