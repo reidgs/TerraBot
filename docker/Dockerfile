@@ -6,7 +6,7 @@ RUN apt-get update && \
     apt-get install -y git python3-pip python-is-python3 tmux && \
     apt-get install -y x11vnc xvfb openbox tint2 mesa-utils python3-tk
 RUN pip install dill opencv-python panda3d transitions scikit-learn ortools \
-                matplotlib pandas sendgrid
+                matplotlib pandas msal requests
 
 EXPOSE 5900
 ENV DISPLAY=:1 XRES=1280x800x24
