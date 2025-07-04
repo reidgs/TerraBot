@@ -99,15 +99,15 @@ class TimeSeries(rclpy.node.Node):
         subplot = self.subplots[subplot_name]
         subplot.current = (data.data[0] + data.data[1])
         if (subplot_name != 'Weight'): subplot.current /= 2
-        write_log_data_line(log_file, subplot_name, data.data, self)
+        write_log_data_line(log_file, subplot_name, data.data, get_ros_time(self))
 
     def update_sensor_data(self, data, subplot_name):
         self.subplots[subplot_name].current = data.data
-        write_log_data_line(log_file, subplot_name, data.data, self)
+        write_log_data_line(log_file, subplot_name, data.data, get_ros_time(self))
 
     def update_actuator_data(self, data, subplot_name):
         self.subplots[subplot_name].current = data.data
-        write_log_data_line(log_file, subplot_name, data.data, self)
+        write_log_data_line(log_file, subplot_name, data.data, get_ros_time(self))
 
     def add_time_series(self, fig, name, limits, force_update,
                         color, pos, plot_width):
@@ -152,6 +152,7 @@ class TimeSeries(rclpy.node.Node):
                 updated = True
         if (updated):
             self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
             plt.pause(0.001)
             plt.show()
         return updated
@@ -176,10 +177,10 @@ parser.add_argument('-s', '--sim', action = 'store_true', help="use simulator")
 parser.add_argument('-p', '--speedup', default = 1, help = 'replay playback speedup')
 args = parser.parse_args()
 
-replay_file = (None if not args.replay else open(args.replay, 'r', 0))
+replay_file = (None if not args.replay else open(args.replay, 'r'))
 if (args.log):
     if (replay_file): print("WARNING: Cannot log while replaying")
-    else: log_file = open(args.log, 'w+', 0)
+    else: log_file = open(args.log, 'w')
 else: log_file = None
 
 rclpy.init()
@@ -192,7 +193,7 @@ if (replay_file):
     for line in replay_file:
         cur_time, name, data = process_log_data_line(line)
         if (isinstance(data, tuple)): data = (data[0] + data[1])/2
-        self.subplots[name].current = data
+        time_series.subplots[name].current = data
         if (not start_time): start_time = cur_time
         hours_since_start = (cur_time - start_time)/3600.0
         if (time_series.update_plots(hours_since_start)):

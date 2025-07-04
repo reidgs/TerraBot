@@ -1,13 +1,31 @@
 #!/usr/bin/env python
 
-import rclpy
-from terrabot_utils import get_ros_time
+import rclpy, rclpy.node, array
+from std_msgs.msg import Float32, Int32, Int32MultiArray, Float32MultiArray, Bool, String
+from terrabot_utils import get_ros_time, set_use_sim_time
+from topic_def import sensor_names, sensor_types, actuator_names, actuator_types
 
-def write_log_data_line(log_file, name, data, node):
+class Logger(rclpy.node.Node):
+    def __init__(self, use_simulator, log_file):
+        super().__init__("logger")
+        self.log_file = log_file
+        set_use_sim_time(self, use_simulator)
+        self.init_ros()
+
+    def init_ros(self):
+        for topic in sensor_names:
+            self.create_subscription(sensor_types[topic], topic+"_output",
+                                     lambda x: self.log_data_cb(x, topic), 1)
+        for topic in actuator_names:
+            self.create_subscription(actuator_types[topic], topic+"_input",
+                                     lambda x: self.log_data_cb(x, topic), 1)
+
+    def log_data_cb(self, data, topic):
+        write_log_data_line(self.log_file, topic, data.data, get_ros_time(self))
+        
+def write_log_data_line(log_file, name, data, now):
     if (log_file):
-        now = get_ros_time(node)
-
-        if (isinstance(data, tuple)):
+        if (type(data) in [tuple, list, array.array]):
             log_file.write("%f '%s' %.1f %.1f\n"
                            %(now, name, data[0], data[1]))
         elif (isinstance(data, int)):
@@ -22,8 +40,8 @@ def process_log_data_line(line):
     data = sline[2].strip(' \n').split(' ')
     return (float(sline[0]), sline[1],
             ((float(data[0]), float(data[1])) if (len(data) > 1) else
-             float(data[0]) if ('.' in data[0]) else
-             int(data[0]) if (data[0].isdigit()) else data[0]))
+            float(data[0]) if ('.' in data[0]) else
+            int(data[0]) if (data[0].isdigit()) else data[0]))
 
 def read_log_file(filename):
     log_data = []
@@ -42,29 +60,14 @@ def log_sensordata(log_data, time, sensordata={}, next_index=0):
     return (sensordata, len(log_data))
 
 if __name__ == '__main__':
-    import sys, select, os
-    sys.path.insert(0, os.getcwd()[:os.getcwd().find('TerraBot')]+'TerraBot/lib')
-    import topic_def as td
-    from std_msgs.msg import Float32, Int32, Int32MultiArray, Float32MultiArray, Bool, String
     import argparse
 
-    parser = argparse.ArgumentParser(description = "Interactive Agent")
+    parser = argparse.ArgumentParser(description = "Logger")
     parser.add_argument('file', help="log the sensor data to file")
     parser.add_argument('-s', '--sim', action = 'store_true', help="use simulator")
     args = parser.parse_args()
 
-    if args.sim: rospy.set_param("use_sim_time", True)
-    rospy.init_node("logger", anonymous = True)
-
-    def log_data_cb(data, file_and_topic):
-        write_log_data_line(file_and_topic[0], file_and_topic[1], data.data)
-
+    rclpy.init()
     with open(args.file, "w") as log_file:
-        for topic in td.sensor_names:
-            rospy.Subscriber(topic+"_output", td.sensor_types[topic],
-                             log_data_cb, (log_file, topic))
-        for topic in td.actuator_names:
-            rospy.Subscriber(topic+"_input", td.actuator_types[topic],
-                             log_data_cb, (log_file, topic))
-        while not rospy.core.is_shutdown():
-            rospy.sleep(0.1)
+        logger = Logger(args.sim, log_file)
+        rclpy.spin(logger)
