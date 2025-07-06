@@ -1,138 +1,140 @@
-import rospy, sys, select, os, time, argparse
+import rclpy, rclpy.node
+import sys, select, time, argparse
 from std_msgs.msg import Float32, Int32, Int32MultiArray, Float32MultiArray, Bool, String
 import matplotlib.pyplot as plt
 from limits import scale, limits, names
+from topic_def import sensor_types, actuator_types
+from terrabot_utils import set_use_sim_time, spin_for
 
-sensor_levels = {}
-actuator_labels  = {}
-sensor_bars = {}
-sensor_values = {}
+class SensorPlots:
+    def __init__(self):
+        self.sensor_levels = {}
+        self.actuator_labels  = {}
+        self.sensor_bars = {}
+        self.sensor_values = {}
+        self.init_plotting()
 
-def add_sensor(name, fig, nrow, ncol, pos):
-    global sensor_levels
-    sensor_levels[name] = fig.add_subplot(nrow, ncol, pos)
-    update_sensor(name, None)
+    def add_sensor(self, name, fig, nrow, ncol, pos):
+        self.sensor_levels[name] = fig.add_subplot(nrow, ncol, pos)
+        self.update_sensor(name, None)
 
-def add_actuator(name, fig, nrow, ncol, pos):
-    global actuator_labels
-    actuator_labels[name] = fig.add_subplot(nrow, ncol, pos)
-    update_actuator(name, "")
+    def add_actuator(self, name, fig, nrow, ncol, pos):
+        self.actuator_labels[name] = fig.add_subplot(nrow, ncol, pos)
+        self.update_actuator(name, "")
 
-def update_sensor(name, value):
-    global sensor_levels, names, sensor_bars, sensor_values
-    ax = sensor_levels[name]
-    if (value == None):
-        if (value == None): value = 0
-        sensor_values[name] = value
-        ax.set_xlim(scale[name])
-        bars = ax.barh(names[name], value)
-        sensor_bars[name] = bars[0]
-    sensor_bars[name].set_width(value)
-    sensor_bars[name].set_color('Red' if value < limits[name][0] else
+    def update_sensor(self, name, value):
+        ax = self.sensor_levels[name]
+        if (value == None):
+            value = 0
+            self.sensor_values[name] = value
+            ax.set_xlim(scale[name])
+            bars = ax.barh(names[name], value)
+            self.sensor_bars[name] = bars[0]
+        self.sensor_bars[name].set_width(value)
+        self.sensor_bars[name].set_color('Red' if value < limits[name][0] else
                                 'Red' if value > limits[name][1] else 'Green')
 
-def update_actuator(name, actuator):
-    global actuator_labels, names, sensor_values
-    ax = actuator_labels[name]
-    if (not ax.texts):
-        sensor_values[name] = ''
-        ax.set_yticklabels([])
-        #ax.set_yticks([],[])
-        #ax.set_xticks([],[''])
-        ax.bar(names[name],[0])
-    else: 
-        ax.texts[0].remove()
-    ax.text(0, 0, actuator, ha='center', va='center', color='Blue')
+    def update_actuator(self, name, actuator):
+        ax = self.actuator_labels[name]
+        if (not ax.texts):
+            self.sensor_values[name] = ''
+            ax.set_yticklabels([])
+            #ax.set_yticks([],[])
+            #ax.set_xticks([],[''])
+            ax.bar(names[name],[0])
+        else: 
+            ax.texts[0].remove()
+        ax.text(0, 0, actuator, ha='center', va='center', color='Blue')
+    
+    def update(self):
+        for key in self.sensor_levels:
+            self.update_sensor(key, self.sensor_values[key])
+        for key in self.actuator_labels:
+            self.update_actuator(key, self.sensor_values[key])
+        plt.pause(0.0001)
 
-def init_ros (use_simulator):
-    global led_pub, wpump_pub, fan_pub, camera_pub
-    global sensor_values, actuator_labels
+    def init_plotting(self):
+        fig = plt.figure()
+        plt.subplots_adjust(hspace=0.6)
+        plt.subplots_adjust(wspace=0.3)
+        plt.ion()
 
-    if use_simulator: rospy.set_param("use_sim_time", True)
-    rospy.init_node("time_series_grapher", anonymous = True)
+        self.add_sensor('light_level', fig, 6,2,1)
+        self.add_sensor('humidity', fig, 6,2,3)
+        self.add_sensor('temperature', fig, 6,2,5)
+        self.add_sensor('moisture', fig, 6,2,7)
+        self.add_sensor('weight', fig, 6,2,9)
+        self.add_sensor('water_level', fig, 6,2,10)
 
-    rospy.Subscriber("smoist_output", Int32MultiArray,
-                     update_sensor_multi_data, 'moisture')
-    rospy.Subscriber("light_output", Int32MultiArray,
-                     update_sensor_multi_data, 'light_level')
-    rospy.Subscriber("level_output", Float32,
-                     update_sensor_data, 'water_level')
-    rospy.Subscriber("temp_output", Int32MultiArray,
-                     update_sensor_multi_data, 'temperature')
-    rospy.Subscriber("humid_output", Int32MultiArray,
-                     update_sensor_multi_data, 'humidity')
-    rospy.Subscriber("weight_output", Float32MultiArray,
-                     update_sensor_multi_data, 'weight')
-    rospy.Subscriber("cur_output", Float32MultiArray, update_power_data, 'cur')
-    rospy.Subscriber("led_input", Int32, update_sensor_data, 'led')
-    rospy.Subscriber("fan_input", Bool, update_binary_data, 'fan')
-    rospy.Subscriber("wpump_input", Bool, update_binary_data, 'pump')
+        self.add_actuator('led', fig, 6,2,2)
+        self.add_actuator('fan', fig, 6,2,4)
+        self.add_actuator('pump', fig, 6,2,6)
 
-    # Initialize actuators
-    sensor_values['led'] = 'Off'
-    sensor_values['fan'] = 'Off'
-    sensor_values['pump'] = 'Off'
+        plt.show()
 
-def update_sensor_multi_data(data, name):
-    sensor_values[name] =(data.data[0] + data.data[1])/2
+    def print_sensor_values():
+        print("Light Level: %.2f" %self.sensor_values['light_level'])
+        print("Temperature: %.2f" %self.sensor_values['temperature'])
+        print("Humidity: %.2f" %self.sensor_values['humidity'])
+        print("Weight: %.2f" %self.sensor_values['weight'])
+        print("Soil Moisture: %.2f" %self.sensor_values['moisture'])
+        print("Water Level: %.2f" %self.sensor_values['water_level'])
+        print("LED: %s" %self.sensor_values['led'])
+        print("Fan: %s" %self.sensor_values['fan'])
+        print("Water Pump: %s" %self.sensor_values['pump'])
 
-def update_sensor_data(data, name):
-    sensor_values[name] = data.data
+class Plotter(rclpy.node.Node):
+    def __init__(self, use_simulator):
+        super().__init__("plotter")
+        set_use_sim_time(self, use_simulator)
+        self.sensorPlots = SensorPlots()
+        self.init_ros()
 
-def update_binary_data(data, name):
-    sensor_values[name] = ('On' if data.data else 'Off')
+    def init_ros (self):
+        self.create_subscription(sensor_types['smoist'], "smoist_output",
+                     lambda x: self.update_sensor_multi_data(x, 'moisture'), 1)
+        self.create_subscription(sensor_types['light'], 'light_output',
+                     lambda x: self.update_sensor_multi_data(x, 'light_level'), 1)
+        self.create_subscription(sensor_types['level'], "level_output",
+                     lambda x: self.update_sensor_data(x, 'water_level'), 1)
+        self.create_subscription(sensor_types['temp'], "temp_output",
+                     lambda x: self.update_sensor_multi_data(x, 'temperature'), 1)
+        self.create_subscription(sensor_types['humid'], "humid_output",
+                     lambda x: self.update_sensor_multi_data(x, 'humidity'), 1)
+        self.create_subscription(sensor_types['weight'], "weight_output",
+                     lambda x: self.update_sensor_multi_data(x, 'weight'), 1)
+        self.create_subscription(actuator_types['led'], "led_input", 
+                     lambda x: self.update_sensor_data(x, 'led'), 1)
+        self.create_subscription(actuator_types['fan'], "fan_input", 
+                     lambda x: self.update_binary_data(x, 'fan'), 1)
+        self.create_subscription(actuator_types['wpump'], "wpump_input", 
+                     lambda x: self.update_binary_data(x, 'pump'), 1)
 
-def update_power_data(data, name):
-    sensor_values['current'] = data.data[0]
-    sensor_values['energy'] = data.data[1]
+        # Initialize actuators
+        self.sensorPlots.sensor_values['led'] = 'Off'
+        self.sensorPlots.sensor_values['fan'] = 'Off'
+        self.sensorPlots.sensor_values['pump'] = 'Off'
 
-def init_plotting():
-    fig = plt.figure()
-    plt.subplots_adjust(hspace=0.6)
-    plt.subplots_adjust(wspace=0.3)
-    plt.ion()
+    def update_sensor_multi_data(self, data, name):
+        self.sensorPlots.sensor_values[name] =(data.data[0] + data.data[1])/2
 
-    add_sensor('light_level', fig, 6,2,1)
-    add_sensor('humidity', fig, 6,2,3)
-    add_sensor('temperature', fig, 6,2,5)
-    add_sensor('moisture', fig, 6,2,7)
-    add_sensor('weight', fig, 6,2,9)
-    add_sensor('water_level', fig, 6,2,10)
-    add_sensor('current', fig, 6,2,11)
-    add_sensor('energy', fig, 6,2,12)
+    def update_sensor_data(self, data, name):
+        self.sensorPlots.sensor_values[name] = data.data
 
-    add_actuator('led', fig, 6,2,2)
-    add_actuator('fan', fig, 6,2,4)
-    add_actuator('pump', fig, 6,2,6)
+    def update_binary_data(self, data, name):
+        self.sensorPlots.sensor_values[name] = ('On' if data.data else 'Off')
 
-    plt.show()
-
-def print_sensor_values():
-    print("Light Level: %.2f" %sensor_values['light_level'])
-    print("Temperature: %.2f" %sensor_values['temperature'])
-    print("Humidity: %.2f" %sensor_values['humidity'])
-    print("Weight: %.2f" %sensor_values['weight'])
-    print("Soil Moisture: %.2f" %sensor_values['moisture'])
-    print("Water Level: %.2f" %sensor_values['water_level'])
-    print("LED: %s" %sensor_values['led'])
-    print("Fan: %s" %sensor_values['fan'])
-    print("Water Pump: %s" %sensor_values['pump'])
 
 parser = argparse.ArgumentParser(description = "Interactive Agent")
 parser.add_argument('-s', '--sim', action = 'store_true', help="use simulator")
 args = parser.parse_args()
 
-init_plotting()
+rclpy.init()
+plotter = Plotter(args.sim)
+time.sleep(2) # Need to do this even if running simulator to handle messages
 
-init_ros(args.sim)
-rospy.sleep(2) # Need to do this even if running simulator to handle messages
-
-while not rospy.core.is_shutdown():
-    for key in sensor_levels:
-        update_sensor(key, sensor_values[key])
-    for key in actuator_labels:
-        update_actuator(key, sensor_values[key])
-    plt.pause(0.0001)
+while rclpy.ok():
+    plotter.sensorPlots.update()
 
     if sys.stdin in select.select([sys.stdin],[],[],0)[0]:
         input = sys.stdin.readline()
@@ -143,4 +145,4 @@ while not rospy.core.is_shutdown():
         else:
             print("Usage:  q (quit)\n\tv (sensor values)")
 
-    rospy.sleep(1)
+    spin_for(plotter, 1)
