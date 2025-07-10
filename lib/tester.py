@@ -2,6 +2,7 @@ import copy
 from datetime import datetime
 from terrabot_utils import clock_time, time_since_midnight, dtime_to_seconds
 from terrabot_utils import Agenda
+from limits import limits, optimal
 
 def parse_error(line):
     raise Exception("Unknown syntax: %s" % line)
@@ -305,7 +306,6 @@ class Tester:
         self.active.remove(whenever)
 
     def init_constraints(self, time0):
-        #print("Start time: %s" %clock_time(time0))
         self.set_delay_time(time0)
         self.set_end_time(time0)
         for constraint in self.constraints:
