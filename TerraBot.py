@@ -52,12 +52,11 @@ def tester_update_var(var, value):
         trans = var_translations[var]
         if isinstance(value, array): value = list(value)
         if (type(value) in [list, tuple]):
-            value = list(value)
             svalue = sum(value) if var == 'weight' else sum(value)/2
             tester.vars[trans+'_raw'] = value
-            tester.vars[trans] = svalue 
+            tester.vars[trans] = svalue
         else:
-            tester.vars[trans] = value 
+            tester.vars[trans] = value
         #print(var, value, tester.vars)
 
 def tester_update_behaviors(behavior, enabled_p):
@@ -107,7 +106,7 @@ def cb_generic(name, data):
 
     if (name == 'light'): # Integrate light levels
         global last_light_reading, insolation
-        now = get_ros_time(terrabot)        
+        now = get_ros_time(terrabot)
         if (last_light_reading > 0):
             light_level = (original[0] + original[1])/2.0
             dt = now - last_light_reading
@@ -158,13 +157,8 @@ parser.add_argument('-b', '--baseline', default = None)
 parser.add_argument('-i', '--interference', default = None)
 parser.add_argument('-t','--test', default = None,
         help = "test execution using given tester file")
-parser.add_argument('-e', '--email', default = None,
-        help = "email address to notify if restarting frequently")
-parser.add_argument('-p', '--password', default = None,
-        help = "email address password")
 parser.add_argument('-f', '--fixedshutter', default = None,
         help = "use fixed shutter speed")
-
 
 args = parser.parse_args()
 
@@ -173,7 +167,6 @@ log = args.log
 mode = args.mode
 tester_file = args.test
 simulate = mode == "sim"
-password = args.password
 fixed_shutter = (args.fixedshutter if args.fixedshutter == None else
                  int(args.fixedshutter))
 
@@ -370,6 +363,6 @@ while rclpy.ok():
             print("Done testing!")
             if (tester.end_status() == 'QUIT'): terminate_gracefully()
             else: tester = None
-    
+
     spin_for(terrabot, tick_interval)
     # End while loop
