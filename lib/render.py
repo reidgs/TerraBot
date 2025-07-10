@@ -63,14 +63,14 @@ class Terrarium(ShowBase):
 
         self.BASE_TEXT2 = \
         '''
-        Time : {:s}
+        Time: {:s}
         Light level: 0
-        Temperature : 20 C
-        Soil moisture : 0
-        Humidity : 50%
-        Volume : 3000 ml
-        Weight : 100 g
-        Speedup : 1x
+        Temperature: 20 C
+        Soil moisture: 0
+        Humidity: 50%
+        Volume: 3000 ml
+        Weight: 100 g
+        Speedup: 1x
         '''.format(clock_time(t0 + initTime))
 
         self.lastTime = initTime
@@ -455,14 +455,14 @@ class Terrarium(ShowBase):
 
         self.textpanel2.text = \
         '''
-        Time : {:s}
+        Time: {:s}
         Light level: {:01.0f}
-        Temperature : {:04.1f} C
-        Soil moisture : {:03.1f}
-        Humidity : {:02.0f}%
-        Volume : {:04.1f} ml
-        Weight : {:04.1f} g
-        Speedup : {}x
+        Temperature: {:04.1f} C
+        Soil moisture: {:03.1f}
+        Humidity: {:02.0f}%
+        Volume: {:04.1f} ml
+        Weight: {:04.1f} g
+        Speedup: {}x
         '''.format(clock_time(self.start_time + params['time']), light, \
                    params['temperature'], 2*params['soilwater'], \
                    params['humidity'], params['volume'], weight, speedup)

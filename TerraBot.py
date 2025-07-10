@@ -46,7 +46,8 @@ def tester_update_var(var, value):
     global tester, var_translations
     if (tester):
         trans = var_translations[var]
-        if (isinstance(value, tuple)):
+        if isinstance(value, array): value = list(value)
+        if (type(value) in [list, tuple]):
             svalue = sum(value) if var == 'weight' else sum(value)/2
             tester.vars[trans+'_raw'] = value
             tester.vars[trans] = svalue
@@ -169,10 +170,10 @@ num_restarts = 0
 max_restarts = 5
 
 def terminate (process, log_file):
-    if (log_file != None): log_file.close()
     if (process.poll() == None):
         process.terminate()
         process.wait()
+    if (log_file != None): log_file.close()
 
 def terminate_core():
     global core_p, core_log
@@ -227,7 +228,6 @@ generate_publishers()
 generate_subscribers()
 
 images = None
-image_start_time = 1735000 # Should be in baseline
 ### Camera callback - take a picture and store in the given location
 def camera_cb(data):
     global simulate, images, fixed_shutter
@@ -271,7 +271,7 @@ serial_log = None
 ### Initiates the Simulator and redirects output
 def start_simulator():
     global sim_p, sim_log, args
-    if (sim_log == None): sim_log = open(op.join(log_dir, "simulator.log"), "a+")
+    if (sim_log == None): sim_log = open(op.join(log_dir, "simulator.log"), "w")
     fard_args = ["--speedup", str(args.speedup)]
     if args.graphics: fard_args += ["--graphics"]
     if args.baseline: 
@@ -289,7 +289,7 @@ def start_simulator():
 ### Initiates the Arduino and redirects output
 def start_serial():
     global serial_p, serial_log
-    if (serial_log == None): serial_log = open(op.join(log_dir, "rosserial.log"), "a+")
+    if (serial_log == None): serial_log = open(op.join(log_dir, "rosserial.log"), "w")
     serial_p = sp.Popen(["rosrun", "rosserial_arduino",
                          "serial_node.py", "/dev/ttyACM0"],
                         stdout = serial_log, stderr = serial_log)
