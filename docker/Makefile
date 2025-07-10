@@ -22,6 +22,3 @@ stop:
 	docker container stop terrabot_container_ros2
 	docker container rm terrabot_container_ros2
 
-run_once:
-	docker run -it --rm --name terrabot_container_ros2 --volume .:/home/robotanist/User -p 5902:5901 terrabot_image_ros2
-
