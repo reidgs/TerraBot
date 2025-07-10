@@ -1,21 +1,20 @@
 
 #!/usr/bin/env python
-import os, os.path as op, sys, select
-import subprocess as sp
-from std_msgs.msg import Int32,Bool,Float32,String,Int32MultiArray,Float32MultiArray, String
-import argparse, time, getpass
-from shutil import copyfile
 import rclpy, rclpy.node
+import os, os.path as op, sys, select
+import argparse, time, subprocess as sp
+from std_msgs.msg import Int32, Bool, String
+from array import array
+from shutil import copyfile
+from math import exp
+from os import makedirs
+
 from lib import topic_def as tdef
 from lib import interference as interf_mod
 from lib import tester as tester_mod
-from lib import send_email
-from lib import sim_camera as cam
 from lib.terrabot_utils import clock_time, time_since_midnight, \
                                get_ros_time, set_use_sim_time, spin_for
 from lib.baseline import Baseline
-from math import exp
-from os import makedirs
 
 class TerraBot(rclpy.node.Node):
     def __init__(self):
@@ -51,12 +50,14 @@ def tester_update_var(var, value):
     global tester, var_translations
     if (tester):
         trans = var_translations[var]
-        if (isinstance(value, tuple)):
+        if isinstance(value, array): value = list(value)
+        if (type(value) in [list, tuple]):
+            value = list(value)
             svalue = sum(value) if var == 'weight' else sum(value)/2
             tester.vars[trans+'_raw'] = value
-            tester.vars[trans] = svalue
+            tester.vars[trans] = svalue 
         else:
-            tester.vars[trans] = value
+            tester.vars[trans] = value 
         #print(var, value, tester.vars)
 
 def tester_update_behaviors(behavior, enabled_p):
@@ -334,8 +335,8 @@ else:
     print("  Starting hardware")
     start_serial()
 # Wait for clock to start up correctly
-    while get_ros_time(terrabot) == 0:
-        rclpy.spin_once(terrabot, timeout_sec=0.1)
+while get_ros_time(terrabot) == 0:
+    rclpy.spin_once(terrabot, timeout_sec=0.1)
 now = get_ros_time(terrabot)
 
 print("System started")
