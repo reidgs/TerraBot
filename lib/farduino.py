@@ -29,6 +29,15 @@ class Simulator(rclpy.node.Node):
         self.received = {}
         self.generate_publishers()
         self.generate_subscribers()
+        # The first element is the current time till resensing,
+        #   and the second is the chosen frequenc
+        self.sensor_timing = { 'smoist' : [0.0, 1.0],
+                               'cur' : [0.0, 1.0],
+                               'light' : [0.0, 1.0],
+                               'level' : [0.0, 1.0],
+                               'temp' : [0.0, 1.0],
+                               'humid' : [0.0, 1.0],
+                               'weight' : [0.0, 1.0]}
 
     ### Handle Sub/Pub
 
@@ -53,7 +62,7 @@ class Simulator(rclpy.node.Node):
                 if action == 'freq':
                     # Parse and update sensor frequency
                     name, freq = frommsg(data.data)
-                    sensor_timing[name][1] = (99999999 if freq == 0 else 1/freq)
+                    self.sensor_timing[name][1] = (99999999 if freq == 0 else 1/freq)
                 elif action == 'speedup':
                     self.default_speedup = self.speedup = data.data
                 elif action == 'camera':
@@ -72,16 +81,6 @@ class Simulator(rclpy.node.Node):
                                                     name+'_raw', 100)
     
     ### Handling Sensors ###
-
-    # The first element is the current time till resensing,
-    #   and the second is the chosen frequency
-    sensor_timing = { 'smoist' : [0.0, 1.0],
-                      'cur' : [0.0, 1.0],
-                      'light' : [0.0, 1.0],
-                      'level' : [0.0, 1.0],
-                      'temp' : [0.0, 1.0],
-                      'humid' : [0.0, 1.0],
-                      'weight' : [0.0, 1.0]}
     
     def publish (self, name, value):
         with self.lock:
