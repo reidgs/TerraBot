@@ -17,9 +17,10 @@ API: send_email.send(sender, recipients, subject, text, images=[], inline=False)
                them in the text using, for instance, '<img src="cid:image1" />', 
                for image1, image2, ...
 """
-import os, base64, msal, requests
+import pathlib, base64, msal, requests
 
-TOKEN_CACHE_FILE = '../param/token_cache.json'
+terrabot_dir = pathlib.Path(__file__).parent.parent
+TOKEN_CACHE_FILE = terrabot_dir / 'param/token_cache.json'
 CLIENT_ID = 'ff1cc03d-5766-430d-b45d-587116b60294'
 AUTHORITY = f"https://login.microsoftonline.com/common"
 SCOPES = ['User.Read', 'Mail.Send']
@@ -57,7 +58,6 @@ def init():
         with open(TOKEN_CACHE_FILE, "w") as f:
             f.write(cache.serialize())
 
-    #print(token_result)
     if "access_token" in token_result:
         return token_result["access_token"]
     else: return None
@@ -71,7 +71,8 @@ def msg_attachments(images, inline):
             "contentId": "image%d" %(i+1)
             } for i, image in enumerate(images)]
 
-def send(from_address, to_addresses, subject, text, images=[], inline=False):
+# Doesn't need passwd, but including to be consistent with older version
+def send(from_address, passwd, to_addresses, subject, text, images=[], inline=False):
     try:
         access_token = init()
         if (not access_token): return False
@@ -97,19 +98,20 @@ def send(from_address, to_addresses, subject, text, images=[], inline=False):
         "saveToSentItems": "true"
         }
         response = requests.post('https://graph.microsoft.com/v1.0/me/sendMail',
-                                  headers=headers, json=message)
-        return response.status_code == 202
+                                  headers=headers, json=message).status_code
+        if response != 202: 
+            print('Failed to send with rsponse %d' %response)
+        return response == 202
     except Exception as e:
         print('Failed to send:', e)
         return False
 
 # Here's a simple example (please don't actually use it as is, since it will spam me)
-'''
-images = []
-for file_name in ["../simulator.JPG", "../system_diagram.jpg"]:
-    with open(file_name, 'rb') as f: images += [f.read()]
-if send("terrabot1@outlook.com", "reidgs@hotmail.com, reids@cs.cmu.edu", 
-        "Hello", '<b>This is a test</b><p><img src="cid:image1" /><p><img src="cid:image2" />', 
-        images, inline=True):
-    print("Successfully sent!")
-'''
+if __name__ == "__main__":
+    images = []
+    for file_name in ["../simulator.JPG", "../system_diagram.jpg"]:
+        with open(file_name, 'rb') as f: images += [f.read()]
+    if send("terrabot0@outlook.com", "Simmons482", "reidgs@hotmail.com, reids@cs.cmu.edu", 
+            "Hello", '<b>This is a test</b><p><img src="cid:image1" /><p><img src="cid:image2" />', 
+            images, inline=True):
+        print("Successfully sent!")
