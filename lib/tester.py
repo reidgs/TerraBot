@@ -1,8 +1,10 @@
 import copy
 from datetime import datetime
+from pathlib import Path
 from terrabot_utils import clock_time, time_since_midnight, dtime_to_seconds
 from terrabot_utils import Agenda
-from limits import limits, optimal
+import os, sys # usable in monitor conditions
+from limits import limits, optimal # usable in monitor conditions
 
 def parse_error(line):
     raise Exception("Unknown syntax: %s" % line)
@@ -244,6 +246,8 @@ class Tester:
                     else: self.interf_file = linterference
                 elif (line.startswith("INCLUDE")):
                     include = line.split()[1].strip()
+                    if (include[0] != '/'): # Relative file name
+                        include = Path(filename).parent / include
                     print("Including monitors from", include)
                     self.parse_file(include)
                 elif (line.startswith("QUIT") or line.startswith("STOP")):
