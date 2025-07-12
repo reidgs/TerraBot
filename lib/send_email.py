@@ -25,7 +25,8 @@ CLIENT_ID = 'ff1cc03d-5766-430d-b45d-587116b60294'
 AUTHORITY = f"https://login.microsoftonline.com/common"
 SCOPES = ['User.Read', 'Mail.Send']
 
-def init():
+def init(reinitialize=False):
+    print(TOKEN_CACHE_FILE)
     try:
         cache = msal.SerializableTokenCache()
         with open(TOKEN_CACHE_FILE, "r") as f:
@@ -42,8 +43,11 @@ def init():
     accounts = app.get_accounts()
     if accounts:
         token_result = app.acquire_token_silent(SCOPES, account=accounts[0])
+    elif not reinitialize:
+        print("Invalid cache")
+        token_result = []
     else:
-        print("No cached token found. Initiating device flow login...")
+        print("Invalid cache. Initiating device flow login...")
         flow = app.initiate_device_flow(scopes=SCOPES)
         if "user_code" not in flow:
             raise ValueError("Failed to create device flow")
@@ -61,6 +65,10 @@ def init():
     if "access_token" in token_result:
         return token_result["access_token"]
     else: return None
+
+def setCacheLocation(location):
+    global TOKEN_CACHE_FILE
+    TOKEN_CACHE_FILE = location
 
 def msg_attachments(images, inline):
     return [{"@odata.type": "#microsoft.graph.fileAttachment",
@@ -108,6 +116,7 @@ def send(from_address, passwd, to_addresses, subject, text, images=[], inline=Fa
 
 # Here's a simple example (please don't actually use it as is, since it will spam me)
 if __name__ == "__main__":
+    #init(True)
     images = []
     for file_name in ["../simulator.JPG", "../system_diagram.jpg"]:
         with open(file_name, 'rb') as f: images += [f.read()]
