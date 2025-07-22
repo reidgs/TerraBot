@@ -19,14 +19,6 @@
 * `sudo chsh -s /bin/bash robotanist`
 * You have to logout and back in, or reboot, for the usermod changes to take effect
 
-### Creating Swap File ###
-Do as robotanist-admin;
-Check whether already have a swap file: cat /proc/swaps; if not:
-* `sudo apt install dphys-swapfile`
-* edit /etc/dphys-swapfile and uncomment CONF_SWAPFILE line
-* `sudo dphys-swapfile setup`
-* `sudo dphys-swapfile swapon`
-
 ### Installing software ###
 Do as robotanist-admin
 * `sudo apt update`
@@ -91,12 +83,35 @@ Do as robotanist-admin
 --->
 
 ### Set up Camera ###
-* `df | grep firmware` => use this device name below
-* `sudo mount /dev/mmcblk0p1 /boot`
+Very complex - might be an easier way, but didn't find one
 * Edit /boot/firmware/config.txt to add the following lines:
     - `start_x=1`
     - `gpu_mem=128`
-* Reboot (and check using raspivid -t 1000)
+    - `dtoverlay=imx219`
+* `sudo update-initramfs -c -k $(umami -r)`
+* `sudo apt install ffmpeg ninja-build libboost-all-dev`
+* `sudo apt install libexif-dev libjpeg-dev libtiff-dev libv4l-dev libpng-dev`
+* `sudo apt install qtbase5-dev qtbase5-dev-tools`
+* `sudo apt install python3-jinja2 python3-yaml python3-ply`
+* `pip install meson==0.64.1`
+* `git clone https://github.com/raspberrypi/libcamera.git`
+* `cd libcamera`
+* `meson setup build`
+* `ninja -C build`
+* `sudo ninja -C build install`
+* `git clone https://github.com/raspberrypi/rpicam-apps.git`
+* `cd rpicam-apps`
+* `meson setup build --buildtype=release`
+* `ninja -C build`
+* `sudo ninja -C build install`
+* `wget https://github.com/bluenviron/mediamtx/releases/download/v1.13.0/mediamtx_v1.13.0_linux_arm64.tar.gz`
+* `tar -xvzf mediamtx_v1.13.0_linux_arm64.tar.gz`
+* `sudo mv mediamtx.yml /etc/.`
+* `sudo mv mediamtx /usr/bin/.`
+* `rm -rf LICENSE libcamera rpicam-apps`
+* `sudo ldconfig`
+* put `export rpicam-hello="rpicam-hello --qt-preview -v 0"` in ~/.bashrc
+* Reboot
 
 ### Copy Setup to Other SD Cards ###
 * https://computers.tutsplus.com/articles/how-to-clone-your-raspberry-pi-sd-cards-with-windows--mac-59294
