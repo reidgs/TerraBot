@@ -28,7 +28,6 @@ Do as robotanist-admin
 * `sudo apt install python3-transitions python3-sklearn python3-pandas`
 * `sudo pip install dill sendgrid ortools`
 * Optional: `sudo apt install xemacs21` (or your favorite text editor)
-* `sudo apt upgrade`
 
 ### Enabling SSH ###
 * `sudo apt install openssh-server`
@@ -36,19 +35,14 @@ Do as robotanist-admin
 * `sudo systemctl start ssh`
 * Make sure the /etc/ssh/sshd_config has `PasswordAuthentication yes`
 
-<!--- if you are finding that you are running into errors, try the following:
-* ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key  
-* ssh-keygen -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key  
-* ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key
---->
-
 ### Installing ROS ###
 Do as robotanist-admin
 * `sudo apt install software-properties-common`
-* `sudo add-apt-repository universe`
+* `sudo add-apt-repository universe && sudo apt update`
 * `export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')`
 * `curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo $VERSION_CODENAME)_all.deb"`
 * `sudo dpkg -i /tmp/ros2-apt-source.deb`
+* `sudo apt install ros-humble-ros-base`
 * add these lines to the end of the .bashrc file (for both robotanist and robotanist-admin, using `sudo xemacs`):
     - `source /opt/ros/humble/setup.bash`
     - `export TB_DIR=${HOME}/TerraBot`
@@ -57,6 +51,7 @@ Do as robotanist-admin
 ### Installing TerraBot Software ###
 Switch user to robotanist
 * `git clone --branch ros2 https://github.com/reidgs/TerraBot` (use your git name and password)
+* `touch Terrabot/Log/arduino_bridge.log`
 
 ### Installing Arduino ###
 Do as robotanist-admin
@@ -69,31 +64,18 @@ Do as robotanist-admin
 * `cd ~/TerraBot/lib/ArduinoCode`
 * `make clean; make upload` [note: may have to change the permissions on ArduinoCode to make them available to robotanist-admin)
 
-<!--
-### Installing ortools ###
-Do as robotanist-admin
-* download cmake-3.2.6 from cmake.org and make it
-* `python -m pip install numpy==1.21`
-* `python -m pip install ortools`
--->
-<!---### Set up Python Libraries ###
-* cd /home/robotanist-admin/.local/lib/
-* sudo cp -r python3.8/site-packages/*  /usr/lib/python3/dist-packages/.
-* sudo rm -rf python3.8
---->
-
 ### Set up Camera ###
 Very complex - might be an easier way, but didn't find one
 * Edit /boot/firmware/config.txt to add the following lines:
     - `start_x=1`
     - `gpu_mem=128`
     - `dtoverlay=imx219`
-* `sudo update-initramfs -c -k $(umami -r)`
+* `sudo update-initramfs -c -k $(uname -r)`
 * `sudo apt install ffmpeg ninja-build libboost-all-dev`
 * `sudo apt install libexif-dev libjpeg-dev libtiff-dev libv4l-dev libpng-dev`
 * `sudo apt install qtbase5-dev qtbase5-dev-tools`
 * `sudo apt install python3-jinja2 python3-yaml python3-ply`
-* `pip install meson==0.64.1`
+* `sudo pip install meson==0.64.1`
 * `git clone https://github.com/raspberrypi/libcamera.git`
 * `cd libcamera`
 * `meson setup build`
@@ -110,7 +92,7 @@ Very complex - might be an easier way, but didn't find one
 * `sudo mv mediamtx /usr/bin/.`
 * `rm -rf LICENSE libcamera rpicam-apps`
 * `sudo ldconfig`
-* put `export rpicam-hello="rpicam-hello --qt-preview -v 0"` in ~/.bashrc
+* put `alias rpicam-hello='rpicam-hello --qt-preview -v 0'` in ~/.bashrc
 * Reboot
 
 ### Copy Setup to Other SD Cards ###
