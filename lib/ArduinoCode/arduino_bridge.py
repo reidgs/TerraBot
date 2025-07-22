@@ -74,7 +74,7 @@ class ArduinoBridge(rclpy.node.Node):
                 if len(data) == 1: data = data[0]
                 msg = stype(data=data)
                 self.pubs[name].publish(msg)
-                #self.logger.info(f'Published: {msg.data}')
+                #self.logger.info(f'Published {name}: {msg.data}')
             except Exception as inst:
                 self.logger.error(f'ERROR: bad input: {line} ({inst.args})')
                 self.ser.reset_input_buffer()
