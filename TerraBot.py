@@ -243,8 +243,12 @@ def camera_cb(data):
 #        sp.call("raspistill -n -md 2 -awb off -awbg 1,1 -ss 30000 -o %s"
 #        sp.call("raspistill -n -md 4 -awb auto -ss 30000 -rot 180 -o %s"
         
-        sp.call("raspistill -n -md 4 -awb auto -ss %d -o %s"
-                %(shutter_speed, data.data), shell = True)
+#        sp.call("raspistill -n -md 4 -awb auto -ss %d -o %s"
+#                %(shutter_speed, data.data), shell = True)
+#        print("rpicam-still --shutter %d --gain %.1f -o %s -t 1000 -v 0"
+#                %(shutter_speed, 1.5, data.data))
+        sp.call("rpicam-still --shutter %d --gain %.1f -o %s -t 1000 -v 0"
+                %(shutter_speed, 1.5, data.data), shell = True)
     tester_update_var('camera', data.data)
 
 camera_sub = terrabot.create_subscription(String, 'camera', camera_cb, 10)
