@@ -1,0 +1,26 @@
+#!/bin/bash
+
+start_mediamtx(){
+  SERVER_PID=$(pgrep -x mediamtx)
+  if [ -n "$SERVER_PID" ]; then
+    echo "RTSP server already running (PID $SERVER_PID)"
+  else
+    # Start RTSP server in background
+    mediamtx /etc/mediamtx.yml &
+    SERVER_PID=$!
+    echo "RTSP server started (PID $SERVER_PID)"
+  fi
+}
+
+# Handle cleanup on script exit
+cleanup() {
+    if [ -d "/proc/$SERVER_PID" ]; then
+      echo "Stopping RTSP server..."
+      kill $SERVER_PID
+      wait $SERVER_PID 2>/dev/null
+      echo "Done."
+    else
+      echo "RTSP server already killed"
+    fi
+}
+

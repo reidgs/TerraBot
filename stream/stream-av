@@ -1,3 +1,21 @@
-#/bin/bash
+#!/bin/bash
 
-raspivid -o - -t 0 -w 640 -h 480 -fps 12 -n | ffmpeg -f h264 -r 12 -thread_queue_size 128 -i - -f alsa -ac 1 -thread_queue_size 128 -i plughw:1,0 -map 0:0 -map 1:0 -vcodec copy -acodec libmp3lame -ac 1 -ar 44100 -b:a 128k -f mpegts - | cvlc -vvv stream:///dev/stdin --sout '#rtp{sdp=rtsp://:8000/}'
+source mediamtx-ctl
+start_mediamtx
+trap cleanup EXIT
+
+WIDTH=1280
+HEIGHT=720
+RATE=30
+CARD=$(arecord -l | awk -F: '/Elf/ {print $1}' | awk '{print $2}' | head -n1)
+
+echo "Starting video + audio stream..."
+rpicam-vid --width $WIDTH --height $HEIGHT --framerate $RATE\
+   -t 0 -v 0 -o - --codec h264 --inline --profile baseline --bitrate 2000000 |\
+   ffmpeg -fflags nobuffer -flags low_delay -flush_packets 1 \
+      -analyzeduration 1000000 -probesize 1000000 \
+      -loglevel warning \
+      -thread_queue_size 512 -f h264 -i - \
+      -thread_queue_size 512 -f alsa -ac 2 -i hw:$CARD,0 \
+      -c:v copy -c:a aac -b:a 96k \
+      -f rtsp rtsp://localhost:8554/stream

@@ -1,3 +1,9 @@
-#/bin/bash
+#!/bin/bash
 
-cvlc -vvv alsa://hw:1,0 --sout '#transcode{acodec=mp3, ab=128} :rtp{mux=ts, sdp=rtsp://:8001/}'
+source mediamtx-ctl
+start_mediamtx
+trap cleanup EXIT
+
+# Run FFmpeg to push audio stream
+CARD=$(arecord -l | awk -F: '/Elf/ {print $1}' | awk '{print $2}' | head -n1)
+ffmpeg -f alsa -ac 2 -ar 44100 -i hw:$CARD,0 -acodec aac -f rtsp rtsp://localhost:8554/stream

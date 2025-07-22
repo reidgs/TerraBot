@@ -1,3 +1,18 @@
-#/bin/bash
+#!/bin/bash
 
-raspivid -o - -t 0 -n -w 640 -h 480 -fps 10 | cvlc -vvv stream:///dev/stdin --sout '#rtp{sdp=rtsp://:8000/}' :demux=h264
+source mediamtx-ctl
+start_mediamtx
+trap cleanup EXIT
+
+WIDTH=1280
+HEIGHT=720
+RATE=20
+
+# Run FFmpeg to push audio stream
+# Start rpicam-vid and pipe to ffmpeg
+echo "Starting video stream..."
+rpicam-vid --width $WIDTH --height $HEIGHT --framerate $RATE\
+   -t 0 -v 0 -o - --codec h264 --inline --profile baseline --bitrate 2000000 |\
+   ffmpeg -re -analyzeduration 1000000 -probesize 1000000 -fflags nobuffer -flags low_delay\
+     -f h264 -i - -c copy -f rtsp rtsp://localhost:8554/stream
+
