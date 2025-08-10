@@ -174,7 +174,6 @@ void setup(){
     ;
   }
   S_PRLN("# Comm started");
-  return;
   pinMode(led_pin, OUTPUT);
   pinMode(wpump_pin, OUTPUT);
   pinMode(fan_pin, OUTPUT);
