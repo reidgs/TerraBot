@@ -40,7 +40,7 @@ Do as robotanist-admin
 * `sudo add-apt-repository universe && sudo apt update`
 * `export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')`
 * `curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo $VERSION_CODENAME)_all.deb"`
-* `sudo dpkg -i /tmp/ros2-apt-source.deb`
+* `sudo dpkg -i /tmp/ros2-apt-source.deb && sudo apt update`
 * `sudo apt install ros-humble-ros-base`
 * add these lines to the end of the .bashrc file (for both robotanist and robotanist-admin, using `sudo xemacs`):
     - `source /opt/ros/humble/setup.bash`
@@ -50,11 +50,11 @@ Do as robotanist-admin
 ### Installing TerraBot Software ###
 Switch user to robotanist
 * `git clone --branch ros2 https://github.com/reidgs/TerraBot` (use your git name and password)
-* `touch Terrabot/Log/arduino_bridge.log`
+* `touch TerraBot/Log/arduino_bridge.log`
 
 ### Installing Arduino ###
 Do as robotanist-admin
-* `ln -s /home/robotanist/Terrabot .`
+* `ln -s /home/robotanist/TerraBot .`
 * `sudo apt install build-essential arduino arduino-mk python3-serial`
 * `sudo chmod a+wrx /dev/ttyACM0`
 * `mkdir -p ~/Sketchbook/libraries; cd ~/Sketchbook/libraries`
@@ -75,17 +75,17 @@ Very complex - might be an easier way, but didn't find one
 * `sudo apt install qtbase5-dev qtbase5-dev-tools`
 * `sudo apt install python3-jinja2 python3-yaml python3-ply`
 * `sudo pip install meson==0.64.1`
-* `git clone https://github.com/raspberrypi/libcamera.git`
+* `cd ~/ && git clone https://github.com/raspberrypi/libcamera.git`
 * `cd libcamera`
 * `meson setup build`
 * `ninja -C build`
 * `sudo ninja -C build install`
-* `git clone https://github.com/raspberrypi/rpicam-apps.git`
+* `cd ~/ && git clone https://github.com/raspberrypi/rpicam-apps.git`
 * `cd rpicam-apps`
 * `meson setup build --buildtype=release`
 * `ninja -C build`
 * `sudo ninja -C build install`
-* `wget https://github.com/bluenviron/mediamtx/releases/download/v1.13.0/mediamtx_v1.13.0_linux_arm64.tar.gz`
+* `cd ~/ && wget https://github.com/bluenviron/mediamtx/releases/download/v1.13.0/mediamtx_v1.13.0_linux_arm64.tar.gz`
 * `tar -xvzf mediamtx_v1.13.0_linux_arm64.tar.gz`
 * `sudo mv mediamtx.yml /etc/.`
 * `sudo mv mediamtx /usr/bin/.`
