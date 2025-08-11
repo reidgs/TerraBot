@@ -24,9 +24,8 @@ Do as robotanist-admin
 * `sudo apt update`
 * `sudo apt install git vlc curl tmux libraspberrypi-bin`
 * `sudo apt install python3 python3-pip python-is-python3`
-* `sudo apt install python3-opencv python3-matplotlib`
-* `sudo apt install python3-transitions python3-sklearn python3-pandas`
-* `sudo pip install dill sendgrid ortools`
+* `sudo pip install transitions opencv-python pandas scikit-learn`
+* `sudo pip install dill sendgrid ortools "matplotlib>=3.9"`
 * Optional: `sudo apt install xemacs21` (or your favorite text editor)
 
 ### Enabling SSH ###
