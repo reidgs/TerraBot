@@ -1,0 +1,43 @@
+<div class="markdown-heading" dir="auto"><h2 tabindex="-1" class="heading-element" dir="auto">Installing and Running TerraBot in Docker</h2></div>
+<ul>
+<li><a href="#Build_Docker">Building a Docker Image</a></li>
+<li><a href="#Run_Docker">Running a Docker Container</a></li>
+<li><a href="#Run_TerraBot">Running TerraBot and Agent Software</a></li>
+<li><a href="#Visualization">Visualizing the TerraBot's Graphics</a></li>
+</ul>
+<div id="Build_Docker" class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto">Build Docker</h3></div>
+<p dir="auto">Building the system using docker is very simple:</p>
+<ul dir="auto">
+<li>Download docker desktop (<a href="https://docs.docker.com/get-started/introduction/get-docker-desktop/" rel="nofollow">docs.docker.com/get-started/introduction/get-docker-desktop/</a> for your machine</li>
+<li>cd to the TerraBot/docker directory</li>
+<li>If you have access to <code>make</code>, simply invoke <code>make build</code> (or <code>make rebuild</code> if you want to rebuild from scratch)</li>
+<li>Otherwise, look at the <code>build</code> or <code>rebuild</code> instructions in the <code>Makefile</code> and run those commands in a shell</li>
+</ul>
+<p dir="auto">In either case, you will produce a terrabot_image file that can then be run (see next section).</p>
+<div id="Run_Docker" class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto">Run Docker</h3><p dir="auto">The docker image includes Ubuntu, ROS, the TerraBot software, and the packages you will need to run the TerraBot and all the assignments in the course.  To run a docker container:</p>
+<ul dir="auto">
+<li>From a shell, if on Windows, invoke <code>run_terrabot.bat</code>; if on Linux or Macs, invoke <code>sudo ./run_terrabot.sh</code>, providing the password <code>TerraBot</code>, if needed.</li>
+<li>The shell scripts start a container called <code>terrabot_container</code>, exposing port 5901 (which is used for graphics visualization).  It also maps a directory on your computer to the <code>User</code> directory in the container.  By default, the directory mapped is the one in which you invoked the shell script.  However, you can change that by providing a path to the directory you want to view within the container.  For instance:
+<ul dir="auto">
+<li><code>sudo ./run_terrabot.sh "c:\Users\rsimmons\Desktop\ROS_HW"</code></li>
+<li>(note: this is equivalent to cd'ing to the ROS_HW directory and invoking the script from there)</li>
+</ul>
+</li>
+<li>If a container is already running, the shell scripts will connect you to the existing container</li>
+<li>You can also invoke the container from the Docker Desktop, but you will have to add the command-line arguments manually.</li>
+</ul>
+<p dir="auto">Once you invoke the container, you will end up in a <code>bash</code> shell under Ubuntu.  From there, you can run the TerraBot software (see next section).</p>
+<div id="Run_TerraBot" class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto">Run TerraBot</h3>
+<p dir="auto">There are two directories within the container.  The <code>TerraBot</code> directory contains all the software needed to run the TerraBot simulator; The <code>User</code> directory is whichever directory you mapped to when you invoked the shell scripts (default being the directory in which the shell script was invoked).  Note that if you edit files in the <code>User</code> directory, it will be changed on your computer; if you edit files in the <code>TerraBot</code> directory, those changes will last only as long as the container is running.</p>
+<p dir="auto">To run the TerraBot, do <code>python TerraBot\TerraBot.py -m sim</code>.  You can also use the <code>-s &lt;x&gt;</code> flag to speed up the simulator by a factor of "x" (e.g., <code>-s 100</code> runs the simulator at 100x real speed), and the <code>-g</code> flag to run graphics (see next section for how to view the graphics).  You will see <code>Waiting for nodes</code>, <code>Starting simulator</code>, followed by <code>System started</code>.  The software is running and growing plants (but they will die without an autonomous agent to take care of them).</p>
+<p dir="auto">For most of the assignments, you will need multiple terminals to be running.  There are several ways to accomplish this:</p>
+<ol dir="auto">
+<li>Invoke the shell scripts multiple times; the first invocation starts a new container and subsequent invocations connect a new terminal to that container.</li>
+<li>Use <code>tmux</code>, which is a terminal multiplexer.  Use <code>ctl-b "</code> to split screens and <code>ctl-b o</code> to move between them.  One good reason to use <code>tmux</code> with the docker container is that you'll need to use it on the Raspberry Pi, so it is good to get familiar with using it.</li>
+<li>You can connect to the docker container through Visual Studio.  Open the <code>Extensions</code> tab and install <code>Dev Containers</code> (need to do this just once).  Then, open the <code>Remote Explorer</code> tab and select the <code>terrabot_image (terrabot_container)</code>. At that point, you can navigate to and execute files (using the <code>Folders</code> tab) or open a terminal.  Again, if you edit files in the <code>User</code> directory, they get changed on your computer; if you edit files in the <code>TerraBot</code> directory, they will go away once the container ends.</li>
+<li>You can open new terminals using <code>xterm &amp;</code>, but to be seen you need to follow the instructions in the next section.</li>
+</ol>
+<div id="Visualization" class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto">Visualization</h3><p dir="auto">The TerraBot container runs lightweight versions of X (a VNC server) with a window manager, exporting the display on port 5901. To view the display, you need to run a remote viewer.  There are several available options. TigerVNC (<a href="https://tigervnc.org/" rel="nofollow">https://tigervnc.org/</a>) is available for Windows, Macs, and Linux, but other options include RealVNC, TightVNC, and Remmina (for Linux).  You will need to download and install one of the options.</p>
+<p dir="auto">When you invoke the viewer, connect to <code>localhost:5901</code> - you should then be able to see any graphics that have been started in the container.  In particular, when you run <code>TerraBot.py</code> with the <code>-m sim -g</code> options, it starts up a graphical simulator that shows all the dynamic change to the (simulated) greenhouse.  Similarly, the <code>agents/plot_sensors.py</code> and <code>agents/time_series.py</code> both display graphics.  And, as mentioned above, you can start xterm windows and they can be interacted with (e.g., editing and running code).</p>
+<p dir="auto"><strong>Note:</strong> You can view remotely, from a different computer, by replacing <code>localhost</code> with the hostname of the machine that is running the docker container (e.g., <code>foobar.cs.cmu.edu:5901</code>).</p>
+</article></div><button hidden="" data-hotkey="Control+a"></button></section>
