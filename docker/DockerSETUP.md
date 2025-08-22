@@ -6,7 +6,7 @@
 
 ### Build Docker ###
 Building the system using docker is very simple:
-* Download docker desktop ([docs.docker.com/get-started/introduction/get-docker-desktop/](https://docs.docker.com/get-started/introduction/get-docker-desktop/) for your machine
+* Download docker desktop ([docs.docker.com/get-started/introduction/get-docker-desktop/](https://docs.docker.com/get-started/introduction/get-docker-desktop/)) for your machine
 * cd to the TerraBot/docker directory
 * If you have access to `make`, simply invoke `make build` (or `make rebuild` if you want to rebuild from scratch)
 * Otherwise, look at the `build` or `rebuild` instructions in the `Makefile` and run those commands in a shell
