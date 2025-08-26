@@ -42,8 +42,8 @@ RUN echo '#!/bin/sh\n Xvfb $DISPLAY -screen 0 $XRES 2>/dev/null &\n sleep 1\n \
     chmod a+x ~/.start.sh
 
 # I like to use this editor; uncomment out for my personal image
-USER root
-RUN apt-get -y install xemacs21 && apt-get clean
+#USER root
+#RUN apt-get -y install xemacs21 && apt-get clean
 USER robotanist
 
 # add launcher
