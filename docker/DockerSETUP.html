@@ -16,7 +16,7 @@
 <p dir="auto">In either case, you will produce a terrabot_image file that can then be run (see next section).</p>
 <div id="Run_Docker" class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto">Run Docker</h3><p dir="auto">The docker image includes Ubuntu, ROS, the TerraBot software, and the packages you will need to run the TerraBot and all the assignments in the course.  To run a docker container:</p>
 <ul dir="auto">
-<li>From a shell, if on Windows, invoke <code>run_terrabot.bat</code>; if on Linux or Macs, invoke <code>sudo ./run_terrabot.sh</code>, providing the password <code>TerraBot</code>, if needed.</li>
+<li>From a shell, if on Windows, invoke <code>run_terrabot.bat</code>; if on Linux or Macs, invoke <code>sudo ./run_terrabot.sh</code>, providing your password, if needed.</li>
 <li>The shell scripts start a container called <code>terrabot_container</code>, exposing port 5901 (which is used for graphics visualization).  It also maps a directory on your computer to the <code>User</code> directory in the container.  By default, the directory mapped is the one in which you invoked the shell script.  However, you can change that by providing a path to the directory you want to view within the container.  For instance:
 <ul dir="auto">
 <li><code>sudo ./run_terrabot.sh "c:\Users\rsimmons\Desktop\ROS_HW"</code></li>
@@ -40,4 +40,5 @@
 <div id="Visualization" class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto">Visualization</h3><p dir="auto">The TerraBot container runs lightweight versions of X (a VNC server) with a window manager, exporting the display on port 5901. To view the display, you need to run a remote viewer.  There are several available options. TigerVNC (<a href="https://tigervnc.org/" rel="nofollow">https://tigervnc.org/</a>) is available for Windows, Macs, and Linux, but other options include RealVNC, TightVNC, and Remmina (for Linux).  You will need to download and install one of the options.</p>
 <p dir="auto">When you invoke the viewer, connect to <code>localhost:5901</code> - you should then be able to see any graphics that have been started in the container.  In particular, when you run <code>TerraBot.py</code> with the <code>-m sim -g</code> options, it starts up a graphical simulator that shows all the dynamic change to the (simulated) greenhouse.  Similarly, the <code>agents/plot_sensors.py</code> and <code>agents/time_series.py</code> both display graphics.  And, as mentioned above, you can start xterm windows and they can be interacted with (e.g., editing and running code).</p>
 <p dir="auto"><strong>Note:</strong> You can view remotely, from a different computer, by replacing <code>localhost</code> with the hostname of the machine that is running the docker container (e.g., <code>foobar.cs.cmu.edu:5901</code>).</p>
+
 </article></div><button hidden="" data-hotkey="Control+a"></button></section>
