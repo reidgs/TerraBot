@@ -144,15 +144,16 @@ void led_activate( const String& cmd_msg){
   analogWrite(led_pin, cmd_msg.toInt());//toggle led
 }
 
+#define PUMP_ON 100
 void wpump_activate(const String& cmd_msg){
-  S_PR("# Setting pump to : ");  S_PRLN(cmd_msg.toInt() ? 90 : 0);
-//  analogWrite(wpump_pin, cmd_msg ? 75 : 0);
-  analogWrite(wpump_pin, cmd_msg.toInt() ? 90 : 0);
+  S_PR("# Setting pump to : ");  S_PRLN(cmd_msg.toInt() ? PUMP_ON : 0);
+  analogWrite(wpump_pin, cmd_msg.toInt() ? PUMP_ON : 0);
 }
 
+#define FAN_ON 255
 void fan_activate(const String& cmd_msg){
-  S_PR("# Setting fan to : "); S_PRLN(cmd_msg.toInt() ? 255 : 0);
-  analogWrite(fan_pin, cmd_msg.toInt() ? 255 : 0);
+  S_PR("# Setting fan to : "); S_PRLN(cmd_msg.toInt() ? FAN_ON : 0);
+  analogWrite(fan_pin, cmd_msg.toInt() ? FAN_ON : 0);
 }
 
 // Sensor helpers
