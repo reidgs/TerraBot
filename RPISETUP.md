@@ -107,7 +107,6 @@ Very complex - might be an easier way, but didn't find one
 * Deal with the audio server
     - `sudo chown robotanist /usr/bin/pulseaudio`
     - `sudo chgrp robotanist /usr/bin/pulseaudio`
-    - edit stream-av and stream-audio to change the plughw card to match (e.g., plughw:1,0)
 * Set the parameters for the weight sensors
     - edit lib/ArduinoCode/ArduinoCode.ino
     - `make && make upload`
