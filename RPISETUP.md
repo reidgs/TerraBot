@@ -110,6 +110,6 @@ Very complex - might be an easier way, but didn't find one
     - edit stream-av and stream-audio to change the plughw card to match (e.g., plughw:1,0)
 * Set the parameters for the weight sensors
     - edit lib/ArduinoCode/ArduinoCode.ino
-    - make & make upload
+    - `make && make upload`
  * Check pump pressure
     - if pump is too weak (or too strong), edit wpump_activate in Arduino.ino (and make upload)
