@@ -8,6 +8,7 @@ WIDTH=1640
 HEIGHT=1232
 RATE=30
 CARD=$(arecord -l | awk -F: '/Microphone|Elf/ {print $1}' | awk '{print $2}' | head -n1)
+CC=$(arecord -l | grep -q "Elf" && echo 2 || echo 1) # Channel count
 
 echo "Starting video + audio stream..."
 rpicam-vid --width $WIDTH --height $HEIGHT --framerate $RATE\
@@ -16,6 +17,6 @@ rpicam-vid --width $WIDTH --height $HEIGHT --framerate $RATE\
       -analyzeduration 1000000 -probesize 1000000 \
       -loglevel warning \
       -thread_queue_size 512 -f h264 -i - \
-      -thread_queue_size 512 -f alsa -i hw:$CARD,0 \
+      -thread_queue_size 512 -f alsa -ac $CC -i hw:$CARD,0 \
       -c:v copy -c:a aac -b:a 96k \
       -f rtsp rtsp://localhost:8554/stream

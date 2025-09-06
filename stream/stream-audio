@@ -6,4 +6,6 @@ trap cleanup EXIT
 
 # Run FFmpeg to push audio stream
 CARD=$(arecord -l | awk -F: '/Microphone|Elf/ {print $1}' | awk '{print $2}' | head -n1)
-ffmpeg -f alsa -ar 44100 -i hw:$CARD,0 -acodec aac -f rtsp rtsp://localhost:8554/stream
+CC=$(arecord -l | grep -q "Elf" && echo 2 || echo 1) # Channel count
+echo "Channel count $CC"
+ffmpeg -f alsa -ac $CC -ar 44100 -i hw:$CARD,0 -acodec aac -f rtsp rtsp://localhost:8554/stream
