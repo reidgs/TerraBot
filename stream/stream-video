@@ -4,8 +4,8 @@ source mediamtx-ctl
 start_mediamtx
 trap cleanup EXIT
 
-WIDTH=1280
-HEIGHT=720
+WIDTH=1640
+HEIGHT=1230
 RATE=20
 
 # Run FFmpeg to push audio stream

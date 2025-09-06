@@ -5,5 +5,5 @@ start_mediamtx
 trap cleanup EXIT
 
 # Run FFmpeg to push audio stream
-CARD=$(arecord -l | awk -F: '/Microphone/ {print $1}' | awk '{print $2}' | head -n1)
-ffmpeg -f alsa -ac 1 -ar 44100 -i hw:$CARD,0 -acodec aac -f rtsp rtsp://localhost:8554/stream
+CARD=$(arecord -l | awk -F: '/Microphone|Elf/ {print $1}' | awk '{print $2}' | head -n1)
+ffmpeg -f alsa -ar 44100 -i hw:$CARD,0 -acodec aac -f rtsp rtsp://localhost:8554/stream
