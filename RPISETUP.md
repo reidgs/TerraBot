@@ -59,8 +59,9 @@ Do as robotanist-admin
 * `sudo apt update`
 * `sudo apt install build-essential arduino arduino-mk`
 * `sudo apt install ros-noetic-rosserial ros-noetic-rosserial-arduino`
-* add the line to the end of the .bashrc file
+* add the lines to the end of the .bashrc file
     - `source /opt/ros/noetic/setup.bash`
+    - `export ROS_LOCALHOST_ONLY=1`
 
 ### Installing TerraBot Software ###
 Switch user to robotanist
