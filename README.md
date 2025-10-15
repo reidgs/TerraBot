@@ -320,10 +320,18 @@ QUIT AT 3-23:59:59 # Run testing for 3 full days, and then quit the simulator
 ```
 Note again that comments can be place at the end of lines
 
+#### INCLUDE ####
+One can write each test in a separate file and then create another test file that includes them all.  This facilitates modularity and unit testing.  You can provide either relative or global file locations
+```
+INCULDE lowerhumid.tst
+INCLUDE /home/reids/terrabot/insolation.tst
+```
+Note that any BASELINE, QUIT or DELAY statements in the main file overrides any specifications that are within the included files.
+
 ### VARIABLES ###
 You can use any of the sensor or actuator values (light, humidity, temperature, smoist, wlevel, weight, camera, fan, pump, led).  'fan' and 'pump' are Booleans, 'camera' is a string (the location of the image file), and the rest are numbers.  For sensors that are in pairs (light, humidity, temperature, smoist, weight) you can access each value separately using *sensor*_raw[n], where 'n' is 0 or 1 (for instance, smoist_raw[0]).  You can also make use of the dicts 'limits' and 'optimal', which are defined in agents/limits.py.
 
-Finally, you can use the function 'enabled' to determine whether a behavior has been enabled (assuming your agent publishes that information).  For instance 'enabled("LowerHumidBehavior")' is True when the behavior is running and False otherwise.
+Finally, you can use the function 'enabled' to determine whether a behavior has been enabled (assuming your agent publishes that information).  For instance `enabled("LowerHumidBehavior")` is True when the behavior is running and False otherwise.
 
 ### WHENEVER ###
 The bulk of test files consist of WHENEVER constraints.  These are subtests that are activiated whenever a particular condition is met.  WHENEVER constraints consist of a trigger and a body, which is a sequence of WAIT, ENSURE, SET, and PRINT subconstraints that specify what behavior is expected of the system.
@@ -341,7 +349,7 @@ The body of a WHENEVER constraint indicates a sequence of subconstraints that mu
 
 You can also use the WHILE condition to indicate a condition that must hold while the WHENEVER constraint is active. When the WHILE condition becomes false, the whole WHENEVER constraint ends successfully, no matter where in the list of subconstraints it is currently.  For instance:
 ```
-WHENEVER enabled("LowerHumidBehavior") and humidity >= 90 WHILE enabled("LowerHumidBehavior")
+WHENEVER enabled("LowerHumidBehavior") and humidity > limits['humidity'][1] WHILE enabled("LowerHumidBehavior")
 ```
 activates when the LowerHumidBehavior is enabled and the humidity is high, but stays active only as long as the behavior is enabled.
 
