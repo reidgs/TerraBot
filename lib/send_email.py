@@ -26,7 +26,7 @@ AUTHORITY = f"https://login.microsoftonline.com/common"
 SCOPES = ['User.Read', 'Mail.Send']
 
 def init(reinitialize=False):
-    print(TOKEN_CACHE_FILE)
+    #print(TOKEN_CACHE_FILE)
     try:
         cache = msal.SerializableTokenCache()
         with open(TOKEN_CACHE_FILE, "r") as f:
