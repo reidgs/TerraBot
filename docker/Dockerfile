@@ -27,7 +27,7 @@ WORKDIR /home/robotanist
 
 # install TerraBot software
 RUN cd /home/robotanist && \
-    git clone --branch ros2 https://github.com/reidgs/TerraBot && \
+    git clone https://github.com/reidgs/TerraBot && \
     echo 'source /opt/ros/humble/setup.bash' >> ~/.bashrc && \
     echo 'export TB_DIR=${HOME}/TerraBot' >> ~/.bashrc && \
     echo 'export PYTHONPATH=${PYTHONPATH}:${TB_DIR}:${TB_DIR}/lib:${TB_DIR}:${TB_DIR}/agents' >> ~/.bashrc

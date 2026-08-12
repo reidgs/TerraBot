@@ -2,8 +2,8 @@
 
 USER_DIR="${1:-.}"
 
-CONTAINER_NAME=terrabot_container_ros2
-IMAGE_NAME=terrabot_image_ros2
+CONTAINER_NAME=terrabot_container
+IMAGE_NAME=terrabot_image
 PORT=5901
 
 # Check if the container exists

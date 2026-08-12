@@ -1,7 +1,7 @@
 USER_DIR ?= "."
 
 build:
-	docker build ${REBUILD} --build-arg FOOBAR="TerraBot" -t terrabot_image_ros2 .
+	docker build ${REBUILD} --build-arg FOOBAR="TerraBot" -t terrabot_image .
 
 rebuild:
 	make build REBUILD="--no-cache"
@@ -9,16 +9,16 @@ rebuild:
 # Need to be able to connect to already running container (exec)
 
 run:
-	docker run -it ${ONCE} --name terrabot_container_ros2 --volume \
-	           ${USER_DIR}:/home/robotanist/User -p 5901:5901 terrabot_image_ros2
+	docker run -it ${ONCE} --name terrabot_container --volume \
+	           ${USER_DIR}:/home/robotanist/User -p 5901:5901 terrabot_image
 
 run_once:
 	make run ONCE="--rm"
 
 exec:
-	docker exec -it terrabot_container_ros2 bash
+	docker exec -it terrabot_container bash
 
 stop:
-	docker container stop terrabot_container_ros2
-	docker container rm terrabot_container_ros2
+	docker container stop terrabot_container
+	docker container rm terrabot_container
 

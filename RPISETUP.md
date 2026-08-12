@@ -49,7 +49,7 @@ Do as robotanist-admin
 
 ### Installing TerraBot Software ###
 Switch user to robotanist
-* `git clone --branch ros2 https://github.com/reidgs/TerraBot` (use your git name and password)
+* `git clone https://github.com/reidgs/TerraBot` (use your git name and password)
 * `touch TerraBot/Log/arduino_bridge.log`
 
 ### Installing Arduino ###
