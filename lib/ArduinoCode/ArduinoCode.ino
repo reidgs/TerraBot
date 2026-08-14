@@ -3,10 +3,6 @@
    so doing this with simple serial communication and a ROS2 bridge
 */
 
-//#define USE_DHT20
-//#define USE_TCA
-#define USE_BOTH
-
 /*
  * Automated Systems TerraBot Arduino File
  */
@@ -23,6 +19,11 @@
   //#include <SimpleDHT.h>
 #endif
 #include <HX711.h>
+
+#ifdef USE_A02YYUW
+  #include <A02YYUW.h>
+  A02YYUW a02yyuw(&Serial1, 19);
+#endif
 
 // Internal Values
 #if 1
@@ -114,7 +115,7 @@ long cur_count = 0;
 // These macros make it easier to string lines of prints/println
 // Do it so don't have to generate a lot of String instances
 #define S_PR(val) Serial.print(val)
-#define S_PRLN(val) Serial.println(val); delay(100) // try to keep buffer small
+#define S_PRLN(val) {Serial.println(val); delay(100);} // try to keep buffer small
 
 //Frequency Adjustment
 void freq_change( const String &cmd_msg){
@@ -204,6 +205,13 @@ void setup(){
   weight2.begin(weight_dout_pin2, weight_sck_pin2);
   weight2.set_scale(weight_scale2);
   weight2.set_offset(weight_offset2);
+#ifdef USE_A02YYUW
+  Serial1.begin(9600);
+  S_PR("#"); S_PRLN(__FILE__);
+  S_PR("#A02YYUW_LIB_VERSION: "); S_PRLN(A02YYUW_LIB_VERSION);
+  a02yyuw.begin();
+  a02yyuw.setProcessingMode(true);
+#endif
 }
 
 float to_amp(int analog) {
@@ -225,6 +233,10 @@ void actuate(const String &cmd, const String &data) {
 }
 
 void publish1(const String &sensor, long int data) {
+  S_PR(sensor); S_PR("|"); S_PRLN(data);
+}
+
+void publish1f(const String &sensor, float data) {
   S_PR(sensor); S_PR("|"); S_PRLN(data);
 }
 
@@ -336,11 +348,24 @@ void loop(){
   if(time_now >= wlevel_timing.next){
       wlevel_timing.next = time_now + wlevel_timing.period;
 
+#ifdef USE_A02YYUW
+    // Flush old data, and wait 150ms for the sensor to repopulate
+    a02yyuw.flush();
+    unsigned long starttime = millis();
+    while (millis() - starttime < 150);
+
+    if (a02yyuw.newDistance()) {
+      // For this sensor, a value of ~160 indicates an empty reservoir
+      int level = 160 - a02yyuw.getDistanceMM();
+      publish1("level", level);
+    }
+#else      
       // Get the level (complicated enough for own function)
       // Returns the distance to the water; we want the height of the water.
       // Experimentally, a value of ~180 indicates an empty reservoir
       int level = 180 - get_level();
       publish1("level", level);
+#endif
   }
 
   if(time_now >= smoist_timing.next){
