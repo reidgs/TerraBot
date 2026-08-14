@@ -60,6 +60,7 @@ Do as robotanist-admin
 * `mkdir -p ~/Sketchbook/libraries; cd ~/Sketchbook/libraries`
 * `git clone https://github.com/RobTillaart/dhtnew.git`
 * `git clone https://github.com/RobTillaart/HX711.git`
+* `git clone https://github.com/RobTillaart/A02YYUW.git`
 * `cd ~/TerraBot/lib/ArduinoCode`
 * `make clean; make upload` [note: may have to change the permissions on ArduinoCode to make them available to robotanist-admin)
 
