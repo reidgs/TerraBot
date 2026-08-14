@@ -28,7 +28,7 @@ simulate = False
 still_running = True
 tick_interval = 0.5
 interference = None
-tester = None
+tester = tester_mod.Tester()
 
 #lists which will be populated based on the topic_def.py
 log_files = {}
@@ -143,6 +143,19 @@ def generate_subscribers():
         cb = generate_cb(name)
         subscribers[name] = terrabot.create_subscription(
                                tdef.actuator_types[name], sub_name, cb, 10)
+
+def print_sensor_values():
+    print("  Light level: %.1f (%.1f, %.1f)"
+          %(tester.vars['light'], *tester.vars['light_raw']))
+    print("  Temperature: %.1f (%.1f, %.1f)"
+          %(tester.vars['temperature'], *tester.vars['temperature_raw']))
+    print("  Humidity: %.1f (%.1f, %.1f)"
+          %(tester.vars['humidity'], *tester.vars['humidity_raw']))
+    print("  Soil moisture: %.1f (%.1f, %.1f)"
+          %(tester.vars['smoist'], *tester.vars['smoist_raw']))
+    print("  Weight: %.1f (%.1f, %.1f)"
+          %(tester.vars['weight'], *tester.vars['weight_raw']))
+    print("  Reservoir level: %.1f" %tester.vars['wlevel'])
 
 ###Start of program
 parser = argparse.ArgumentParser(description = "TerraBot arg parser")
@@ -307,7 +320,6 @@ def adjust_path(pathname, dirname):
             op.abspath(dirname + pathname))
     
 if tester_file:
-    tester = tester_mod.Tester()
     try:
         tester.parse_file(tester_file)
     except Exception as inst:
@@ -351,10 +363,12 @@ while rclpy.ok():
         input = sys.stdin.readline()
         if input[0] == 'q':
             terminate_gracefully()
-        if input[0] == 't':
+        elif input[0] == 't':
             print("Current time: %s" %clock_time(now))
+        elif input[0] == 'v':
+            print_sensor_values()
         else:
-            print("Usage: q (quit); t (current time)")
+            print("Usage: q (quit); t (current time); v (sensor values)")
 
     now = get_ros_time(terrabot)
     if (interference): interference.update(now)
