@@ -5,6 +5,16 @@
 * Flash to SD card
 * Select the language, layout, etc. options. Set user name (robotanist-admin), hostname (terrabot<x>), and password [GET ADMIN PASSWORD FROM REID]
 
+## Update the Swapfile ##
+* sudo swapoff /swapfile
+* sudo rm /swapfile
+* sudo fallocate -l 8G /swapfile
+* sudo chmod 600 /swapfile
+* sudo mkswap /swapfile
+* sudo swapon /swapfile
+* sudo cp /etc/fstab /etc/fstab.bak # For safety reasons
+* echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
 ### Connect to Network ###
 * If not done through the setup:
     - Hostname: same as computer name; Address: use `cat /sys/class/net/eth0/address`
