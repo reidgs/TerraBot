@@ -116,11 +116,17 @@ def send(from_address, passwd, to_addresses, subject, text, images=[], inline=Fa
 
 # Here's a simple example (please don't actually use it as is, since it will spam me)
 if __name__ == "__main__":
+    from socket import gethostname
     #init(True)
     images = []
     for file_name in ["../simulator.JPG", "../system_diagram.jpg"]:
         with open(file_name, 'rb') as f: images += [f.read()]
+<<<<<<< Updated upstream
     if send("terrabot1@outlook.com", "Simmons482", "reidgs@hotmail.com, reids@cs.cmu.edu", 
+=======
+    if send(f"{gethostname()}@outlook.com", "Simmons482",
+            "reidgs@hotmail.com, reids@cs.cmu.edu", 
+>>>>>>> Stashed changes
             "Hello", '<b>This is a test</b><p><img src="cid:image1" /><p><img src="cid:image2" />', 
             images, inline=True):
         print("Successfully sent!")
