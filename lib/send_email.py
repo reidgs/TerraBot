@@ -120,7 +120,7 @@ if __name__ == "__main__":
     images = []
     for file_name in ["../simulator.JPG", "../system_diagram.jpg"]:
         with open(file_name, 'rb') as f: images += [f.read()]
-    if send("terrabot0@outlook.com", "Simmons482", "reidgs@hotmail.com, reids@cs.cmu.edu", 
+    if send("terrabot1@outlook.com", "Simmons482", "reidgs@hotmail.com, reids@cs.cmu.edu", 
             "Hello", '<b>This is a test</b><p><img src="cid:image1" /><p><img src="cid:image2" />', 
             images, inline=True):
         print("Successfully sent!")
