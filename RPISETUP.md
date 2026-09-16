@@ -5,6 +5,16 @@
 * Flash to SD card
 * Select the language, layout, etc. options. Set user name (robotanist-admin), hostname (terrabot<x>), and password [GET ADMIN PASSWORD FROM REID]
 
+## Update the Swapfile ##
+* sudo swapoff /swapfile
+* sudo rm /swapfile
+* sudo fallocate -l 8G /swapfile
+* sudo chmod 600 /swapfile
+* sudo mkswap /swapfile
+* sudo swapon /swapfile
+* sudo cp /etc/fstab /etc/fstab.bak # For safety reasons
+* echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
 ### Connect to Network ###
 * If not done through the setup:
     - Hostname: same as computer name; Address: use `cat /sys/class/net/eth0/address`
@@ -60,6 +70,7 @@ Do as robotanist-admin
 * `mkdir -p ~/Sketchbook/libraries; cd ~/Sketchbook/libraries`
 * `git clone https://github.com/RobTillaart/dhtnew.git`
 * `git clone https://github.com/RobTillaart/HX711.git`
+* `git clone https://github.com/RobTillaart/A02YYUW.git`
 * `cd ~/TerraBot/lib/ArduinoCode`
 * `make clean; make upload` [note: may have to change the permissions on ArduinoCode to make them available to robotanist-admin)
 
